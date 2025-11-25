@@ -34,7 +34,7 @@ const SideBar: React.FC = () => {
 
     const navItems = [
         { path: '/', icon: FaHome, label: 'Home' },
-        { path: '/overzicht', icon: BsFillGrid1X2Fill, label: 'Dashboard' },
+        { path: '/dashboard', icon: BsFillGrid1X2Fill, label: 'Dashboard' },
         { path: '/druppels', icon: FaCogs, label: 'Druppels' },
         { path: '/personen', icon: FaPerson, label: 'Personen' },
     ];
@@ -42,7 +42,7 @@ const SideBar: React.FC = () => {
     const activeIndex = navItems.findIndex(item => item.path === location.pathname);
 
     return (
-        <div className="bg-neutral-900">
+        <div className="z-20 bg-neutral-900">
             <motion.div
                 className="flex flex-col bg-neutral-950 p-4 min-h-screen border-r border-neutral-600 rounded-r-2xl items-center justify-between overflow-x-hidden text-white"
                 animate={{ width: isOpen ? 256 : 80 }}
@@ -59,13 +59,17 @@ const SideBar: React.FC = () => {
                             <h1 className="text-2xl font-bold">BoerBert</h1>
                         }
                     </div>
-                    <div className="relative flex flex-col bg-neutral-900 border border-neutral-700 space-y-2 p-4 mt-10 rounded-3xl justify-center items-center">
+                    <div className="relative flex flex-col bg-neutral-900 border border-neutral-700 gap-2 p-4 mt-10 rounded-3xl justify-center items-center">
                         {activeIndex !== -1 && (
                             <motion.div
-                                className={`absolute bg-neutral-600 border border-neutral-400 rounded-full inset-x-4 z-0`}
+                                className="absolute bg-blue-500/20 border border-blue-500/50 rounded-full z-0"
                                 layoutId="sidebar-active-link"
                                 style={{ height: '40px' }}
-                                animate={{ top: `${16 + activeIndex * 48}px` }}
+                                animate={{
+                                    top: `${16 + activeIndex * 48}px`,
+                                    left: isOpen ? '16px' : '4px',
+                                    right: isOpen ? '16px' : '4px'
+                                }}
                                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
                             />
                         )}
@@ -75,7 +79,7 @@ const SideBar: React.FC = () => {
                             return (
                                 <button
                                     key={item.path}
-                                    className={`btn-sidebar flex w-full space-x-2 p-2 items-center overflow-x-hidden relative z-10 ${!isOpen && 'justify-center'} ${isActive ? 'text-blue-400' : ''}`}
+                                    className={`btn-sidebar flex w-full h-10 gap-2 px-2 items-center overflow-x-hidden relative z-10 ${!isOpen && 'justify-center'} ${isActive ? 'text-blue-400' : 'text-neutral-300 hover:text-white'}`}
                                     onClick={() => navigate(item.path)}
                                 >
                                     <Icon size={20} className="shrink-0" />
@@ -89,7 +93,7 @@ const SideBar: React.FC = () => {
                 </div>
                 <div className="flex flex-col w-full space-y-4 items-center justify-center">
                     <button
-                        className={`btn-sidebar flex w-full space-x-2 p-2 items-center overflow-x-hidden bg-neutral-800 ${!isOpen && 'justify-center'}`}
+                        className={`btn-sidebar flex w-full space-x-2 p-2 items-center overflow-x-hidden bg-blue-500/20 border border-blue-500/50 hover:bg-blue-500 transition-colors rounded-xl ${!isOpen && 'justify-center'}`}
                         onClick={toggleLoginModal}
                     >
                         <FaLockOpen size={20} className="shrink-0" />
