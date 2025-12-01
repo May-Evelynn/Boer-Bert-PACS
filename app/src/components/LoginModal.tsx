@@ -1,19 +1,32 @@
+import { useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import { motion } from "framer-motion";
 
 interface LoginModalProps {
     isLoginModalOpen: boolean,
     setIsLoginModalOpen: (show: boolean) => void;
+    setIsLoggedIn: (loggedIn: boolean) => void;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({ isLoginModalOpen, setIsLoginModalOpen }) => {
+const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsLoggedIn }) => {
+
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [message, setMessage] = useState('');
 
     const handleClose = () => {
         setIsLoginModalOpen(false);
     };
 
-    const handleLogin = () => {
-
+    // yes its hardcoded, yes this will change lmao
+    const handleLogin = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (password === "password" && username === "bert") {
+            setIsLoggedIn(true);
+            setIsLoginModalOpen(false);
+        } else {
+            setMessage("Ongeldige inloggegevens");
+        }
     }
 
     return (
@@ -35,7 +48,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isLoginModalOpen, setIsLoginMod
                         alt="Boer Bert Logo"
                         className="w-10 h-10"
                     />
-                    <h1 className="text-3xl font-bold">BoerBert Inlog</h1>
+                    <h1 className="text-3xl font-bold">Boer DashBert Inlog</h1>
                 </div>
                 <button
                     className="absolute top-4 right-4 bg-red-600 hover:bg-red-700 p-2.5 rounded-xl hover:cursor-pointer transition-colors duration-200"
@@ -53,6 +66,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isLoginModalOpen, setIsLoginMod
                             className="bg-neutral-800 border border-neutral-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                             type="text"
                             placeholder="Voer gebruikersnaam in"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
                         />
                     </div>
                     <div className="flex flex-col space-y-2">
@@ -61,11 +76,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ isLoginModalOpen, setIsLoginMod
                             className="bg-neutral-800 border border-neutral-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                             type="password"
                             placeholder="Voer wachtwoord in"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
                     <button className="bg-blue-600 hover:bg-blue-700 rounded-lg p-3 font-bold mt-2 transition-colors duration-200 shadow-lg hover:shadow-xl">
                         Log In
                     </button>
+                    {message && <p className="text-red-500 mt-2">{message}</p>}
                 </form>
             </motion.div>
         </motion.div>
