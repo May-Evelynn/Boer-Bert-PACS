@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <time>
 #include <vector>
 using namespace std;
 
@@ -53,4 +54,8 @@ int main(){
 //    cout << colors[2] << "\n";
     cout << myArray[0] << "\n";
     cout << combineStrings(input1, input2);
+
+
+    cout <<
+
 }
