@@ -1,13 +1,20 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaArrowLeft, FaCogs, FaHome, FaLockOpen } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { FaPerson } from "react-icons/fa6";
+
+import { FaArrowLeft, FaCogs, FaHome } from "react-icons/fa";
+import { MdLogout, MdLogin } from "react-icons/md";
 import { BsFillGrid1X2Fill } from "react-icons/bs";
+import { FaPerson } from "react-icons/fa6";
 
 import LoginModal from './LoginModal'
 
-const SideBar: React.FC = () => {
+interface SideBarProps {
+    isLoggedIn: boolean;
+    setIsLoggedIn: (loggedIn: boolean) => void;
+}
+
+const SideBar: React.FC<SideBarProps> = ({ isLoggedIn, setIsLoggedIn }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const [isOpen, setIsOpen] = useState(true);
@@ -30,6 +37,11 @@ const SideBar: React.FC = () => {
         setIsLoginModalOpen(!isLoginModalOpen)
 
         console.log(isLoginModalOpen)
+    }
+
+    const handleLogout = () => {
+        console.log("Logging out")
+        setIsLoggedIn(false)
     }
 
     const navItems = [
@@ -56,7 +68,7 @@ const SideBar: React.FC = () => {
                             className="w-8 h-8"
                         />
                         {isOpen &&
-                            <h1 className="text-2xl font-bold">BoerBert</h1>
+                            <h1 className="text-2xl font-bold text-nowrap">Boer DashBert</h1>
                         }
                     </div>
                     <div className="relative flex flex-col bg-neutral-900 border border-neutral-700 gap-2 p-4 mt-10 rounded-3xl justify-center items-center">
@@ -77,30 +89,46 @@ const SideBar: React.FC = () => {
                             const Icon = item.icon;
                             const isActive = location.pathname === item.path;
                             return (
-                                <button
+                                <motion.button
                                     key={item.path}
-                                    className={`btn-sidebar flex w-full h-10 gap-2 px-2 items-center overflow-x-hidden relative z-10 ${!isOpen && 'justify-center'} ${isActive ? 'text-blue-400' : 'text-neutral-300 hover:text-white'}`}
+                                    animate={{
+                                        justifyContent: isOpen ? 'flex-start' : 'center'
+                                    }}
+                                    transition={{ delay: 0.3 }}
+                                    className={`btn-sidebar flex w-full h-10 gap-2 px-2 items-center overflow-x-hidden relative z-10 ${isActive ? 'text-blue-400' : 'text-neutral-300 hover:text-white'}`}
                                     onClick={() => navigate(item.path)}
                                 >
                                     <Icon size={20} className="shrink-0" />
                                     {isOpen &&
                                         <span>{item.label}</span>
                                     }
-                                </button>
+                                </motion.button>
                             );
                         })}
                     </div>
                 </div>
                 <div className="flex flex-col w-full space-y-4 items-center justify-center">
-                    <button
-                        className={`btn-sidebar flex w-full space-x-2 p-2 items-center overflow-x-hidden bg-blue-500/20 border border-blue-500/50 hover:bg-blue-500 transition-colors rounded-xl ${!isOpen && 'justify-center'}`}
-                        onClick={toggleLoginModal}
-                    >
-                        <FaLockOpen size={20} className="shrink-0" />
-                        {isOpen &&
-                            <span>Log In</span>
-                        }
-                    </button>
+                    {isLoggedIn ? (
+                        <button
+                            className={`btn-sidebar flex w-full space-x-2 p-2 items-center overflow-x-hidden bg-red-600/20 border border-red-600/50 hover:bg-red-600/50 transition-colors rounded-xl text-nowrap ${!isOpen && 'justify-center'}`}
+                            onClick={handleLogout}
+                        >
+                            <MdLogout size={20} className="shrink-0" />
+                            {isOpen &&
+                                <span>Log uit</span>
+                            }
+                        </button>
+                    ) : (
+                        <button
+                            className={`btn-sidebar flex w-full space-x-2 p-2 items-center overflow-x-hidden bg-blue-500/20 border border-blue-500/50 hover:bg-blue-500/50 transition-colors rounded-xl text-nowrap ${!isOpen && 'justify-center'}`}
+                            onClick={toggleLoginModal}
+                        >
+                            <MdLogin size={20} className="shrink-0" />
+                            {isOpen &&
+                                <span>Log In</span>
+                            }
+                        </button>
+                    )}
                     <motion.button
                         className="text-2xl text-neutral-200 hover:cursor-pointer"
                         onClick={toggleSidebar}
@@ -119,6 +147,7 @@ const SideBar: React.FC = () => {
                     <LoginModal
                         isLoginModalOpen={isLoginModalOpen}
                         setIsLoginModalOpen={setIsLoginModalOpen}
+                        setIsLoggedIn={setIsLoggedIn}
                     />
                 }
             </motion.div>

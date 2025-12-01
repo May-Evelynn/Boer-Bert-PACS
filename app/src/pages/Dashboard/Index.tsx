@@ -4,7 +4,11 @@ import LaatsteScans from './components/LaatsteScans';
 import Weer from './components/Weer';
 import Wasruimte from './components/Wasruimte';
 
-const Dashboard: React.FC = () => {
+interface DashboardProps {
+    isLoggedIn: boolean;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ isLoggedIn }) => {
 
   const scans = [
     { id: 1, location: 'Zwembad', time: '12:30 PM', tagId: '07235' },
@@ -41,7 +45,7 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="z-10 bg-neutral-900 min-h-screen w-full p-4 flex flex-col items-center justify-start text-white">
+    <div className="z-10 bg-neutral-900 min-h-screen w-full p-4 flex flex-col items-center justify-start text-white h-screen overflow-auto">
       <motion.div 
         className='absolute bottom-16 right-16 -z-10 blur-sm'
         initial={{ opacity: 0, scale: 0.8, translateX: -50, translateY: 10 }}
@@ -65,11 +69,11 @@ const Dashboard: React.FC = () => {
         initial="hidden"
         animate="visible"
       >
-        <LaatsteScans scans={scans} variants={itemVariants} />
+        <LaatsteScans scans={scans} variants={itemVariants} isLoggedIn={isLoggedIn} />
 
         <Weer variants={itemVariants} />
 
-        <Wasruimte wasruimte={wasruimte} variants={itemVariants} />
+        <Wasruimte wasruimte={wasruimte} variants={itemVariants} isLoggedIn={isLoggedIn} />
 
       </motion.section>
     </div>

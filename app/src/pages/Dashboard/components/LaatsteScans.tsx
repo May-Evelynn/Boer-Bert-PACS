@@ -1,4 +1,5 @@
 import { motion, Variants } from 'framer-motion';
+import { FaLock } from 'react-icons/fa';
 
 interface Scan {
     id: number;
@@ -10,9 +11,10 @@ interface Scan {
 interface LaatsteScansProps {
     scans: Scan[];
     variants?: Variants;
+    isLoggedIn: boolean;
 }
 
-const LaatsteScans: React.FC<LaatsteScansProps> = ({ scans, variants }) => {
+const LaatsteScans: React.FC<LaatsteScansProps> = ({ scans, variants, isLoggedIn }) => {
     const getLocationColor = (location: string) => {
         const colors: Record<string, string> = {
             'Zwembad': 'bg-sky-500/20 text-sky-400 border-sky-500/30',
@@ -31,36 +33,43 @@ const LaatsteScans: React.FC<LaatsteScansProps> = ({ scans, variants }) => {
                 <h2 className="text-2xl font-medium">Laatste scans</h2>
             </div>
             <div className="bg-neutral-900 rounded-2xl overflow-hidden">
-                <table className="w-full table-auto">
-                    <thead>
-                        <tr className="bg-neutral-800/50">
-                            <th className="text-left p-3 border-b border-neutral-700 text-neutral-400 font-medium text-sm uppercase tracking-wide">Locatie</th>
-                            <th className="text-left p-3 border-b border-neutral-700 text-neutral-400 font-medium text-sm uppercase tracking-wide">Tijd</th>
-                            <th className="text-left p-3 border-b border-neutral-700 text-neutral-400 font-medium text-sm uppercase tracking-wide">Tag ID</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {scans.map((scan, index) => (
-                            <motion.tr
-                                key={scan.id}
-                                className="hover:bg-neutral-800/50 transition-colors"
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.3 + index * 0.1, duration: 0.3 }}
-                            >
-                                <td className="p-3 border-b border-neutral-800">
-                                    <span className={`px-2 py-1 rounded-lg border text-sm font-medium ${getLocationColor(scan.location)}`}>
-                                        {scan.location}
-                                    </span>
-                                </td>
-                                <td className="p-3 border-b border-neutral-800 text-neutral-300">{scan.time}</td>
-                                <td className="p-3 border-b border-neutral-800">
-                                    <span className="font-mono text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">{scan.tagId}</span>
-                                </td>
-                            </motion.tr>
-                        ))}
-                    </tbody>
-                </table>
+                {isLoggedIn ? (
+                    <table className="w-full table-auto">
+                        <thead>
+                            <tr className="bg-neutral-800/50">
+                                <th className="text-left p-3 border-b border-neutral-700 text-neutral-400 font-medium text-sm uppercase tracking-wide">Locatie</th>
+                                <th className="text-left p-3 border-b border-neutral-700 text-neutral-400 font-medium text-sm uppercase tracking-wide">Tijd</th>
+                                <th className="text-left p-3 border-b border-neutral-700 text-neutral-400 font-medium text-sm uppercase tracking-wide">Tag ID</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {scans.map((scan, index) => (
+                                <motion.tr
+                                    key={scan.id}
+                                    className="hover:bg-neutral-800/50 transition-colors"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.3 + index * 0.1, duration: 0.3 }}
+                                >
+                                    <td className="p-3 border-b border-neutral-800">
+                                        <span className={`px-2 py-1 rounded-lg border text-sm font-medium ${getLocationColor(scan.location)}`}>
+                                            {scan.location}
+                                        </span>
+                                    </td>
+                                    <td className="p-3 border-b border-neutral-800 text-neutral-300">{scan.time}</td>
+                                    <td className="p-3 border-b border-neutral-800">
+                                        <span className="font-mono text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">{scan.tagId}</span>
+                                    </td>
+                                </motion.tr>
+                            ))}
+                        </tbody>
+                    </table>
+                ) : (
+                    <div className="p-6 text-center">
+                        <FaLock className="mx-auto mb-4 size-12 text-neutral-500" />
+                        <p className="text-neutral-400">Je moet ingelogd zijn om de laatste scans te bekijken.</p>
+                    </div>
+                )}
             </div>
         </motion.div>
     );
