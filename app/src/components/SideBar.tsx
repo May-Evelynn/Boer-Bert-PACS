@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { FaArrowLeft, FaCogs, FaHome } from "react-icons/fa";
 import { MdLogout, MdLogin } from "react-icons/md";
 import { BsFillGrid1X2Fill } from "react-icons/bs";
-import { FaPerson } from "react-icons/fa6";
+import { FaPeopleGroup, FaPerson } from "react-icons/fa6";
 
 import LoginModal from './LoginModal'
 
@@ -47,8 +47,9 @@ const SideBar: React.FC<SideBarProps> = ({ isLoggedIn, setIsLoggedIn }) => {
     const navItems = [
         { path: '/', icon: FaHome, label: 'Home' },
         { path: '/dashboard', icon: BsFillGrid1X2Fill, label: 'Dashboard' },
+        { path: '/gasten', icon: FaPerson, label: 'Gasten' },
+        { path: '/gebruikers', icon: FaPeopleGroup, label: 'Gebruikers' },
         { path: '/druppels', icon: FaCogs, label: 'Druppels' },
-        { path: '/personen', icon: FaPerson, label: 'Personen' },
     ];
 
     const activeIndex = navItems.findIndex(item => item.path === location.pathname);
@@ -56,7 +57,7 @@ const SideBar: React.FC<SideBarProps> = ({ isLoggedIn, setIsLoggedIn }) => {
     return (
         <div className="z-20 bg-neutral-900">
             <motion.div
-                className="flex flex-col bg-neutral-950 p-4 min-h-screen border-r border-neutral-600 rounded-r-2xl items-center justify-between overflow-x-hidden text-white"
+                className="flex flex-col bg-neutral-950 p-4 h-screen border-r border-neutral-600 rounded-r-2xl items-center justify-between overflow-x-hidden text-white"
                 animate={{ width: isOpen ? 256 : 80 }}
                 transition={{ duration: 0.3 }}
             >
