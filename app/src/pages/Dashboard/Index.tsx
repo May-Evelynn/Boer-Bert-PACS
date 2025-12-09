@@ -45,7 +45,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoggedIn }) => {
   };
 
   return (
-    <div className="z-10 bg-neutral-900 min-h-screen w-full p-4 flex flex-col items-center justify-start text-white h-screen overflow-auto">
+    <div className="z-10 bg-neutral-900 min-h-screen w-full h-screen p-4 flex flex-col items-center justify-start text-white">
       <motion.div 
         className='absolute bottom-16 right-16 -z-10 blur-sm'
         initial={{ opacity: 0, scale: 0.8, translateX: -50, translateY: 10 }}

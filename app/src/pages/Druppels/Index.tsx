@@ -64,7 +64,7 @@ const Druppels: React.FC<DruppelsProps> = ({ isLoggedIn }) => {
   return (
     <>
       {isLoggedIn ? (
-        <div className="z-10 bg-neutral-900 min-h-screen w-full p-4 flex flex-col items-center justify-start text-white h-screen overflow-auto">
+        <div className="z-10 bg-neutral-900 w-full p-4 flex flex-col items-center justify-start text-white">
           <motion.div
             className='absolute bottom-16 right-16 -z-10 blur-sm'
             initial={{ opacity: 0, scale: 0.8, translateX: -50, translateY: 10 }}
@@ -88,7 +88,7 @@ const Druppels: React.FC<DruppelsProps> = ({ isLoggedIn }) => {
             initial="hidden"
             animate="visible"
           >
-            {/* Personeel */}
+            {/* Druppels */}
             <motion.div
               className="w-full mb-8"
               variants={itemVariants}
