@@ -21,3 +21,16 @@ export async function hashPassword(password) {
 export async function comparePassword(password, hash) {
     return bcrypt.compare(password, hash);
 }
+
+/**
+ *
+ * @returns {string} OTP
+ */
+export function generateOTP() {
+    let chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+';
+    let otp = '';
+    for (let i = 0; i < 6; i++) {
+        otp += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return otp;
+}
