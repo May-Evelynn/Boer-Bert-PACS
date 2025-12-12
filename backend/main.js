@@ -3,6 +3,14 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 
+app.use((err, req, res, next) => {
+    if (err && (err.type === 'entity.parse.failed' || (err instanceof SyntaxError && err.status === 400 && 'body' in err))) {
+        console.error('Invalid JSON payload received:', err.message || err);
+        return res.status(400).json({ error: 'Invalid JSON payload' });
+    }
+    next(err);
+});
+
 app.get('/', (req, res) => {
     res.status(200).json({ message: 'OK' });
 });
