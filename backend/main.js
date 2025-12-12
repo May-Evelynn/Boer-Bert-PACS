@@ -1,9 +1,16 @@
 const express = require('express');
-import { testData, createUser, sendMail } from './auth.js'
+import { testData, createUser, sendMail, loginUser } from './auth.js'
 
 const app = express();
 app.use(express.json());
 
+app.use((err, req, res, next) => {
+    if (err && (err.type === 'entity.parse.failed' || (err instanceof SyntaxError && err.status === 400 && 'body' in err))) {
+        console.error('Invalid JSON payload received:', err.message || err);
+        return res.status(400).json({ error: 'Invalid JSON payload' });
+    }
+    next(err);
+});
 
 app.get('/', (req, res) => {
     res.status(200).json({ message: 'OK' });
@@ -34,7 +41,17 @@ app.post('/admin/createUser', async (req, res) => {
 
 app.post('/auth/login', async (req, res) => {
     const { username, password } = req.body;
-    // TODO
+    
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    try {
+        const loginResult = await loginUser(username, password);
+        return res.status(200).json({ message: 'Login successful', ...loginResult });
+    } catch (err) {
+        return res.status(500).json({ error: err.message || 'Internal Server Error' });
+    }
 });
 
 // Fallback

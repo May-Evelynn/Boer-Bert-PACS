@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const fs = require('fs');
+const jwt = require('jsonwebtoken');
 const saltRounds = 15;
 
 /**
@@ -33,4 +34,19 @@ export function generateOTP() {
         otp += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return otp;
+}
+
+export async function generateToken(hashedPW) {
+    const payload = { password: hashedPW };
+    return jwt.sign(payload, process.env.SECRET, { expiresIn: '30d' });
+}
+
+export async function verifyToken(token) {
+    try {
+        const decoded = await jwt.verify(token, process.env.SECRET);
+            return { valid: true, payload: decoded };
+    } catch (error) {
+        console.error('Error verifying token:', error);
+        return { valid: false, payload: null };
+    }
 }
