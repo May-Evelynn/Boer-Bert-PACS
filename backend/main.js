@@ -9,7 +9,7 @@ app.get('/', (req, res) => {
 
 const adminRoute = require('./routes/adminRoute');
 const authRoute = require('./routes/authRoute');
-const druppelRoute = require('./routes/drupperRoute');
+const druppelRoute = require('./routes/druppelRoute');
 
 app.use('/api/admin', adminRoute);
 app.use('/api/auth', authRoute);
