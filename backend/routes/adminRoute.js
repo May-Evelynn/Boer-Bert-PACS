@@ -9,7 +9,7 @@ router.post('/create-user', async (req, res) => {
         return res.status(400).json({ error: 'Request body is empty' });
     }
 
-    const { firstName, lastName, affix, email, username, role } = req.body || {};
+    let { firstName, lastName, affix, email, username, role } = req.body || {};
     const dataArr = [firstName, lastName, affix, email, username, role];
     const dataNames = ['firstName', 'lastName', 'affix', 'email', 'username', 'role'];
 

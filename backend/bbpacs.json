@@ -14,26 +14,17 @@
     "/auth/login": {
       "post": {
         "summary": "User login",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "username",
-                  "password"
-                ],
+                "required": ["username", "password"],
                 "properties": {
-                  "username": {
-                    "type": "string"
-                  },
-                  "password": {
-                    "type": "string"
-                  }
+                  "username": { "type": "string" },
+                  "password": { "type": "string" }
                 }
               }
             }
@@ -47,15 +38,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "string"
-                    },
-                    "user": {
-                      "$ref": "#/components/schemas/User"
-                    },
-                    "token": {
-                      "type": "string"
-                    }
+                    "message": { "type": "string" },
+                    "user": { "$ref": "#/components/schemas/User" },
+                    "token": { "type": "string" }
                   }
                 }
               }
@@ -63,23 +48,11 @@
           },
           "400": {
             "description": "Missing username or password",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           },
           "500": {
             "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           }
         }
       }
@@ -87,30 +60,18 @@
     "/auth/change-password": {
       "post": {
         "summary": "Change user password",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "username",
-                  "oldPassword",
-                  "newPassword"
-                ],
+                "required": ["username", "oldPassword", "newPassword"],
                 "properties": {
-                  "username": {
-                    "type": "string"
-                  },
-                  "oldPassword": {
-                    "type": "string"
-                  },
-                  "newPassword": {
-                    "type": "string"
-                  }
+                  "username": { "type": "string" },
+                  "oldPassword": { "type": "string" },
+                  "newPassword": { "type": "string" }
                 }
               }
             }
@@ -123,34 +84,18 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  }
+                  "properties": { "message": { "type": "string" } }
                 }
               }
             }
           },
           "400": {
             "description": "Missing fields",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           },
           "500": {
             "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           }
         }
       }
@@ -158,43 +103,21 @@
     "/admin/create-user": {
       "post": {
         "summary": "Create a new user",
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "firstName",
-                  "lastName",
-                  "affix",
-                  "email",
-                  "username",
-                  "role"
-                ],
+                "required": ["firstName", "lastName", "affix", "email", "username", "role"],
                 "properties": {
-                  "firstName": {
-                    "type": "string"
-                  },
-                  "lastName": {
-                    "type": "string"
-                  },
-                  "affix": {
-                    "type": "string"
-                  },
-                  "email": {
-                    "type": "string",
-                    "format": "email"
-                  },
-                  "username": {
-                    "type": "string"
-                  },
-                  "role": {
-                    "type": "string"
-                  }
+                  "firstName": { "type": "string" },
+                  "lastName": { "type": "string" },
+                  "affix": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "username": { "type": "string" },
+                  "role": { "type": "string" }
                 }
               }
             }
@@ -208,12 +131,8 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "string"
-                    },
-                    "result": {
-                      "type": "object"
-                    }
+                    "message": { "type": "string" },
+                    "result": { "type": "object" }
                   }
                 }
               }
@@ -221,23 +140,122 @@
           },
           "400": {
             "description": "Missing fields or invalid request",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/facility/create-facility": {
+      "put": {
+        "summary": "Create a new facility",
+        "tags": ["Facility"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["facilityType", "capacity"],
+                "properties": {
+                  "facilityType": { "type": "string" },
+                  "capacity": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Facility created successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "result": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid fields",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/facility/facilities": {
+      "get": {
+        "summary": "Get all facilities",
+        "tags": ["Facility"],
+        "responses": {
+          "200": {
+            "description": "List of facilities",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "facilities": {
+                      "type": "array",
+                      "items": { "type": "object" }
+                    }
+                  }
                 }
               }
             }
           },
           "500": {
             "description": "Internal server error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/facility/delete-facility/{id}": {
+      "delete": {
+        "summary": "Delete a facility",
+        "tags": ["Facility"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Facility deleted successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "result": { "type": "object" }
+                  }
                 }
               }
             }
+          },
+          "400": {
+            "description": "Missing or invalid facility ID",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           }
         }
       }
@@ -245,34 +263,18 @@
     "/druppel/scans": {
       "post": {
         "summary": "Log a scan event",
-        "tags": [
-          "Druppel"
-        ],
+        "tags": ["Druppel"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "tag_id",
-                  "location_id",
-                  "inout"
-                ],
+                "required": ["tag_id", "location_id", "inout"],
                 "properties": {
-                  "tag_id": {
-                    "type": "integer"
-                  },
-                  "location_id": {
-                    "type": "integer"
-                  },
-                  "inout": {
-                    "type": "string",
-                    "enum": [
-                      "in",
-                      "out"
-                    ]
-                  }
+                  "tag_id": { "type": "integer" },
+                  "location_id": { "type": "integer" },
+                  "inout": { "type": "string", "enum": ["in", "out"] }
                 }
               }
             }
@@ -286,12 +288,8 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "string"
-                    },
-                    "result": {
-                      "type": "object"
-                    }
+                    "message": { "type": "string" },
+                    "result": { "type": "object" }
                   }
                 }
               }
@@ -299,31 +297,17 @@
           },
           "400": {
             "description": "Missing or invalid fields",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           },
           "500": {
             "description": "Failed to log scan",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           }
         }
       },
       "get": {
         "summary": "Get all scan logs",
-        "tags": [
-          "Druppel"
-        ],
+        "tags": ["Druppel"],
         "responses": {
           "200": {
             "description": "List of scans",
@@ -334,9 +318,7 @@
                   "properties": {
                     "scans": {
                       "type": "array",
-                      "items": {
-                        "type": "object"
-                      }
+                      "items": { "type": "object" }
                     }
                   }
                 }
@@ -345,13 +327,169 @@
           },
           "500": {
             "description": "Failed to retrieve scans",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/druppel/attach-user": {
+      "put": {
+        "summary": "Attach a user to a keyfob",
+        "tags": ["Druppel"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["userId", "keyfobId"],
+                "properties": {
+                  "userId": { "type": "integer" },
+                  "keyfobId": { "type": "integer" }
                 }
               }
             }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User attached to keyfob successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "result": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid fields",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "500": {
+            "description": "Failed to attach user to keyfob",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/druppel/detach-user": {
+      "put": {
+        "summary": "Detach a user from a keyfob",
+        "tags": ["Druppel"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["keyfobId"],
+                "properties": {
+                  "keyfobId": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User detached from keyfob successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "result": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid fields",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "500": {
+            "description": "Failed to detach user from keyfob",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/druppel/set-keyfob-key": {
+      "put": {
+        "summary": "Set a new key for a keyfob",
+        "tags": ["Druppel"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["keyfobId", "newKey"],
+                "properties": {
+                  "keyfobId": { "type": "integer" },
+                  "newKey": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Keyfob key set successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "result": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid fields",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "500": {
+            "description": "Failed to set keyfob key",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/druppel/keyfobs": {
+      "get": {
+        "summary": "Get all keyfobs",
+        "tags": ["Druppel"],
+        "responses": {
+          "200": {
+            "description": "List of keyfobs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "keyfobs": {
+                      "type": "array",
+                      "items": { "type": "object" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to retrieve keyfobs",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           }
         }
       }
@@ -362,41 +500,21 @@
       "User": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "integer"
-          },
-          "username": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string"
-          },
-          "firstName": {
-            "type": "string"
-          },
-          "lastName": {
-            "type": "string"
-          },
-          "affix": {
-            "type": "string"
-          },
-          "role": {
-            "type": "string"
-          },
-          "first_time_login": {
-            "type": "integer"
-          }
+          "id": { "type": "integer" },
+          "username": { "type": "string" },
+          "email": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "affix": { "type": "string" },
+          "role": { "type": "string" },
+          "first_time_login": { "type": "integer" }
         }
       },
       "Error": {
         "type": "object",
         "properties": {
-          "error": {
-            "type": "string"
-          },
-          "details": {
-            "type": "string"
-          }
+          "error": { "type": "string" },
+          "details": { "type": "string" }
         }
       }
     }

@@ -85,7 +85,7 @@ export async function loginUser(username, password) {
 
         const token = await generateToken(payload);
 
-        const { wachtwoord, ...userWithoutPassword } = user;
+        let { wachtwoord, ...userWithoutPassword } = user;
         return { user: userWithoutPassword, token };
     } catch (error) {
         console.error('Error logging in user:', error);

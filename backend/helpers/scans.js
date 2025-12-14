@@ -40,3 +40,68 @@ export async function getScans() {
         await pool.end();
     }
 }
+
+export async function attachUserToKeyfob(userId, keyfobId) {
+    const pool = mariadb.createPool(vpool);
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const result = await conn.query("UPDATE keyfobs SET attached_user_id = ? WHERE keyfob_id = ?", [userId, keyfobId]);
+        return result;
+    } catch (error) {
+        console.error('Error attaching user to keyfob:', error);
+        throw new Error('Error attaching user to keyfob');
+    } finally {
+        if (conn) conn.release();
+        await pool.end();
+    }
+}
+
+export async function detachUserFromKeyfob(keyfobId) {
+    const pool = mariadb.createPool(vpool);
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const result = await conn.query("UPDATE keyfobs SET attached_user_id = NULL WHERE keyfob_id = ?", [keyfobId]);
+        return result;
+    } catch (error) {
+        console.error('Error detaching user from keyfob:', error);
+        throw new Error('Error detaching user from keyfob');
+    } finally {
+        if (conn) conn.release();
+        await pool.end();
+    }
+}
+
+export async function setKeyfobKey(keyfobId, newKey) {
+    const pool = mariadb.createPool(vpool);
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const result = await conn.query("UPDATE keyfobs SET keyfob_key = ? WHERE keyfob_id = ?", [newKey, keyfobId]);
+        return result;
+    } catch (error) {
+        console.error('Error setting keyfob key:', error);
+        throw new Error('Error setting keyfob key');
+    } finally {
+        if (conn) conn.release();
+        await pool.end();
+    }
+}
+
+export async function getKeyfobs() {
+    const pool = mariadb.createPool(vpool);
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const rows = await conn.query("SELECT * FROM keyfobs WHERE kapot = 0");
+        return rows;
+    } catch (error) {
+        console.error('Error retrieving keyfobs:', error);
+        throw new Error('Error retrieving keyfobs');
+    } finally {
+        if (conn) conn.release();
+        await pool.end();
+    }
+}
+

@@ -3,7 +3,7 @@ const router = express.Router();
 const { createUser, sendMail, loginUser, changePassword } = require('../helpers/auth.js'); 
 
 router.post('/login', async (req, res) => {
-    const { username, password } = req.body;
+    let { username, password } = req.body;
     
     if (!username || !password) {
         return res.status(400).json({ error: 'Username and password are required' });
@@ -18,7 +18,7 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/change-password', async (req, res) => {
-    const { username, oldPassword, newPassword } = req.body;
+    let { username, oldPassword, newPassword } = req.body;
     
     if (!username || !oldPassword || !newPassword) {
         return res.status(400).json({ error: 'Username, old password, and new password are required' });
