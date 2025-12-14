@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { authService } from "../services/authService";
 
 interface LoginModalProps {
     isLoginModalOpen: boolean,
@@ -13,19 +14,26 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsLogge
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleClose = () => {
         setIsLoginModalOpen(false);
     };
 
-    // yes its hardcoded, yes this will change lmao
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (password === "password" && username === "bert") {
+        setIsLoading(true);
+        setMessage('');
+
+        try {
+            await authService.login({ username, password });
             setIsLoggedIn(true);
             setIsLoginModalOpen(false);
-        } else {
-            setMessage("Ongeldige inloggegevens");
+        } catch (error: any) {
+            console.error('Login error:', error);
+            setMessage(error.message || "Ongeldige inloggegevens");
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -80,8 +88,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsLogge
                             onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
-                    <button className="bg-blue-600 hover:bg-blue-700 rounded-lg p-3 font-bold mt-2 transition-colors duration-200 shadow-lg hover:shadow-xl">
-                        Log In
+                    <button 
+                        className="bg-blue-600 hover:bg-blue-700 rounded-lg p-3 font-bold mt-2 transition-colors duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? 'Bezig met inloggen...' : 'Log In'}
                     </button>
                     {message && <p className="text-red-500 mt-2">{message}</p>}
                 </form>

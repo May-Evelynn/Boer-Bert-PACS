@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { userService } from '../../../services/userService';
 
 const UserCreation: React.FC = () => {
     const [username, setUsername] = useState('');
@@ -7,15 +8,37 @@ const UserCreation: React.FC = () => {
     const [lastName, setLastName] = useState('');
     const [affix, setAffix] = useState('');
     const [role, setRole] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log({ username, firstName, lastName, affix, role });
-        setUsername('');
-        setFirstName('');
-        setLastName('');
-        setAffix('');
-        setRole('');
+        setIsSubmitting(true);
+        setMessage(null);
+
+        try {
+            await userService.createUser({
+                firstName,
+                lastName,
+                affix,
+                email,
+                username: username || createUsername(firstName, lastName),
+                role
+            });
+            
+            setMessage({ type: 'success', text: 'Gebruiker succesvol aangemaakt!' });
+            setUsername('');
+            setEmail('');
+            setFirstName('');
+            setLastName('');
+            setAffix('');
+            setRole('');
+        } catch (error: any) {
+            console.error('Error creating user:', error);
+            setMessage({ type: 'error', text: error.message || 'Er is een fout opgetreden bij het aanmaken van de gebruiker.' });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     // Gebruikersnaam maken op basis van voor- en achternaam
@@ -97,10 +120,16 @@ const UserCreation: React.FC = () => {
             </div>
             <button
                 type="submit"
-                className="w-full bg-blue-500/20 border border-blue-500/50 hover:bg-blue-500/50 transition-colors rounded-xl p-2 text-white"
+                disabled={isSubmitting}
+                className="w-full bg-blue-500/20 border border-blue-500/50 hover:bg-blue-500/50 transition-colors rounded-xl p-2 text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                Maak Gebruiker Aan
+                {isSubmitting ? 'Bezig...' : 'Maak Gebruiker Aan'}
             </button>
+            {message && (
+                <div className={`mt-4 p-3 rounded-xl ${message.type === 'success' ? 'bg-green-500/20 border border-green-500/50 text-green-400' : 'bg-red-500/20 border border-red-500/50 text-red-400'}`}>
+                    {message.text}
+                </div>
+            )}
         </form>
     );
 }
