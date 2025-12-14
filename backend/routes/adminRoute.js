@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { toSerializable } = require('../helpers/serializable.js');
 
-const { testData, createUser, sendMail } = require('../helpers/auth.js');
+const { createUser, sendMail } = require('../helpers/auth.js');
 
 router.post('/create-user', async (req, res) => {
     if (!req.body || Object.keys(req.body).length === 0) {

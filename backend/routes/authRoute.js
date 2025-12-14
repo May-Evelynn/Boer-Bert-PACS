@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { testData, createUser, sendMail, loginUser, changePassword } = require('../helpers/auth.js'); 
+const { createUser, sendMail, loginUser, changePassword } = require('../helpers/auth.js'); 
 
 router.post('/login', async (req, res) => {
     const { username, password } = req.body;

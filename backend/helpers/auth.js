@@ -42,23 +42,6 @@ export async function createUser(firstName, lastName, affix, email, username, ro
     }
 }
 
-export async function testData() {
-    const pool = mariadb.createPool(vpool);
-    let conn;
-
-    try {
-        conn = await pool.getConnection();
-        let rows = await conn.query("SELECT * FROM users");
-        return rows;
-    } catch (error) {
-        console.error('Error fetching test data:', error);
-        throw new Error('Error fetching test data');
-    } finally {
-        if (conn) conn.release();
-        await pool.end();
-    }
-}
-
 export async function sendMail(otp, toEmail) {
     const mailOptions = {
         from: process.env.SMTP_FROM,
