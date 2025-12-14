@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const toSerializable = require('../helpers/serializable.js');
+const { toSerializable } = require('../helpers/serializable.js');
 
 const { testData, createUser, sendMail } = require('../helpers/auth.js');
 
