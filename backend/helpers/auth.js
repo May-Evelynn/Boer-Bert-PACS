@@ -112,3 +112,29 @@ export async function loginUser(username, password) {
         await pool.end();
     }
 }
+
+export async function changePassword(username, oldPassword, newPassword) {
+    const pool = mariadb.createPool(vpool);
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const rows = await conn.query("SELECT * FROM users WHERE username = ?", [username]);
+        if (!rows || rows.length === 0) {
+            throw new Error('User not found');
+        }
+        const user = rows[0];
+        const isOldPasswordValid = await comparePassword(oldPassword, user.wachtwoord);
+        if (!isOldPasswordValid) {
+            throw new Error('Old password is incorrect');
+        }
+        const hashedNewPassword = await hashPassword(newPassword);
+        await conn.query("UPDATE users SET wachtwoord = ? WHERE username = ?", [hashedNewPassword, username]);
+        return { message: 'Password changed successfully' };
+    } catch (error) {
+        console.error('Error changing password:', error);
+        throw new Error('Error changing password');
+    } finally {
+        if (conn) conn.release();
+        await pool.end();
+    }
+}
