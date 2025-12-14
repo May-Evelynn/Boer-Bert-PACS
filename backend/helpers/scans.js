@@ -24,3 +24,19 @@ export async function logScan(tag_id, location_id, time, inout) {
         await pool.end();
     }
 }
+
+export async function getScans() {
+    const pool = mariadb.createPool(vpool);
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const rows = await conn.query("SELECT * FROM logs");
+        return rows;
+    } catch (error) {
+        console.error('Error retrieving scans:', error);
+        throw new Error('Error retrieving scans');
+    } finally {
+        if (conn) conn.release();
+        await pool.end();
+    }
+}

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { logScan } = require('../helpers/scans.js');
+const { logScan, getScans } = require('../helpers/scans.js');
 const { toSerializable } = require('../helpers/serializable.js');
 
 router.post('/scans', async (req, res) => {
@@ -41,7 +41,13 @@ router.post('/scans', async (req, res) => {
 });
 
 router.get('/scans', async (req, res) => {
-    // 
+    try {
+        let result = await getScans();
+        const safeResult = toSerializable(result);
+        return res.status(200).json({ scans: safeResult });
+    } catch (error) {
+        return res.status(500).json({ error: 'Failed to retrieve scans', details: error.message });
+    }
 });
 
 module.exports = router;
