@@ -1,47 +1,85 @@
 import { motion } from 'framer-motion';
-import { useState } from 'react';
-import { FaCogs } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import { FaCogs, FaSpinner, FaPlus } from 'react-icons/fa';
 
-import { User } from '../../types';
+import { User, Keyfob } from '../../types';
+import { druppelService } from '../../services/druppelService';
 
 import DruppelModal from './components/DruppelModal';
+import CreateDruppelModal from './components/CreateDruppelModal';
 
 interface DruppelsProps {
   user: User | null;
 }
 
+interface DruppelDisplay {
+  id: number;
+  druppelId: number;
+  druppelCode: string;
+  attached_user_id: number;
+  buitengebruik: boolean;
+}
+
 const Druppels: React.FC<DruppelsProps> = ({ user }) => {
-  // Dummy data voor personeel en gasten
-  const druppels = [
-    { id: 1, druppelId: 1, druppelCode: '07235', lastName: 'Papendorp', firstName: 'Jan', affix: '', role: 'Schoonmaker' },
-    { id: 2, druppelId: 2, druppelCode: '20159', lastName: 'Hendriks', firstName: 'Piet', affix: '', role: 'Schoonmaker' },
-    { id: 3, druppelId: 3, druppelCode: '20160', lastName: 'Vaker', firstName: 'Klaas', affix: '', role: 'Receptionist' },
-    { id: 4, druppelId: 4, druppelCode: '20161', lastName: 'Boer', firstName: 'Bert', affix: 'de', role: 'Eigenaar' },
-  ];
+  const [keyfobs, setKeyfobs] = useState<Keyfob[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchKeyfobs = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const data = await druppelService.getKeyfobs();
+        setKeyfobs(data);
+      } catch (err) {
+        console.error('Failed to fetch keyfobs:', err);
+        setError('Kon druppels niet laden');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchKeyfobs();
+  }, [user]);
+
+  // Transform keyfobs to display format
+  const druppels: DruppelDisplay[] = keyfobs.map((keyfob) => ({
+    id: keyfob.keyfob_id,
+    druppelId: keyfob.keyfob_id,
+    druppelCode: String(keyfob.keyfob_key).padStart(5, '0'),
+    attached_user_id: keyfob.attached_user_id || 0,
+    buitengebruik: keyfob.buitengebruik,
+  }));
 
   const [druppelsSearch, setDruppelsSearch] = useState('');
   const [isDruppelModalOpen, setIsDruppelModalOpen] = useState(false);
-  const [selectedDruppel, setSelectedDruppel] = useState<Druppel | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedDruppel, setSelectedDruppel] = useState<DruppelDisplay | null>(null);
 
-  interface Druppel {
-    id: number;
-    druppelId: number;
-    druppelCode: string;
-    lastName: string;
-    firstName: string;
-    affix: string;
-    role: string;
-  }
-
-  const toggleDruppelModal = (druppel: Druppel) => {
+  const toggleDruppelModal = (druppel: DruppelDisplay) => {
     setSelectedDruppel(druppel);
     setIsDruppelModalOpen(!isDruppelModalOpen);
   };
 
+  const refreshKeyfobs = async () => {
+    setLoading(true);
+    try {
+      const data = await druppelService.getKeyfobs();
+      setKeyfobs(data);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch keyfobs:', err);
+      setError('Kon druppels niet laden');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredDruppels = druppels.filter((druppel) =>
-    druppel.druppelCode.toLowerCase().includes(druppelsSearch.toLowerCase()) ||
-    druppel.lastName.toLowerCase().includes(druppelsSearch.toLowerCase()) ||
-    druppel.firstName.toLowerCase().includes(druppelsSearch.toLowerCase())
+    druppel.druppelCode.toLowerCase().includes(druppelsSearch.toLowerCase())
   );
 
   const containerVariants = {
@@ -98,48 +136,70 @@ const Druppels: React.FC<DruppelsProps> = ({ user }) => {
               <div className="bg-neutral-950 border border-neutral-700 p-4 rounded-3xl">
                 <div className='flex justify-between items-center mb-4'>
                   <h2 className="text-2xl">Druppels</h2>
-                  {/* Zoekbalk */}
-                  <input
-                    type="text"
-                    placeholder="Zoek druppels..."
-                    value={druppelsSearch}
-                    onChange={(e) => setDruppelsSearch(e.target.value)}
-                    className="p-2 rounded-lg bg-neutral-800 border border-neutral-600 text-white focus:outline-none focus:border-blue-500"
-                  />
+                  <div className="flex items-center gap-4">
+                    {/* Zoekbalk */}
+                    <input
+                      type="text"
+                      placeholder="Zoek druppels..."
+                      value={druppelsSearch}
+                      onChange={(e) => setDruppelsSearch(e.target.value)}
+                      className="p-2 rounded-lg bg-neutral-800 border border-neutral-600 text-white focus:outline-none focus:border-blue-500"
+                    />
+                    {/* Nieuwe druppel knop */}
+                    <button
+                      onClick={() => setIsCreateModalOpen(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-medium transition-colors"
+                    >
+                      <FaPlus />
+                      Nieuwe Druppel
+                    </button>
+                  </div>
                 </div>
                 <div className='bg-neutral-900 rounded-2xl overflow-hidden'>
-                  <table className="w-full table-auto">
-                    <thead>
-                      <tr className='bg-neutral-800/50'>
-                        <th className="text-left p-3 border-b border-neutral-700 text-neutral-400 font-medium text-sm uppercase tracking-wide">ID</th>
-                        <th className="text-left p-3 border-b border-neutral-700 text-neutral-400 font-medium text-sm uppercase tracking-wide">Druppel Code</th>
-                        <th className="text-left p-3 border-b border-neutral-700 text-neutral-400 font-medium text-sm uppercase tracking-wide">Achternaam</th>
-                        <th className="text-left p-3 border-b border-neutral-700 text-neutral-400 font-medium text-sm uppercase tracking-wide">Tussenvoegsel</th>
-                        <th className="text-left p-3 border-b border-neutral-700 text-neutral-400 font-medium text-sm uppercase tracking-wide">Voornaam</th>
-
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredDruppels.map((druppel, index) => {
-                        return (
-                          <motion.tr
-                            key={druppel.id}
-                            className="hover:bg-neutral-800/50 transition-colors hover:cursor-pointer"
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.3 + index * 0.1, duration: 0.3 }}
-                            onClick={() => toggleDruppelModal(druppel)}
-                          >
-                            <td className="p-3 border-b border-neutral-800 text-neutral-300">{druppel.druppelId}</td>
-                            <td className="p-3 border-b border-neutral-800 text-neutral-300">{druppel.druppelCode}</td>
-                            <td className="p-3 border-b border-neutral-800 text-neutral-300">{druppel.lastName}</td>
-                            <td className="p-3 border-b border-neutral-800 text-neutral-300">{druppel.affix || '-'}</td>
-                            <td className="p-3 border-b border-neutral-800 text-neutral-300">{druppel.firstName}</td>
-                          </motion.tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                  {loading ? (
+                    <div className="p-6 text-center">
+                      <FaSpinner className="mx-auto mb-4 size-12 text-neutral-500 animate-spin" />
+                      <p className="text-neutral-400">Laden...</p>
+                    </div>
+                  ) : error ? (
+                    <div className="p-6 text-center">
+                      <p className="text-red-400">{error}</p>
+                    </div>
+                  ) : filteredDruppels.length === 0 ? (
+                    <div className="p-6 text-center">
+                      <p className="text-neutral-400">Geen druppels gevonden.</p>
+                    </div>
+                  ) : (
+                    <table className="w-full table-auto">
+                      <thead>
+                        <tr className='bg-neutral-800/50'>
+                          <th className="text-left p-3 border-b border-neutral-700 text-neutral-400 font-medium text-sm uppercase tracking-wide">ID</th>
+                          <th className="text-left p-3 border-b border-neutral-700 text-neutral-400 font-medium text-sm uppercase tracking-wide">Druppel Code</th>
+                          <th className="text-left p-3 border-b border-neutral-700 text-neutral-400 font-medium text-sm uppercase tracking-wide">Gekoppelde Gebruikers ID</th>
+                          <th className="text-left p-3 border-b border-neutral-700 text-neutral-400 font-medium text-sm uppercase tracking-wide">Buitengebruik</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredDruppels.map((druppel, index) => {
+                          return (
+                            <motion.tr
+                              key={druppel.id}
+                              className="hover:bg-neutral-800/50 transition-colors hover:cursor-pointer"
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.3 + index * 0.1, duration: 0.3 }}
+                              onClick={() => toggleDruppelModal(druppel)}
+                            >
+                              <td className="p-3 border-b border-neutral-800 text-neutral-300">{druppel.druppelId}</td>
+                              <td className="p-3 border-b border-neutral-800 text-neutral-300">{druppel.druppelCode}</td>
+                              <td className="p-3 border-b border-neutral-800 text-neutral-300">{druppel.attached_user_id}</td>
+                              <td className="p-3 border-b border-neutral-800 text-neutral-300">{druppel.buitengebruik ? 'Ja' : 'Nee'}</td>
+                            </motion.tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -151,6 +211,11 @@ const Druppels: React.FC<DruppelsProps> = ({ user }) => {
               druppel={selectedDruppel!}
             />
           )}
+          <CreateDruppelModal
+            isOpen={isCreateModalOpen}
+            setIsOpen={setIsCreateModalOpen}
+            onSuccess={refreshKeyfobs}
+          />
         </div>
       ) : (
         <motion.div

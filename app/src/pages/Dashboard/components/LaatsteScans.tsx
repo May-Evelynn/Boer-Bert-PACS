@@ -1,5 +1,5 @@
 import { motion, Variants } from 'framer-motion';
-import { FaLock } from 'react-icons/fa';
+import { FaLock, FaSpinner } from 'react-icons/fa';
 
 import { User } from '../../../types';
 
@@ -14,9 +14,10 @@ interface LaatsteScansProps {
     scans: Scan[];
     variants?: Variants;
     user: User | null;
+    loading?: boolean;
 }
 
-const LaatsteScans: React.FC<LaatsteScansProps> = ({ scans, variants, user }) => {
+const LaatsteScans: React.FC<LaatsteScansProps> = ({ scans, variants, user, loading }) => {
     const getLocationColor = (location: string) => {
         const colors: Record<string, string> = {
             'Zwembad': 'bg-sky-500/20 text-sky-400 border-sky-500/30',
@@ -35,7 +36,21 @@ const LaatsteScans: React.FC<LaatsteScansProps> = ({ scans, variants, user }) =>
                 <h2 className="text-2xl font-medium">Laatste scans</h2>
             </div>
             <div className="bg-neutral-900 rounded-2xl overflow-hidden">
-                {user ? (
+                {!user ? (
+                    <div className="p-6 text-center">
+                        <FaLock className="mx-auto mb-4 size-12 text-neutral-500" />
+                        <p className="text-neutral-400">Je moet ingelogd zijn om de laatste scans te bekijken.</p>
+                    </div>
+                ) : loading ? (
+                    <div className="p-6 text-center">
+                        <FaSpinner className="mx-auto mb-4 size-12 text-neutral-500 animate-spin" />
+                        <p className="text-neutral-400">Laden...</p>
+                    </div>
+                ) : scans.length === 0 ? (
+                    <div className="p-6 text-center">
+                        <p className="text-neutral-400">Geen scans gevonden.</p>
+                    </div>
+                ) : (
                     <table className="w-full table-auto">
                         <thead>
                             <tr className="bg-neutral-800/50">
@@ -66,11 +81,6 @@ const LaatsteScans: React.FC<LaatsteScansProps> = ({ scans, variants, user }) =>
                             ))}
                         </tbody>
                     </table>
-                ) : (
-                    <div className="p-6 text-center">
-                        <FaLock className="mx-auto mb-4 size-12 text-neutral-500" />
-                        <p className="text-neutral-400">Je moet ingelogd zijn om de laatste scans te bekijken.</p>
-                    </div>
                 )}
             </div>
         </motion.div>
