@@ -3,25 +3,27 @@ import { FaPerson } from 'react-icons/fa6';
 
 import Table from '../../components/Table';
 
+import { User } from '../../types';
+
 interface PersonenProps {
-  isLoggedIn: boolean;
+  user: User | null;
 }
 
-const Personen: React.FC<PersonenProps> = ({ isLoggedIn }) => {
+const Personen: React.FC<PersonenProps> = ({ user }) => {
   // Dummy data voor gasten
   const gasten = [
-    { id: 1, lastName: 'Hendriks', firstName: 'Frank', affix: 'de', tagId: '07235' },
-    { id: 2, lastName: 'Visser', firstName: 'Bram', affix: '', tagId: '02645' },
-    { id: 3, lastName: 'Jansen', firstName: 'Ciska', affix: '', tagId: '07294' },
-    { id: 4, lastName: 'Bakker', firstName: 'Daan', affix: '', tagId: '08321' },
-    { id: 5, lastName: 'Smit', firstName: 'Eva', affix: '', tagId: '09432' },
-    { id: 6, lastName: 'Meijer', firstName: 'Fleur', affix: '', tagId: '01234' },
-    { id: 7, lastName: 'de Vries', firstName: 'Gert', affix: 'de', tagId: '04567' },
-    { id: 8, lastName: 'Mulder', firstName: 'Hanneke', affix: '', tagId: '07890' },
-    { id: 9, lastName: 'Bos', firstName: 'Iris', affix: '', tagId: '03456' },
-    { id: 10, lastName: 'Kramer', firstName: 'Jeroen', affix: '', tagId: '06789' },
-    { id: 11, lastName: 'Dekker', firstName: 'Kim', affix: '', tagId: '09876' },
-    { id: 12, lastName: 'Willems', firstName: 'Lars', affix: '', tagId: '02345' }
+    { id: 1, last_name: 'Hendriks', first_name: 'Frank', affix: 'de', tag_id: '07235' },
+    { id: 2, last_name: 'Visser', first_name: 'Bram', affix: '', tag_id: '02645' },
+    { id: 3, last_name: 'Jansen', first_name: 'Ciska', affix: '', tag_id: '07294' },
+    { id: 4, last_name: 'Bakker', first_name: 'Daan', affix: '', tag_id: '08321' },
+    { id: 5, last_name: 'Smit', first_name: 'Eva', affix: '', tag_id: '09432' },
+    { id: 6, last_name: 'Meijer', first_name: 'Fleur', affix: '', tag_id: '01234' },
+    { id: 7, last_name: 'de Vries', first_name: 'Gert', affix: 'de', tag_id: '04567' },
+    { id: 8, last_name: 'Mulder', first_name: 'Hanneke', affix: '', tag_id: '07890' },
+    { id: 9, last_name: 'Bos', first_name: 'Iris', affix: '', tag_id: '03456' },
+    { id: 10, last_name: 'Kramer', first_name: 'Jeroen', affix: '', tag_id: '06789' },
+    { id: 11, last_name: 'Dekker', first_name: 'Kim', affix: '', tag_id: '09876' },
+    { id: 12, last_name: 'Willems', first_name: 'Lars', affix: '', tag_id: '02345' }
   ];
 
   const containerVariants = {
@@ -36,7 +38,7 @@ const Personen: React.FC<PersonenProps> = ({ isLoggedIn }) => {
 
   return (
     <>
-      {isLoggedIn ? (
+      {user ? (
         <div className="z-10 bg-neutral-900 min-h-screen w-full p-4 flex flex-col items-center justify-start text-white">
           <motion.div
             className='absolute bottom-16 right-16 -z-10 blur-sm'
@@ -68,12 +70,12 @@ const Personen: React.FC<PersonenProps> = ({ isLoggedIn }) => {
                 columns: ['Achternaam', 'Voornaam', 'Tussenvoegsel', 'Tag ID'],
               }}
               data={gasten}
-              searchFilters={['lastName', 'firstName', 'tagId']}
+              searchFilters={['last_name', 'first_name', 'tag_id']}
               renderRow={(item) => [
-                item.lastName,
-                item.firstName,
+                item.last_name,
+                item.first_name,
                 item.affix || '-',
-                item.tagId,
+                item.tag_id,
               ]}
             />
           </motion.section>

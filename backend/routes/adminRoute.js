@@ -9,9 +9,9 @@ router.post('/create-user', async (req, res) => {
         return res.status(400).json({ error: 'Request body is empty' });
     }
 
-    let { firstName, lastName, affix, email, username, role } = req.body || {};
-    const dataArr = [firstName, lastName, affix, email, username, role];
-    const dataNames = ['firstName', 'lastName', 'affix', 'email', 'username', 'role'];
+    let { first_name, last_name, affix, email, username, role } = req.body || {};
+    const dataArr = [first_name, last_name, affix, email, username, role];
+    const dataNames = ['first_name', 'last_name', 'affix', 'email', 'username', 'role'];
 
     const missingFields = dataNames.filter((_, index) => dataArr[index] == null);
     if (missingFields.length > 0) {
@@ -19,7 +19,7 @@ router.post('/create-user', async (req, res) => {
     }
 
     try {
-        let result = await createUser(firstName, lastName, affix, email, username, role);
+        let result = await createUser(first_name, last_name, affix, email, username, role);
         const safeResult = toSerializable(result);
         return res.status(201).json({ message: 'User registered successfully', result: safeResult });
     } catch (err) {

@@ -9,12 +9,12 @@ var vpool = {
         port: process.env.DB_PORT,
 }
 
-export async function createFacility(facilityType, capacity) {
+export async function createFacility(facility_type, capacity) {
     const pool = mariadb.createPool(vpool);
     let conn;
     try {
         conn = await pool.getConnection();
-        const result = await conn.query("INSERT INTO faciliteiten (faciliteit_type, capacity) VALUES (?, ?)", [facilityType, capacity]);
+        const result = await conn.query("INSERT INTO facilities (facility_type, capacity) VALUES (?, ?)", [facility_type, capacity]);
         return result;
     } catch (error) {
         console.error('Error creating facility:', error);
@@ -30,7 +30,7 @@ export async function getFacilities() {
     let conn;
     try {
         conn = await pool.getConnection();
-        const rows = await conn.query("SELECT * FROM faciliteiten WHERE active = true");
+        const rows = await conn.query("SELECT * FROM facilities WHERE active = true");
         return rows;
     } catch (error) {
         console.error('Error retrieving facilities:', error);
@@ -41,12 +41,12 @@ export async function getFacilities() {
     }
 }
 
-export async function deleteFacility(facilityId) {
+export async function deleteFacility(facility_id) {
     const pool = mariadb.createPool(vpool);
     let conn;
     try {
         conn = await pool.getConnection();
-        const result = await conn.query("UPDATE faciliteiten SET active = false WHERE faciliteiten_id = ?", [facilityId]);
+        const result = await conn.query("UPDATE faciliteiten SET active = false WHERE faciliteiten_id = ?", [facility_id]);
         return result;
     } catch (error) {
         console.error('Error deleting facility:', error);

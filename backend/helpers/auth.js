@@ -6,7 +6,7 @@ const { hashPassword, comparePassword, generateOTP, generateToken, verifyToken }
 var transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
-    secure: false   ,
+    secure: false,
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
@@ -21,7 +21,7 @@ var vpool = {
         port: process.env.DB_PORT,
 }
 
-export async function createUser(firstName, lastName, affix, email, username, role) {
+export async function createUser(first_name, last_name, affix, email, username, role) {
     const pool = mariadb.createPool(vpool);
     let conn;
 
@@ -30,7 +30,7 @@ export async function createUser(firstName, lastName, affix, email, username, ro
         const otp = generateOTP();
         // console.log('Generated OTP:', otp);
         const hashedPassword = await hashPassword(otp);
-        const result = await conn.query("INSERT INTO users (voornaam, achternaam, tussenvoegsel, rol, email, username, wachtwoord) VALUES (?, ?, ?, ?, ?, ?, ?)", [firstName, lastName, affix, role, email, username, hashedPassword]);
+        const result = await conn.query("INSERT INTO users (first_name, last_name, affix, role, email, username, password) VALUES (?, ?, ?, ?, ?, ?, ?)", [first_name, last_name, affix, role, email, username, hashedPassword]);
 
         // await sendMail(otp); TODOOOO
         return result;
@@ -71,7 +71,7 @@ export async function loginUser(username, password) {
         }
 
         const user = rows[0];
-        const isPasswordValid = await comparePassword(password, user.wachtwoord);
+        const isPasswordValid = await comparePassword(password, user.password);
         if (!isPasswordValid) {
             throw new Error('Invalid password');
         }
@@ -79,7 +79,7 @@ export async function loginUser(username, password) {
         const payload = {
             id: user.id || user.ID || user.user_id || null,
             username: user.username,
-            role: user.rol,
+            role: user.role,
             email: user.email
         };
 
@@ -106,12 +106,12 @@ export async function changePassword(username, oldPassword, newPassword) {
             throw new Error('User not found');
         }
         const user = rows[0];
-        const isOldPasswordValid = await comparePassword(oldPassword, user.wachtwoord);
+        const isOldPasswordValid = await comparePassword(oldPassword, user.password);
         if (!isOldPasswordValid) {
             throw new Error('Old password is incorrect');
         }
         const hashedNewPassword = await hashPassword(newPassword);
-        await conn.query("UPDATE users SET wachtwoord = ? WHERE username = ?", [hashedNewPassword, username]);
+        await conn.query("UPDATE users SET password = ? WHERE username = ?", [hashedNewPassword, username]);
         return { message: 'Password changed successfully' };
     } catch (error) {
         console.error('Error changing password:', error);

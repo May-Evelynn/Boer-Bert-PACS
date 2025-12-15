@@ -7,8 +7,8 @@ interface UserEditModalProps {
     gebruiker: {
         id: number;
         username: string;
-        lastName: string;
-        firstName: string;
+        last_name: string;
+        first_name: string;
         affix: string;
         role: string;
     };
@@ -43,8 +43,8 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ setIsUserEditModalOpen, g
                 </button>
                 <div className="space-y-2">
                     <p><strong>Gebruikersnaam:</strong> {gebruiker.username}</p>
-                    <p><strong>Voornaam:</strong> {gebruiker.firstName}</p>
-                    <p><strong>Achternaam:</strong> {gebruiker.lastName}</p>
+                    <p><strong>Voornaam:</strong> {gebruiker.first_name}</p>
+                    <p><strong>Achternaam:</strong> {gebruiker.last_name}</p>
                     {gebruiker.affix && <p><strong>Tussenvoegsel:</strong> {gebruiker.affix}</p>}
                     <p><strong>Rol:</strong> {gebruiker.role}</p>
                 </div>

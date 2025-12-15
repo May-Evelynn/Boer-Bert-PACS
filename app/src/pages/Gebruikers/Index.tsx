@@ -7,24 +7,26 @@ import UserEditModal from './components/UserEditModal';
 
 import Table from '../../components/Table';
 
+import { User } from '../../types';
+
 interface GebruikersProps {
-    isLoggedIn: boolean;
+    user: User | null;
 }
 
-const Gebruikers: React.FC<GebruikersProps> = ({ isLoggedIn }) => {
+const Gebruikers: React.FC<GebruikersProps> = ({ user }) => {
     const [isUserEditModalOpen, setIsUserEditModalOpen] = useState(false);
     const [selectedGebruiker, setSelectedGebruiker] = useState<any>(null);
 
     // Dummy data voor personeel en gasten
     const gebruikers = [
-        { id: 1, username: 'jpapendorp', lastName: 'Papendorp', firstName: 'Jan', affix: '', role: 'Schoonmaker' },
-        { id: 2, username: 'phendriks', lastName: 'Hendriks', firstName: 'Piet', affix: '', role: 'Schoonmaker' },
-        { id: 3, username: 'kvaker', lastName: 'Vaker', firstName: 'Klaas', affix: '', role: 'Receptionist' },
-        { id: 4, username: 'bdeboer', lastName: 'Boer', firstName: 'Bert', affix: 'de', role: 'Eigenaar' },
-        { id: 5, username: 'ajansen', lastName: 'Jansen', firstName: 'Anna', affix: '', role: 'Manager' },
-        { id: 6, username: 'esmit', lastName: 'Smit', firstName: 'Eva', affix: '', role: 'Schoonmaker' },
-        { id: 7, username: 'tmeijer', lastName: 'Meijer', firstName: 'Tom', affix: '', role: 'Receptionist' },
-        { id: 8, username: 'ldekker', lastName: 'Dekker', firstName: 'Lisa', affix: '', role: 'Manager' },
+        { id: 1, username: 'j.papendorp', last_name: 'Papendorp', first_name: 'Jan', affix: '', role: 'Schoonmaker' },
+        { id: 2, username: 'p.hendriks', last_name: 'Hendriks', first_name: 'Piet', affix: '', role: 'Schoonmaker' },
+        { id: 3, username: 'k.vaker', last_name: 'Vaker', first_name: 'Klaas', affix: '', role: 'Receptionist' },
+        { id: 4, username: 'b.deboer', last_name: 'Boer', first_name: 'Bert', affix: 'de', role: 'Eigenaar' },
+        { id: 5, username: 'a.jansen', last_name: 'Jansen', first_name: 'Anna', affix: '', role: 'Manager' },
+        { id: 6, username: 'e.smit', last_name: 'Smit', first_name: 'Eva', affix: '', role: 'Schoonmaker' },
+        { id: 7, username: 't.meijer', last_name: 'Meijer', first_name: 'Tom', affix: '', role: 'Receptionist' },
+        { id: 8, username: 'l.dekker', last_name: 'Dekker', first_name: 'Lisa', affix: '', role: 'Manager' },
     ];
 
 
@@ -45,7 +47,7 @@ const Gebruikers: React.FC<GebruikersProps> = ({ isLoggedIn }) => {
 
     return (
         <>
-            {isLoggedIn ? (
+            {user ? (
                 <div className="z-10 bg-neutral-900 min-h-screen w-full p-4 flex flex-col items-center justify-start text-white">
                     <motion.div
                         className='absolute bottom-16 right-16 -z-10 blur-sm'
