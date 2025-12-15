@@ -1,0 +1,13 @@
+bin/
+chronoBuild/
+CMakeFiles/
+Datasets/
+obj/
+Z-Test/
+Boer Bert.cbp
+Boer Bert.depend
+Boer Bert.layout
+CMakeCache.txt
+cmake_install.cmake 
+CMakeLists.txt 
+Makefile
