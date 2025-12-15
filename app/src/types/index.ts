@@ -2,20 +2,21 @@ export interface User {
   id: number;
   username: string;
   email: string;
-  voornaam?: string;
-  achternaam?: string;
-  tussenvoegsel?: string;
-  rol: string;
-  firstName?: string;
-  lastName?: string;
-  affix?: string;
-  role?: string;
+  first_name: string;
+  last_name?: string;
+  affix: string;
+  role: string;
+  is_first_login: number;
 }
 
 export interface AuthResponse {
   message: string;
   token: string;
   user: User;
+}
+
+export interface ChangePasswordResponse {
+  message: string;
 }
 
 export interface LoginCredentials {
@@ -32,7 +33,7 @@ export interface RegisterCredentials {
 export interface Scan {
   id: number;
   keyfob_id: number;
-  faciliteit_id: number;
+  facility_id: number;
   timestamp: number;
   in_out: 'in' | 'out';
   location?: string;
@@ -62,15 +63,15 @@ export interface Keyfob {
 }
 
 export interface Facility {
-  faciliteiten_id: number;
-  faciliteit_type: string;
+  facility_id: number;
+  facility_type: string;
   capacity: number;
   active: boolean;
 }
 
 export interface CreateUserData {
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   affix: string;
   email: string;
   username: string;
