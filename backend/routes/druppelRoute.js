@@ -148,7 +148,7 @@ router.put('/init-keyfob', async (req, res) => {
         let result = await initNewKeyfob(keyfob_key);
         return res.status(200).json({ keyfob: keyfob_key + ' successfully created' });
     } catch (error) {
-        return res.status(500).json({ error: 'Failed to retrieve keyfobs', details: error.message });
+        return res.status(500).json({ error: 'Failed to initialize keyfob', details: error.message });
     }
 });
 
