@@ -1,5 +1,5 @@
 import api from './api';
-import { AuthResponse, LoginCredentials, User } from '../types';
+import { AuthResponse, ChangePasswordResponse, LoginCredentials, User } from '../types';
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
@@ -29,5 +29,14 @@ export const authService = {
 
   isAuthenticated(): boolean {
     return !!localStorage.getItem('token');
+  },
+
+  async changePassword(username: string, oldPassword: string, newPassword: string): Promise<ChangePasswordResponse> {
+    const response = await api.post('/auth/change-password', {
+      username,
+      oldPassword,
+      newPassword
+    });
+    return response.data;
   }
 };
