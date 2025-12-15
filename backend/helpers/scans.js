@@ -94,7 +94,7 @@ export async function getKeyfobs() {
     let conn;
     try {
         conn = await pool.getConnection();
-        const rows = await conn.query("SELECT * FROM keyfobs WHERE kapot = 0");
+        const rows = await conn.query("SELECT * FROM keyfobs WHERE buitengebruik = 0");
         return rows;
     } catch (error) {
         console.error('Error retrieving keyfobs:', error);

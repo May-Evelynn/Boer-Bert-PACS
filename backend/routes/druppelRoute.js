@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { logScan, getScans, attachUserToKeyfob, detachUserFromKeyfob, setKeyfobKey, initNewKeyfob } = require('../helpers/scans.js');
+const { logScan, getScans, attachUserToKeyfob, detachUserFromKeyfob, getKeyfobs, setKeyfobKey, initNewKeyfob } = require('../helpers/scans.js');
 const { toSerializable } = require('../helpers/serializable.js');
 
 router.post('/scans', async (req, res) => {
