@@ -105,3 +105,19 @@ export async function getKeyfobs() {
     }
 }
 
+// initialize new keyfob before linking to individual person
+export async function initNewKeyfob(keyfob_key) {
+    const pool = mariadb.createPool(vpool);
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const result = await conn.query("INSERT INTO keyfobs (keyfob_key) VALUES (?)", keyfob_key);
+        return result;
+    } catch (error) {
+        console.error('Error initializing keyfob: ', error)
+        throw new Error('Error initializing keyfob')
+    } finally {
+        if (conn) {conn.release();}
+        await pool.end();
+    }
+}

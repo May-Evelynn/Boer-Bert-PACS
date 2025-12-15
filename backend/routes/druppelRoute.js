@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { logScan, getScans, attachUserToKeyfob, detachUserFromKeyfob, setKeyfobKey } = require('../helpers/scans.js');
+const { logScan, getScans, attachUserToKeyfob, detachUserFromKeyfob, setKeyfobKey, initNewKeyfob } = require('../helpers/scans.js');
 const { toSerializable } = require('../helpers/serializable.js');
 
 router.post('/scans', async (req, res) => {
@@ -133,6 +133,20 @@ router.get('/keyfobs', async (req, res) => {
         let result = await getKeyfobs();
         const safeResult = toSerializable(result);
         return res.status(200).json({ keyfobs: safeResult });
+    } catch (error) {
+        return res.status(500).json({ error: 'Failed to retrieve keyfobs', details: error.message });
+    }
+});
+
+router.put('/init-keyfob', async (req, res) => {
+    try {
+        if (!req.body || Object.keys(req.body).length === 0) {
+            return res.status(400).json({ error: 'Request body is empty' });
+        }
+
+        let { keyfob_key } = req.body || {};        
+        let result = await initNewKeyfob(keyfob_key);
+        return res.status(200).json({ keyfob: keyfob_key + ' successfully created' });
     } catch (error) {
         return res.status(500).json({ error: 'Failed to retrieve keyfobs', details: error.message });
     }
