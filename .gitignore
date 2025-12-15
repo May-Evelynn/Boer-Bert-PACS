@@ -1,9 +1,9 @@
-AI/Boer Bert/bin/
-AI/Boer Bert/chronoBuild/
-AI/Boer Bert/CMakeFiles/
-AI/Boer Bert/Datasets/
-AI/Boer Bert/obj/
-AI/Boer Bert/Z-Test/
+AI/Boer Bert/bin/*
+AI/Boer Bert/chronoBuild/*
+AI/Boer Bert/CMakeFiles/*
+AI/Boer Bert/Datasets/*
+AI/Boer Bert/obj/*
+AI/Boer Bert/Z-Test/*
 AI/Boer Bert/Boer Bert.cbp
 AI/Boer Bert/Boer Bert.depend
 AI/Boer Bert/Boer Bert.layout
@@ -11,3 +11,4 @@ AI/Boer Bert/CMakeCache.txt
 AI/Boer Bert/cmake_install.cmake 
 AI/Boer Bert/CMakeLists.txt 
 AI/Boer Bert/Makefile
+app/node_modules/
