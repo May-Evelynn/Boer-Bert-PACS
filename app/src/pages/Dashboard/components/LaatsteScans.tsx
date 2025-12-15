@@ -1,6 +1,8 @@
 import { motion, Variants } from 'framer-motion';
 import { FaLock } from 'react-icons/fa';
 
+import { User } from '../../../types';
+
 interface Scan {
     id: number;
     location: string;
@@ -11,10 +13,10 @@ interface Scan {
 interface LaatsteScansProps {
     scans: Scan[];
     variants?: Variants;
-    isLoggedIn: boolean;
+    user: User | null;
 }
 
-const LaatsteScans: React.FC<LaatsteScansProps> = ({ scans, variants, isLoggedIn }) => {
+const LaatsteScans: React.FC<LaatsteScansProps> = ({ scans, variants, user }) => {
     const getLocationColor = (location: string) => {
         const colors: Record<string, string> = {
             'Zwembad': 'bg-sky-500/20 text-sky-400 border-sky-500/30',
@@ -33,7 +35,7 @@ const LaatsteScans: React.FC<LaatsteScansProps> = ({ scans, variants, isLoggedIn
                 <h2 className="text-2xl font-medium">Laatste scans</h2>
             </div>
             <div className="bg-neutral-900 rounded-2xl overflow-hidden">
-                {isLoggedIn ? (
+                {user ? (
                     <table className="w-full table-auto">
                         <thead>
                             <tr className="bg-neutral-800/50">

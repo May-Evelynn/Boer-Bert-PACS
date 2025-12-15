@@ -4,11 +4,13 @@ import LaatsteScans from './components/LaatsteScans';
 import Weer from './components/Weer';
 import Wasruimte from './components/Wasruimte';
 
+import { User } from '../../types';
+
 interface DashboardProps {
-    isLoggedIn: boolean;
+    user: User | null;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ isLoggedIn }) => {
+const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 
   const scans = [
     { id: 1, location: 'Zwembad', time: '12:30 PM', tagId: '07235' },
@@ -69,12 +71,11 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoggedIn }) => {
         initial="hidden"
         animate="visible"
       >
-        <LaatsteScans scans={scans} variants={itemVariants} isLoggedIn={isLoggedIn} />
+        <LaatsteScans scans={scans} variants={itemVariants} user={user} />
 
         <Weer variants={itemVariants} />
 
-        <Wasruimte wasruimte={wasruimte} variants={itemVariants} isLoggedIn={isLoggedIn} />
-
+        <Wasruimte wasruimte={wasruimte} variants={itemVariants} user={user} />
       </motion.section>
     </div>
   );

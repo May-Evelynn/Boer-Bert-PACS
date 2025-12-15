@@ -1,6 +1,8 @@
 import { motion, Variants } from 'framer-motion';
 import { FaLock } from 'react-icons/fa';
 
+import { User } from '../../../types';
+
 interface Machine {
     id: number;
     machine: string;
@@ -12,10 +14,10 @@ interface Machine {
 interface WasruimteProps {
     wasruimte: Machine[];
     variants?: Variants;
-    isLoggedIn: boolean;
+    user: User | null;
 }
 
-const Wasruimte: React.FC<WasruimteProps> = ({ wasruimte, variants, isLoggedIn }) => {
+const Wasruimte: React.FC<WasruimteProps> = ({ wasruimte, variants, user }) => {
     const occupiedMachines = wasruimte.filter(m => m.status === 'Bezet');
     const occupancyRatio = occupiedMachines.length / wasruimte.length;
 
@@ -34,7 +36,7 @@ const Wasruimte: React.FC<WasruimteProps> = ({ wasruimte, variants, isLoggedIn }
                 <div className="flex items-center gap-2">
                     <h2 className="text-2xl font-medium">Wasruimte</h2>
                 </div>
-                {isLoggedIn && (
+                {user && (
                     <motion.span
                         className={`text-sm font-medium px-3 py-1.5 rounded-full border ${getOccupancyColor()}`}
                         initial={{ scale: 0 }}
@@ -47,7 +49,7 @@ const Wasruimte: React.FC<WasruimteProps> = ({ wasruimte, variants, isLoggedIn }
             </div>
 
             <div className="bg-neutral-900 rounded-2xl p-3">
-                {isLoggedIn ? (
+                {user ? (
                     <>
                         {occupiedMachines.length > 0 ? (
                             <div className="space-y-2">

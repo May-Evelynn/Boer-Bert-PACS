@@ -8,17 +8,21 @@ import { BsFillGrid1X2Fill } from "react-icons/bs";
 import { FaPeopleGroup, FaPerson } from "react-icons/fa6";
 
 import LoginModal from './LoginModal'
+import PasswordModal from "./PasswordModal";
+
+import { User } from '../types';
 
 interface SideBarProps {
-    isLoggedIn: boolean;
-    setIsLoggedIn: (loggedIn: boolean) => void;
+    user: User | null;
+    setUser: (user: User | null) => void;
 }
 
-const SideBar: React.FC<SideBarProps> = ({ isLoggedIn, setIsLoggedIn }) => {
+const SideBar: React.FC<SideBarProps> = ({ user, setUser }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const [isOpen, setIsOpen] = useState(true);
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
     useEffect(() => {
         let storedValue = localStorage.getItem('sidebarOpen')
@@ -35,13 +39,15 @@ const SideBar: React.FC<SideBarProps> = ({ isLoggedIn, setIsLoggedIn }) => {
 
     function toggleLoginModal() {
         setIsLoginModalOpen(!isLoginModalOpen)
-
         console.log(isLoginModalOpen)
     }
 
     const handleLogout = () => {
-        console.log("Logging out")
-        setIsLoggedIn(false)
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('tempPasswordChange');
+        setUser(null);
+        navigate('/');
     }
 
     const navItems = [
@@ -109,7 +115,7 @@ const SideBar: React.FC<SideBarProps> = ({ isLoggedIn, setIsLoggedIn }) => {
                     </div>
                 </div>
                 <div className="flex flex-col w-full space-y-4 items-center justify-center">
-                    {isLoggedIn ? (
+                    {user ? (
                         <button
                             className={`btn-sidebar flex w-full space-x-2 p-2 items-center overflow-x-hidden bg-red-600/20 border border-red-600/50 hover:bg-red-600/50 transition-colors rounded-xl text-nowrap ${!isOpen && 'justify-center'}`}
                             onClick={handleLogout}
@@ -148,7 +154,17 @@ const SideBar: React.FC<SideBarProps> = ({ isLoggedIn, setIsLoggedIn }) => {
                     <LoginModal
                         isLoginModalOpen={isLoginModalOpen}
                         setIsLoginModalOpen={setIsLoginModalOpen}
-                        setIsLoggedIn={setIsLoggedIn}
+                        setIsPasswordModalOpen={setIsPasswordModalOpen}
+                        user={user}
+                        setUser={setUser}
+                    />
+                }
+                {isPasswordModalOpen &&
+                    <PasswordModal
+                        isPasswordModalOpen={isPasswordModalOpen}
+                        setIsPasswordModalOpen={setIsPasswordModalOpen}
+                        user={user}
+                        setUser={setUser}
                     />
                 }
             </motion.div>

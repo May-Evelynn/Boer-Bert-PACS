@@ -2,13 +2,15 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { FaCogs } from 'react-icons/fa';
 
+import { User } from '../../types';
+
 import DruppelModal from './components/DruppelModal';
 
 interface DruppelsProps {
-  isLoggedIn: boolean;
+  user: User | null;
 }
 
-const Druppels: React.FC<DruppelsProps> = ({ isLoggedIn }) => {
+const Druppels: React.FC<DruppelsProps> = ({ user }) => {
   // Dummy data voor personeel en gasten
   const druppels = [
     { id: 1, druppelId: 1, druppelCode: '07235', lastName: 'Papendorp', firstName: 'Jan', affix: '', role: 'Schoonmaker' },
@@ -63,7 +65,7 @@ const Druppels: React.FC<DruppelsProps> = ({ isLoggedIn }) => {
 
   return (
     <>
-      {isLoggedIn ? (
+      {user ? (
         <div className="z-10 bg-neutral-900 w-full p-4 flex flex-col items-center justify-start text-white">
           <motion.div
             className='absolute bottom-16 right-16 -z-10 blur-sm'
