@@ -1,21 +1,37 @@
 const express = require('express');
-import { testData } from './auth.js'
+const cors = require('cors');
 
 const app = express();
 app.use(express.json());
+
+app.use((err, req, res, next) => {
+    if (err && (err.type === 'entity.parse.failed' || (err instanceof SyntaxError && err.status === 400 && 'body' in err))) {
+        console.error('Invalid JSON payload received:', err.message || err);
+        return res.status(400).json({ error: 'Invalid JSON payload' });
+    }
+    next(err);
+});
+
+// best wel lenient, later dichtzetten
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
 app.get('/', (req, res) => {
     res.status(200).json({ message: 'OK' });
 });
 
-app.get('/test', async (req, res) => {
-    try {
-        const data = await testData();
-        return res.status(200).json(data);
-    } catch (err) {
-        return res.status(500).json({ error: err.message || 'Internal Server Error' });
-    }
-});
+const adminRoute = require('./routes/adminRoute');
+const authRoute = require('./routes/authRoute');
+const druppelRoute = require('./routes/druppelRoute');
+const facilityRoute = require('./routes/facilityRoute');
+
+app.use('/api/admin', adminRoute);
+app.use('/api/auth', authRoute);
+app.use('/api/druppel', druppelRoute);
+app.use('/api/facility', facilityRoute);
 
 // Fallback
 app.use((req, res) => {
@@ -23,7 +39,7 @@ app.use((req, res) => {
 });
 
 const port = process.env.PORT;
+
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
 });
-

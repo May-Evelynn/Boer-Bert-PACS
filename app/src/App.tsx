@@ -1,50 +1,49 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
+import { useEffect, useState } from 'react';
+import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
+import SideBar from './components/SideBar'
+
+import Home from './pages/Home'
+import Dashboard from './pages/Dashboard/Index';
+import Druppels from './pages/Druppels/Index';
+import Gasten from './pages/Gasten/Index';
+import Gebruikers from './pages/Gebruikers/Index';
+
+import { User } from './types';
+
 import "./App.css";
+import "./CustomScrollbar.css"
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const [user, setUser] = useState<User | null>(null);
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  useEffect(() => {
+    // Controleer of de gebruiker is ingelogd (bijv. door een token in localStorage te controleren)
+    const token = localStorage.getItem('token');
+    if (token) {
+      // (Later) Check of token geldig is
+      const userObj = localStorage.getItem('user');
+      if (userObj) {
+        setUser(JSON.parse(userObj));
+      }
+    }
+  }, []);
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
 
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <Router>
+      <div className='select-none flex overflow-hidden h-screen w-screen'>
+        <SideBar user={user} setUser={setUser} />
+        <div className='flex w-full h-full overflow-auto custom-scrollbar'>
+          <Routes>
+            <Route path="/" element={<Home user={user} />} />
+            <Route path="/dashboard" element={<Dashboard user={user} />} />
+            <Route path="/druppels" element={<Druppels user={user} />} />
+            <Route path="/gasten" element={<Gasten user={user} />} />
+            <Route path='/gebruikers' element={<Gebruikers user={user} />} />
+          </Routes>
+        </div>
       </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+    </Router >
   );
 }
 

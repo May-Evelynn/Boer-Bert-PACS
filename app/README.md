@@ -1,7 +1,15 @@
-# Tauri + React + Typescript
+# Tauri frontend
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+## Run dev environment
+Make sure you have Rust installed on your computer before running the app
+```bash
+npm install
+npm run tauri dev
+```
 
-## Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+## Build production product
+```bash
+npm install
+npm run tauri build
+```
+This builds the application for the host's system architechture.

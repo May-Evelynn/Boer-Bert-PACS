@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "app",
+  "productName": "Boer DashBert",
   "version": "0.1.0",
   "identifier": "com.insomniacs.app",
   "build": {
@@ -12,9 +12,10 @@
   "app": {
     "windows": [
       {
-        "title": "app",
+        "title": "Boer DashBert",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "theme": "Dark"
       }
     ],
     "security": {
