@@ -16,8 +16,8 @@
     #include "esp_netif.h"
 
     // Wifi/API variables
-    #define WIFI_SSID "Hamburger"
-    #define WIFI_PASS "minediamonds"
+    #define WIFI_SSID "Gurbe"
+    #define WIFI_PASS "Pepper#1325@"
     #define BACKEND_URL "http://192.168.250.242:3000/api/druppel/init-keyfob"
 
     // Pin definitions
@@ -321,27 +321,55 @@
     }
 
     // Read UID (simplified for testing)
-    bool rc522_read_uid(uint8_t *uid) {
-        // Send ANTICOLL command
+    bool rc522_read_uid(uint8_t *uid_out) {
+        uint8_t irq;
+        uint8_t fifo_level;
+
+        // Clear IRQs and FIFO
+        rc522_write(ComIrqReg, 0x7F);
+        rc522_write(FIFOLevelReg, 0x80);
+
+        // ANTICOLLISION CL1
         rc522_write(BitFramingReg, 0x00);
         rc522_write(FIFODataReg, 0x93);
         rc522_write(FIFODataReg, 0x20);
+
         rc522_write(CommandReg, PCD_TRANSCEIVE);
-        
-        vTaskDelay(pdMS_TO_TICKS(25));
-        
-        // Read UID
-        uint8_t length = rc522_read(FIFOLevelReg);
-        if (length >= 4) {
-            for (int i = 0; i < length; i++) {
-                uid[i] = rc522_read(FIFODataReg);
-            }
-            rc522_write(CommandReg, PCD_IDLE);
-            return true;
+        rc522_write(BitFramingReg, 0x80);
+
+        // Wait for RX or timeout
+        for (int i = 0; i < 100; i++) {
+            irq = rc522_read(ComIrqReg);
+            if (irq & 0x20) break; // RxIRq
+            if (irq & 0x01) return false; // Timer
+            vTaskDelay(pdMS_TO_TICKS(1));
         }
-        
+
         rc522_write(CommandReg, PCD_IDLE);
-        return false;
+
+        // Error check
+        if (rc522_read(ErrorReg) & 0x13) {
+            return false;
+        }
+
+        fifo_level = rc522_read(FIFOLevelReg);
+        if (fifo_level < 5) {
+            return false;
+        }
+
+        // Read UID (4 bytes)
+        uint8_t bcc = 0;
+        for (int i = 0; i < 4; i++) {
+            uid_out[i] = rc522_read(FIFODataReg);
+            bcc ^= uid_out[i];
+        }
+
+        uint8_t received_bcc = rc522_read(FIFODataReg);
+        if (bcc != received_bcc) {
+            return false;
+        }
+
+        return true;
     }
 
     // Function to send HTTP POST request to backend
@@ -521,17 +549,17 @@
                 uint8_t uid[10] = {0};
                 if (rc522_read_uid(uid)) {
                     // Convert UID to hex string
-                    char uid_hex[20] = {0};
-                    
-                    for (int i = 1; i <= 4; i++) {
-                        char temp[3];
-                        snprintf(temp, sizeof(temp), "%02X", uid[i]);
-                        strcat(uid_hex, temp);
-                        if (i < 4) strcat(uid_hex, ":");
+                    char uid_hex[32] = {0};
+
+                    for (int i = 0; i < 4; i++) {
+                        char tmp[4];
+                        snprintf(tmp, sizeof(tmp), "%02X", uid[i]);
+                        strcat(uid_hex, tmp);
+                        if (i < 3) strcat(uid_hex, ":");
                     }
-                    
+
                     printf("[UID] %s\n", uid_hex);
-                    
+
                     // Check if this is a new UID or enough time has passed
                     uint32_t current_time = esp_timer_get_time() / 1000;
                     if (strcmp(uid_hex, last_uid) != 0 || (current_time - last_scan_time) > 5000) {
