@@ -17,7 +17,7 @@
 
 #define WIFI_SSID "Gurbe"
 #define WIFI_PASS "Pepper#1325@"
-#define BACKEND_URL "http://192.168.1.100:3000/api/druppel/scans"  // Use your laptop's IP, not localhost
+#define BACKEND_URL "http://192.168.1.100:3000/api/fobs/init-keyfob/"  // Use your laptop's IP, not localhost
 
 // Pin definitions
 #define PIN_NUM_MISO 19
