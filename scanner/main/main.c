@@ -16,8 +16,8 @@
     #include "esp_netif.h"
 
     // Wifi/API variables
-    #define WIFI_SSID "Gurbe"
-    #define WIFI_PASS "Pepper#1325@"
+    #define WIFI_SSID "Hamburger"
+    #define WIFI_PASS "minediamonds"
     #define BACKEND_URL "http://192.168.250.242:3000/api/druppel/init-keyfob"
 
     // Pin definitions
