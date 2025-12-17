@@ -1,3 +1,9 @@
 # Boer-Bert-PACS
 
-Physical Access Control System
+### Made by Insomniacs
+
+- May-Evelynn N.
+- Frank W.
+- Lilith van der P.
+- Violet U.
+- Thian G.
