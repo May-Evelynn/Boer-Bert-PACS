@@ -29,21 +29,39 @@ const Gebruikers: React.FC<GebruikersProps> = ({ user }) => {
         { id: 8, username: 'l.dekker', last_name: 'Dekker', first_name: 'Lisa', affix: '', role: 'Manager' },
     ];
 
-
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
             transition: {
-                staggerChildren: 0.1
+                staggerChildren: 0.05
             }
         }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: { duration: 0.4, ease: "easeOut" as const }
+        }
+    };
+
+    const getRoleColor = (role: string) => {
+        const colors: Record<string, string> = {
+            'Eigenaar': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+            'Manager': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+            'Receptionist': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+            'Schoonmaker': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+        };
+        return colors[role] || 'bg-neutral-600/20 text-neutral-400 border-neutral-500/30';
     };
 
     const toggleUserEditModal = (gebruiker: any) => {
         setSelectedGebruiker(gebruiker);
         setIsUserEditModalOpen(true);
-    }
+    };
 
     return (
         <>
@@ -80,19 +98,19 @@ const Gebruikers: React.FC<GebruikersProps> = ({ user }) => {
                                 columns: ['Gebruikersnaam', 'Rol'],
                             }}
                             data={gebruikers}
-                            searchFilters={['username']}
+                            searchFilters={['username', 'role']}
                             renderRow={(item) => [
                                 item.username,
-                                item.role,
+                                <span className={`px-2 py-1 rounded-lg border text-sm font-medium ${getRoleColor(item.role)}`}>
+                                    {item.role}
+                                </span>,
                             ]}
                             clickableRows={true}
-                            clickFunction={(item) => {
-                                toggleUserEditModal(item);
-                            }}
+                            clickFunction={toggleUserEditModal}
+                            emptyMessage="Geen gebruikers gevonden."
+                            variants={itemVariants}
                         />
                     </motion.section>
-
-
                 </div>
             ) : (
                 <motion.div
