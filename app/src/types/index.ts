@@ -1,22 +1,26 @@
 export interface User {
-  id: string;
+  id: number;
   username: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
-  affix?: string;
-  role: 'admin' | 'user' | 'guest';
-  createdAt: string;
-  updatedAt: string;
+  first_name: string;
+  last_name?: string;
+  affix: string;
+  role: string;
+  is_first_login: number;
 }
 
 export interface AuthResponse {
+  message: string;
   token: string;
   user: User;
 }
 
+export interface ChangePasswordResponse {
+  message: string;
+}
+
 export interface LoginCredentials {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -27,12 +31,14 @@ export interface RegisterCredentials {
 }
 
 export interface Scan {
-  id: string;
-  userId?: string;
-  guestId?: string;
-  timestamp: string;
-  location: string;
-  status: 'success' | 'failed';
+  id: number;
+  keyfob_id: number;
+  facility_id: number;
+  timestamp: number;
+  in_out: 'in' | 'out';
+  location?: string;
+  time?: string;
+  tagId?: string;
 }
 
 export interface Guest {
@@ -43,12 +49,34 @@ export interface Guest {
   createdAt: string;
 }
 
-export interface Druppel {
-  id: string;
-  code: string;
-  userId?: string;
-  isActive: boolean;
-  lastUsed?: string;
+export interface Keyfob {
+  keyfob_id: number;
+  keyfob_key: number;
+  attached_user_id?: number;
+  buitengebruik: boolean;
+  druppelId?: number;
+  druppelCode?: string;
+  firstName?: string;
+  lastName?: string;
+  affix?: string;
+  role?: string;
+}
+
+export interface Facility {
+  facilities_id: number;
+  facility_type: string;
+  capacity: number;
+  broken: boolean;
+  active: boolean;
+}
+
+export interface CreateUserData {
+  first_name: string;
+  last_name: string;
+  affix: string;
+  email: string;
+  username: string;
+  role: string;
 }
 
 export interface ApiError {
@@ -63,4 +91,16 @@ export interface PaginatedResponse<T> {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+export interface ScansResponse {
+  scans: Scan[];
+}
+
+export interface KeyfobsResponse {
+  keyfobs: Keyfob[];
+}
+
+export interface FacilitiesResponse {
+  facilities: Facility[];
 }

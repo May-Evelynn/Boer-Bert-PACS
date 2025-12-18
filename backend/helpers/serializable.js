@@ -1,4 +1,4 @@
-function toSerializable(value) {
+export function toSerializable(value) {
     if (value === null || value === undefined) return value;
     if (typeof value === 'bigint') {
         const num = Number(value);
@@ -12,5 +12,3 @@ function toSerializable(value) {
     }
     return value;
 }
-
-export default toSerializable;

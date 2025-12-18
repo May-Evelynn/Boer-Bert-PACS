@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import SideBar from './components/SideBar'
 
@@ -8,25 +8,38 @@ import Druppels from './pages/Druppels/Index';
 import Gasten from './pages/Gasten/Index';
 import Gebruikers from './pages/Gebruikers/Index';
 
+import { User } from './types';
+
 import "./App.css";
 import "./CustomScrollbar.css"
 
 function App() {
+  const [user, setUser] = useState<User | null>(null);
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(() => {
+    // Controleer of de gebruiker is ingelogd (bijv. door een token in localStorage te controleren)
+    const token = localStorage.getItem('token');
+    if (token) {
+      // (Later) Check of token geldig is
+      const userObj = localStorage.getItem('user');
+      if (userObj) {
+        setUser(JSON.parse(userObj));
+      }
+    }
+  }, []);
 
   return (
 
     <Router>
       <div className='select-none flex overflow-hidden h-screen w-screen'>
-        <SideBar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+        <SideBar user={user} setUser={setUser} />
         <div className='flex w-full h-full overflow-auto custom-scrollbar'>
           <Routes>
-            <Route path="/" element={<Home isLoggedIn={isLoggedIn} />} />
-            <Route path="/dashboard" element={<Dashboard isLoggedIn={isLoggedIn} />} />
-            <Route path="/druppels" element={<Druppels isLoggedIn={isLoggedIn} />} />
-            <Route path="/gasten" element={<Gasten isLoggedIn={isLoggedIn} />} />
-            <Route path='/gebruikers' element={<Gebruikers isLoggedIn={isLoggedIn} />} />
+            <Route path="/" element={<Home user={user} />} />
+            <Route path="/dashboard" element={<Dashboard user={user} />} />
+            <Route path="/druppels" element={<Druppels user={user} />} />
+            <Route path="/gasten" element={<Gasten user={user} />} />
+            <Route path='/gebruikers' element={<Gebruikers user={user} />} />
           </Routes>
         </div>
       </div>

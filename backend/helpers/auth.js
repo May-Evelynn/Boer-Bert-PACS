@@ -6,7 +6,7 @@ const { hashPassword, comparePassword, generateOTP, generateToken, verifyToken }
 var transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
-    secure: false   ,
+    secure: false,
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
@@ -21,7 +21,7 @@ var vpool = {
         port: process.env.DB_PORT,
 }
 
-export async function createUser(firstName, lastName, affix, email, username, role) {
+export async function createUser(first_name, last_name, affix, email, username, role) {
     const pool = mariadb.createPool(vpool);
     let conn;
 
@@ -30,7 +30,7 @@ export async function createUser(firstName, lastName, affix, email, username, ro
         const otp = generateOTP();
         // console.log('Generated OTP:', otp);
         const hashedPassword = await hashPassword(otp);
-        const result = await conn.query("INSERT INTO users (voornaam, achternaam, tussenvoegsel, rol, email, username, wachtwoord) VALUES (?, ?, ?, ?, ?, ?, ?)", [firstName, lastName, affix, role, email, username, hashedPassword]);
+        const result = await conn.query("INSERT INTO users (first_name, last_name, affix, role, email, username, password) VALUES (?, ?, ?, ?, ?, ?, ?)", [first_name, last_name, affix, role, email, username, hashedPassword]);
 
         // await sendMail(otp); TODOOOO
         return result;
@@ -39,23 +39,6 @@ export async function createUser(firstName, lastName, affix, email, username, ro
         throw new Error('Error creating user');
     } finally {
         if (conn) conn.release();
-    }
-}
-
-export async function testData() {
-    const pool = mariadb.createPool(vpool);
-    let conn;
-
-    try {
-        conn = await pool.getConnection();
-        let rows = await conn.query("SELECT * FROM users");
-        return rows;
-    } catch (error) {
-        console.error('Error fetching test data:', error);
-        throw new Error('Error fetching test data');
-    } finally {
-        if (conn) conn.release();
-        await pool.end();
     }
 }
 
@@ -88,7 +71,7 @@ export async function loginUser(username, password) {
         }
 
         const user = rows[0];
-        const isPasswordValid = await comparePassword(password, user.wachtwoord);
+        const isPasswordValid = await comparePassword(password, user.password);
         if (!isPasswordValid) {
             throw new Error('Invalid password');
         }
@@ -96,17 +79,43 @@ export async function loginUser(username, password) {
         const payload = {
             id: user.id || user.ID || user.user_id || null,
             username: user.username,
-            role: user.rol,
+            role: user.role,
             email: user.email
         };
 
         const token = await generateToken(payload);
 
-        const { wachtwoord, ...userWithoutPassword } = user;
+        let { wachtwoord, ...userWithoutPassword } = user;
         return { user: userWithoutPassword, token };
     } catch (error) {
         console.error('Error logging in user:', error);
         throw new Error('Error logging in user');
+    } finally {
+        if (conn) conn.release();
+        await pool.end();
+    }
+}
+
+export async function changePassword(username, oldPassword, newPassword) {
+    const pool = mariadb.createPool(vpool);
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const rows = await conn.query("SELECT * FROM users WHERE username = ?", [username]);
+        if (!rows || rows.length === 0) {
+            throw new Error('Gebruiker niet gevonden');
+        }
+        const user = rows[0];
+        const isOldPasswordValid = await comparePassword(oldPassword, user.password);
+        if (!isOldPasswordValid) {
+            throw new Error('Oud wachtwoord is onjuist');
+        }
+        const hashedNewPassword = await hashPassword(newPassword);
+        await conn.query("UPDATE users SET password = ?, is_first_login = 0 WHERE username = ?", [hashedNewPassword, username]);
+        return { message: 'Wachtwoord succesvol gewijzigd' };
+    } catch (error) {
+        console.error('Error changing password:', error);
+        throw new Error('Er is een fout opgetreden bij het wijzigen van het wachtwoord');
     } finally {
         if (conn) conn.release();
         await pool.end();

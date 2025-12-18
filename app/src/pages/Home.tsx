@@ -1,11 +1,14 @@
 import { motion } from "framer-motion";
 import { SiTauri } from "react-icons/si";
+import { FaHome } from "react-icons/fa";
+
+import { User } from '../types';
 
 interface HomeProps {
-  isLoggedIn: boolean;
+  user: User | null;
 }
 
-const Home: React.FC<HomeProps> = ({ isLoggedIn }) => {
+const Home: React.FC<HomeProps> = ({ user }) => {
 
   return (
     <div className="z-10 bg-neutral-900 min-h-screen w-full p-4 flex flex-col items-center justify-start text-white">
@@ -23,11 +26,11 @@ const Home: React.FC<HomeProps> = ({ isLoggedIn }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <SiTauri className="w-8 h-8 text-emerald-400" />
-        <h1 className="text-4xl font-semibold">Welkom Terug!</h1>
+        <FaHome className="w-8 h-8 text-emerald-400" />
+        <h1 className="text-4xl font-semibold">Home</h1>
       </motion.div>
-      {isLoggedIn ? (
-        <p>Je bent ingelogd, ga naar het dashboard om te beginnen</p>
+      {user ? (
+        <p>Welkom terug, {user.first_name}!</p>
       ) : (
         <p>Log in om te beginnen</p>
       )}

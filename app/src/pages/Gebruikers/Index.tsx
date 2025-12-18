@@ -7,45 +7,65 @@ import UserEditModal from './components/UserEditModal';
 
 import Table from '../../components/Table';
 
+import { User } from '../../types';
+
 interface GebruikersProps {
-    isLoggedIn: boolean;
+    user: User | null;
 }
 
-const Gebruikers: React.FC<GebruikersProps> = ({ isLoggedIn }) => {
+const Gebruikers: React.FC<GebruikersProps> = ({ user }) => {
     const [isUserEditModalOpen, setIsUserEditModalOpen] = useState(false);
     const [selectedGebruiker, setSelectedGebruiker] = useState<any>(null);
 
     // Dummy data voor personeel en gasten
     const gebruikers = [
-        { id: 1, username: 'jpapendorp', lastName: 'Papendorp', firstName: 'Jan', affix: '', role: 'Schoonmaker' },
-        { id: 2, username: 'phendriks', lastName: 'Hendriks', firstName: 'Piet', affix: '', role: 'Schoonmaker' },
-        { id: 3, username: 'kvaker', lastName: 'Vaker', firstName: 'Klaas', affix: '', role: 'Receptionist' },
-        { id: 4, username: 'bdeboer', lastName: 'Boer', firstName: 'Bert', affix: 'de', role: 'Eigenaar' },
-        { id: 5, username: 'ajansen', lastName: 'Jansen', firstName: 'Anna', affix: '', role: 'Manager' },
-        { id: 6, username: 'esmit', lastName: 'Smit', firstName: 'Eva', affix: '', role: 'Schoonmaker' },
-        { id: 7, username: 'tmeijer', lastName: 'Meijer', firstName: 'Tom', affix: '', role: 'Receptionist' },
-        { id: 8, username: 'ldekker', lastName: 'Dekker', firstName: 'Lisa', affix: '', role: 'Manager' },
+        { id: 1, username: 'j.papendorp', last_name: 'Papendorp', first_name: 'Jan', affix: '', role: 'Schoonmaker' },
+        { id: 2, username: 'p.hendriks', last_name: 'Hendriks', first_name: 'Piet', affix: '', role: 'Schoonmaker' },
+        { id: 3, username: 'k.vaker', last_name: 'Vaker', first_name: 'Klaas', affix: '', role: 'Receptionist' },
+        { id: 4, username: 'b.deboer', last_name: 'Boer', first_name: 'Bert', affix: 'de', role: 'Eigenaar' },
+        { id: 5, username: 'a.jansen', last_name: 'Jansen', first_name: 'Anna', affix: '', role: 'Manager' },
+        { id: 6, username: 'e.smit', last_name: 'Smit', first_name: 'Eva', affix: '', role: 'Schoonmaker' },
+        { id: 7, username: 't.meijer', last_name: 'Meijer', first_name: 'Tom', affix: '', role: 'Receptionist' },
+        { id: 8, username: 'l.dekker', last_name: 'Dekker', first_name: 'Lisa', affix: '', role: 'Manager' },
     ];
-
 
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
             transition: {
-                staggerChildren: 0.1
+                staggerChildren: 0.05
             }
         }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: { duration: 0.4, ease: "easeOut" as const }
+        }
+    };
+
+    const getRoleColor = (role: string) => {
+        const colors: Record<string, string> = {
+            'Eigenaar': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+            'Manager': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+            'Receptionist': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+            'Schoonmaker': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+        };
+        return colors[role] || 'bg-neutral-600/20 text-neutral-400 border-neutral-500/30';
     };
 
     const toggleUserEditModal = (gebruiker: any) => {
         setSelectedGebruiker(gebruiker);
         setIsUserEditModalOpen(true);
-    }
+    };
 
     return (
         <>
-            {isLoggedIn ? (
+            {user ? (
                 <div className="z-10 bg-neutral-900 min-h-screen w-full p-4 flex flex-col items-center justify-start text-white">
                     <motion.div
                         className='absolute bottom-16 right-16 -z-10 blur-sm'
@@ -78,19 +98,19 @@ const Gebruikers: React.FC<GebruikersProps> = ({ isLoggedIn }) => {
                                 columns: ['Gebruikersnaam', 'Rol'],
                             }}
                             data={gebruikers}
-                            searchFilters={['username']}
+                            searchFilters={['username', 'role']}
                             renderRow={(item) => [
                                 item.username,
-                                item.role,
+                                <span className={`px-2 py-1 rounded-lg border text-sm font-medium ${getRoleColor(item.role)}`}>
+                                    {item.role}
+                                </span>,
                             ]}
                             clickableRows={true}
-                            clickFunction={(item) => {
-                                toggleUserEditModal(item);
-                            }}
+                            clickFunction={toggleUserEditModal}
+                            emptyMessage="Geen gebruikers gevonden."
+                            variants={itemVariants}
                         />
                     </motion.section>
-
-
                 </div>
             ) : (
                 <motion.div

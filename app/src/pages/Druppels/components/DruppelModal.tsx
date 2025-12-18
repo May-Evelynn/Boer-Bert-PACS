@@ -8,10 +8,12 @@ interface DruppelModalProps {
         id: number;
         druppelId: number;
         druppelCode: string;
-        lastName: string;
-        firstName:  string;
-        affix: string;
-        role: string;
+        attached_user_id: number;
+        buitengebruik: boolean;
+        firstName?: string;
+        lastName?: string;
+        affix?: string;
+        role?: string;
     };
 }
 
@@ -44,8 +46,7 @@ const DruppelModal: React.FC<DruppelModalProps> = ({ setIsDruppelModalOpen, drup
                 </button>
                 <div>
                     <p><strong>Druppel ID:</strong> {druppel.druppelId}</p>
-                    <p><strong>Gebruiker:</strong> {druppel.firstName} {druppel.affix} {druppel.lastName}</p>
-                    <p><strong>Rol:</strong> {druppel.role}</p>
+                    <p><strong>Gebruiker:</strong> {druppel.attached_user_id}</p>
                 </div>
             </motion.div>
         </motion.div>

@@ -1,31 +1,55 @@
 import { useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { authService } from "../services/authService";
+
+import { User } from '../types';
 
 interface LoginModalProps {
     isLoginModalOpen: boolean,
     setIsLoginModalOpen: (show: boolean) => void;
-    setIsLoggedIn: (loggedIn: boolean) => void;
+    setIsPasswordModalOpen: (show: boolean) => void;
+    user: User | null;
+    setUser: (user: User | null) => void;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsLoggedIn }) => {
+const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPasswordModalOpen, setUser }) => {
 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [isFirstLogin, setIsFirstLogin] = useState(false);
+    const [tempUserData, setTempUserData] = useState<{ user: User; password: string } | null>(null);
+
 
     const handleClose = () => {
         setIsLoginModalOpen(false);
     };
 
-    // yes its hardcoded, yes this will change lmao
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (password === "password" && username === "bert") {
-            setIsLoggedIn(true);
+        setIsLoading(true);
+        setMessage('');
+
+        try {
+            const data = await authService.login({ username, password });
+            if (data.user.is_first_login === 1) {
+                setMessage("Dit is de eerste keer dat u inlogt. Wijzig alstublieft uw wachtwoord.");
+                setIsFirstLogin(true);
+                // Store user data and password for the password change flow
+                setTempUserData({ user: data.user, password });
+                setIsLoading(false);
+                return;
+            }
+            // Update user state for normal login
+            setUser(data.user);
             setIsLoginModalOpen(false);
-        } else {
-            setMessage("Ongeldige inloggegevens");
+        } catch (error: any) {
+            console.error('Login error:', error);
+            setMessage(error.message || "Ongeldige inloggegevens");
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -80,9 +104,23 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsLogge
                             onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
-                    <button className="bg-blue-600 hover:bg-blue-700 rounded-lg p-3 font-bold mt-2 transition-colors duration-200 shadow-lg hover:shadow-xl">
-                        Log In
+                    <button
+                        className="bg-blue-600 hover:bg-blue-700 rounded-lg p-3 font-bold mt-2 transition-colors duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? 'Bezig met inloggen...' : 'Log In'}
                     </button>
+                    {isFirstLogin && tempUserData &&
+                        <button className="bg-orange-400 hover:bg-orange-500 rounded-lg p-3 font-bold mt-2 transition-colors duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed" onClick={() => {
+                            // Store temp data for PasswordModal
+                            localStorage.setItem('tempPasswordChange', JSON.stringify(tempUserData));
+                            setUser(tempUserData.user);
+                            setIsLoginModalOpen(false);
+                            setIsPasswordModalOpen(true);
+                        }}>
+                            Wijzig wachtwoord
+                        </button>
+                    }
                     {message && <p className="text-red-500 mt-2">{message}</p>}
                 </form>
             </motion.div>

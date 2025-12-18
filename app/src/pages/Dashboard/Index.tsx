@@ -1,36 +1,63 @@
 import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import { BsFillGrid1X2Fill } from "react-icons/bs";
 import LaatsteScans from './components/LaatsteScans';
 import Weer from './components/Weer';
-import Wasruimte from './components/Wasruimte';
+import Faciliteiten from './components/Faciliteiten';
+import { scanService } from '../../services/scanService';
+import { facilityService } from '../../services/facilityService';
+
+import { User, Scan, Facility } from '../../types';
 
 interface DashboardProps {
-    isLoggedIn: boolean;
+    user: User | null;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ isLoggedIn }) => {
+const Dashboard: React.FC<DashboardProps> = ({ user }) => {
+  const [scans, setScans] = useState<Scan[]>([]);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const scans = [
-    { id: 1, location: 'Zwembad', time: '12:30 PM', tagId: '07235' },
-    { id: 2, location: 'Sauna', time: '12:15 PM', tagId: '02645' },
-    { id: 3, location: 'Vlindertuin', time: '11:00 AM', tagId: '07294' },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const [scansData, facilitiesData] = await Promise.all([
+          scanService.getScans(),
+          facilityService.getFacilities()
+        ]);
+        setScans(scansData);
+        setFacilities(facilitiesData);
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const wasruimte = [
-    { id: 1, machine: 'Wasmachine 1', status: 'Bezet', tagId: '07235', timeRemaining: '15:11' },
-    { id: 2, machine: 'Wasmachine 2', status: 'Vrij', tagId: '', timeRemaining: '' },
-    { id: 3, machine: 'Wasmachine 3', status: 'Vrij', tagId: '', timeRemaining: '' },
-    { id: 4, machine: 'Droger 1', status: 'Vrij', tagId: '', timeRemaining: '' },
-    { id: 5, machine: 'Droger 2', status: 'Bezet', tagId: '07294', timeRemaining: '32:03' },
-    { id: 6, machine: 'Droger 3', status: 'Vrij', tagId: '', timeRemaining: '' },
-  ]
+    fetchData();
+  }, [user]);
+
+  // Transform scans data for display
+  const displayScans = scans.slice(0, 10).map((scan) => {
+    const facility = facilities.find(f => f.facilities_id === scan.facility_id);
+    return {
+      id: scan.id,
+      location: facility?.facility_type || `Facility ${scan.facility_id}`,
+      time: new Date(scan.timestamp).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
+      tagId: String(scan.keyfob_id).padStart(5, '0')
+    };
+  });
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
+        staggerChildren: 0.05
       }
     }
   };
@@ -69,12 +96,11 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoggedIn }) => {
         initial="hidden"
         animate="visible"
       >
-        <LaatsteScans scans={scans} variants={itemVariants} isLoggedIn={isLoggedIn} />
+        <LaatsteScans scans={displayScans} variants={itemVariants} user={user} loading={loading} />
 
         <Weer variants={itemVariants} />
 
-        <Wasruimte wasruimte={wasruimte} variants={itemVariants} isLoggedIn={isLoggedIn} />
-
+        <Faciliteiten facilities={facilities} variants={itemVariants} user={user} loading={loading} />
       </motion.section>
     </div>
   );
