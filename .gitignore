@@ -15,6 +15,7 @@ AI/Boer Bert/Makefile
 
 # Modules
 app/node_modules
+backend/node_modules
 
 # Tauri generated directories
 app/src-tauri/target/
