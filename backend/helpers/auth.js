@@ -103,19 +103,19 @@ export async function changePassword(username, oldPassword, newPassword) {
         conn = await pool.getConnection();
         const rows = await conn.query("SELECT * FROM users WHERE username = ?", [username]);
         if (!rows || rows.length === 0) {
-            throw new Error('User not found');
+            throw new Error('Gebruiker niet gevonden');
         }
         const user = rows[0];
         const isOldPasswordValid = await comparePassword(oldPassword, user.password);
         if (!isOldPasswordValid) {
-            throw new Error('Old password is incorrect');
+            throw new Error('Oud wachtwoord is onjuist');
         }
         const hashedNewPassword = await hashPassword(newPassword);
-        await conn.query("UPDATE users SET password = ? WHERE username = ?", [hashedNewPassword, username]);
-        return { message: 'Password changed successfully' };
+        await conn.query("UPDATE users SET password = ?, is_first_login = 0 WHERE username = ?", [hashedNewPassword, username]);
+        return { message: 'Wachtwoord succesvol gewijzigd' };
     } catch (error) {
         console.error('Error changing password:', error);
-        throw new Error('Error changing password');
+        throw new Error('Er is een fout opgetreden bij het wijzigen van het wachtwoord');
     } finally {
         if (conn) conn.release();
         await pool.end();
