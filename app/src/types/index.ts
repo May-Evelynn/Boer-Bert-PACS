@@ -70,6 +70,24 @@ export interface Facility {
   active: boolean;
 }
 
+export interface WeatherData {
+  current: {
+    time: string;
+    interval: number;
+    temperature_2m: number;
+    apparent_temperature: number;
+    precipitation: number;
+    snowfall: number;
+    showers: number;
+    rain: number;
+    cloud_cover: number;
+    wind_speed_10m: number;
+    wind_direction_10m: number;
+    wind_gusts_10m: number;
+    is_day: number;
+  };
+}
+
 export interface CreateUserData {
   first_name: string;
   last_name: string;
