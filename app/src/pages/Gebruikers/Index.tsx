@@ -99,6 +99,9 @@ const Gebruikers: React.FC<GebruikersProps> = ({ user }) => {
                             }}
                             data={gebruikers}
                             searchFilters={['username', 'role']}
+                            columnFilters={[
+                                { column: 'role', label: 'Rol' }
+                            ]}
                             renderRow={(item) => [
                                 item.username,
                                 <span className={`px-2 py-1 rounded-lg border text-sm font-medium ${getRoleColor(item.role)}`}>

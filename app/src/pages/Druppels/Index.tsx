@@ -131,6 +131,14 @@ const Druppels: React.FC<DruppelsProps> = ({ user }) => {
               }}
               data={druppels}
               searchFilters={['druppelCode']}
+              columnFilters={[
+                {
+                  column: 'buitengebruik',
+                  label: 'Buiten Gebruik',
+                  options: ['Ja', 'Nee'],
+                  valueFormatter: (value) => value ? 'Ja' : 'Nee'
+                }
+              ]}
               renderRow={(druppel) => [
                 druppel.druppelId,
                 druppel.druppelCode,
