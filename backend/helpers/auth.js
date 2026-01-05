@@ -121,3 +121,27 @@ export async function changePassword(username, oldPassword, newPassword) {
         await pool.end();
     }
 }
+
+export async function OTPintoResetPassword(username) {
+    const pool = mariadb.createPool(vpool);
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const rows = await conn.query("SELECT * FROM users WHERE username = ?", [username]);
+        if (!rows || rows.length === 0) {
+            throw new Error('User not found');
+        }
+        const user = rows[0];
+        const otp = generateOTP();
+        const hashedOTP = await hashPassword(otp);
+        await conn.query("UPDATE users SET password = ? WHERE username = ?", [hashedOTP, username]);
+        await sendMail(otp, user.email);
+        return { message: 'OTP sent to email' };
+    } catch (error) {
+        console.error('Error resetting password with OTP:', error);
+        throw new Error('Error resetting password with OTP');
+    } finally {
+        if (conn) conn.release();
+        await pool.end();
+    }
+}
