@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
-const saltRounds = 15;
+const saltRounds = 2;
 
 /**
  * 

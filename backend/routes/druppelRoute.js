@@ -34,7 +34,7 @@ router.post('/scans', async (req, res) => {
     try {
         let result = await logScan(tag_id, location_id, time, inout);
         const safeResult = toSerializable(result);
-        return res.status(201).json({ message: 'Scan logged successfully', result: safeResult });
+        return res.status(201).json({ result: safeResult });
     } catch (error) {
         return res.status(500).json({ error: 'Failed to log scan', details: error.message });
     }
