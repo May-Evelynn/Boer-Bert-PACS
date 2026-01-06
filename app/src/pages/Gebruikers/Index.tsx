@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaPeopleGroup } from 'react-icons/fa6';
 
@@ -7,6 +7,7 @@ import UserEditModal from './components/UserEditModal';
 
 import Table from '../../components/Table';
 
+import { userService } from '../../services/userService';
 import { User } from '../../types';
 
 interface GebruikersProps {
@@ -15,19 +16,27 @@ interface GebruikersProps {
 
 const Gebruikers: React.FC<GebruikersProps> = ({ user }) => {
     const [isUserEditModalOpen, setIsUserEditModalOpen] = useState(false);
-    const [selectedGebruiker, setSelectedGebruiker] = useState<any>(null);
+    const [selectedGebruiker, setSelectedGebruiker] = useState<User | null>(null);
+    const [gebruikers, setGebruikers] = useState<User[]>([]);
 
-    // Dummy data voor personeel en gasten
-    const gebruikers = [
-        { id: 1, username: 'j.papendorp', last_name: 'Papendorp', first_name: 'Jan', affix: '', role: 'Schoonmaker' },
-        { id: 2, username: 'p.hendriks', last_name: 'Hendriks', first_name: 'Piet', affix: '', role: 'Schoonmaker' },
-        { id: 3, username: 'k.vaker', last_name: 'Vaker', first_name: 'Klaas', affix: '', role: 'Receptionist' },
-        { id: 4, username: 'b.deboer', last_name: 'Boer', first_name: 'Bert', affix: 'de', role: 'Eigenaar' },
-        { id: 5, username: 'a.jansen', last_name: 'Jansen', first_name: 'Anna', affix: '', role: 'Manager' },
-        { id: 6, username: 'e.smit', last_name: 'Smit', first_name: 'Eva', affix: '', role: 'Schoonmaker' },
-        { id: 7, username: 't.meijer', last_name: 'Meijer', first_name: 'Tom', affix: '', role: 'Receptionist' },
-        { id: 8, username: 'l.dekker', last_name: 'Dekker', first_name: 'Lisa', affix: '', role: 'Manager' },
-    ];
+    const fetchUsers = async () => {
+        try {
+            const data = await userService.getUsers();
+            setGebruikers(data);
+        } catch (error) {
+            console.error("Error fetching users:", error);
+        }
+    };
+
+    useEffect(() => {
+        if (user) {
+            fetchUsers();
+        }
+    }, [user]);
+
+    const handleUserUpdate = () => {
+        fetchUsers();
+    };
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -131,6 +140,7 @@ const Gebruikers: React.FC<GebruikersProps> = ({ user }) => {
                     isUserEditModalOpen={isUserEditModalOpen}
                     setIsUserEditModalOpen={setIsUserEditModalOpen}
                     gebruiker={selectedGebruiker}
+                    onUserUpdated={handleUserUpdate}
                 />
             )}
         </>
