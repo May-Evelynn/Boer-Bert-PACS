@@ -27,11 +27,13 @@ const adminRoute = require('./routes/adminRoute');
 const authRoute = require('./routes/authRoute');
 const druppelRoute = require('./routes/druppelRoute');
 const facilityRoute = require('./routes/facilityRoute');
+const usersRoute = require('./routes/usersRoute');
 
 app.use('/api/admin', adminRoute);
 app.use('/api/auth', authRoute);
 app.use('/api/druppel', druppelRoute);
 app.use('/api/facility', facilityRoute);
+app.use('/api/users', usersRoute);
 
 // Fallback
 app.use((req, res) => {
