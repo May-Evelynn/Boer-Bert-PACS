@@ -1,6 +1,6 @@
 import { useState, ReactNode, useMemo } from "react";
 import { motion, Variants, AnimatePresence } from "framer-motion";
-import { FaSpinner, FaLock, FaTimes } from "react-icons/fa";
+import { FaSpinner, FaLock, FaTimes, FaSortUp, FaSortDown, FaSort } from "react-icons/fa";
 import FilterDropdown from "./FilterDropdown";
 
 interface ColumnFilter<T> {
@@ -8,6 +8,11 @@ interface ColumnFilter<T> {
     label: string;
     options?: string[];
     valueFormatter?: (value: unknown) => string;
+}
+
+interface SortConfig {
+    columnIndex: number;
+    direction: 'asc' | 'desc';
 }
 
 interface TableProps<T> {
@@ -18,6 +23,8 @@ interface TableProps<T> {
     data: T[];
     searchFilters?: (keyof T)[];
     columnFilters?: ColumnFilter<T>[];
+    sortableColumns?: number[];
+    defaultSort?: SortConfig;
     renderRow: (item: T) => ReactNode[];
     clickableRows?: boolean;
     clickFunction?: (item: T) => void;
@@ -42,6 +49,8 @@ const Table = <T extends { id: number | string }>({
     data,
     searchFilters,
     columnFilters = [],
+    sortableColumns = [],
+    defaultSort,
     renderRow,
     clickableRows,
     clickFunction,
@@ -58,6 +67,7 @@ const Table = <T extends { id: number | string }>({
 }: TableProps<T>) => {
     const [search, setSearch] = useState('');
     const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
+    const [sortConfig, setSortConfig] = useState<SortConfig | null>(defaultSort || null);
 
     // Generate filter options from data for each column filter
     const filterOptions = useMemo(() => {
@@ -127,6 +137,47 @@ const Table = <T extends { id: number | string }>({
             return true;
         });
     }, [data, search, searchFilters, columnFilters, activeFilters]);
+
+    const sortedData = useMemo(() => {
+        if (!sortConfig) return filteredData;
+
+        return [...filteredData].sort((a, b) => {
+            const rowA = renderRow(a);
+            const rowB = renderRow(b);
+
+            const valueA = rowA[sortConfig.columnIndex];
+            const valueB = rowB[sortConfig.columnIndex];
+
+            const strA = String(valueA ?? '').toLowerCase();
+            const strB = String(valueB ?? '').toLowerCase();
+
+            const numA = parseFloat(strA);
+            const numB = parseFloat(strB);
+
+            let comparison = 0;
+            if (!isNaN(numA) && !isNaN(numB)) {
+                comparison = numA - numB;
+            } else {
+                comparison = strA.localeCompare(strB);
+            }
+
+            return sortConfig.direction === 'asc' ? comparison : -comparison;
+        });
+    }, [filteredData, sortConfig, renderRow]);
+
+    const handleSort = (columnIndex: number) => {
+        if (!sortableColumns.includes(columnIndex)) return;
+
+        setSortConfig((current) => {
+            if (!current || current.columnIndex !== columnIndex) {
+                return { columnIndex, direction: 'asc' };
+            }
+            if (current.direction === 'asc') {
+                return { columnIndex, direction: 'desc' };
+            }
+            return null;
+        });
+    };
 
     const handleFilterChange = (column: string, values: string[]) => {
         setActiveFilters((prev) => ({
@@ -205,24 +256,46 @@ const Table = <T extends { id: number | string }>({
                 <table className="w-full table-auto">
                     <thead className="sticky top-0 bg-neutral-900/90 backdrop-blur-xs">
                         <tr className="bg-neutral-800/50">
-                            {table.columns.map((col, i) => (
-                                <th
-                                    key={i}
-                                    className="text-left p-3 border-b border-neutral-700 text-neutral-400 font-medium text-sm uppercase tracking-wide"
-                                >
-                                    {col}
-                                </th>
-                            ))}
+                            {table.columns.map((col, i) => {
+                                const isSortable = sortableColumns.includes(i);
+                                const isCurrentSort = sortConfig?.columnIndex === i;
+
+                                return (
+                                    <th
+                                        key={i}
+                                        className={`text-left p-3 border-b border-neutral-700 text-neutral-400 font-medium text-sm uppercase tracking-wide ${isSortable ? 'cursor-pointer hover:text-neutral-200 hover:bg-neutral-700/30 transition-colors select-none' : ''
+                                            }`}
+                                        onClick={() => isSortable && handleSort(i)}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            {col}
+                                            {isSortable && (
+                                                <span className="text-xs">
+                                                    {isCurrentSort ? (
+                                                        sortConfig.direction === 'asc' ? (
+                                                            <FaSortUp className="text-emerald-400" />
+                                                        ) : (
+                                                            <FaSortDown className="text-emerald-400" />
+                                                        )
+                                                    ) : (
+                                                        <FaSort className="text-neutral-600" />
+                                                    )}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </th>
+                                );
+                            })}
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredData.map((item, index) => (
+                        {sortedData.map((item, index) => (
                             <motion.tr
                                 key={item.id}
                                 className={`hover:bg-neutral-800/50 transition-colors ${clickableRows ? 'cursor-pointer' : ''}`}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.05 * index, duration: 0.3 }}
+                                transition={{ delay: 0.05 * Math.min(index, 10), duration: 0.3 }}
                                 onClick={() => clickableRows && clickFunction?.(item)}
                             >
                                 {renderRow(item).map((cell, i) => (

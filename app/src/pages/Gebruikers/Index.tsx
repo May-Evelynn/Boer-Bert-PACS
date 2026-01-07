@@ -108,6 +108,7 @@ const Gebruikers: React.FC<GebruikersProps> = ({ user }) => {
                             }}
                             data={gebruikers}
                             searchFilters={['username', 'role']}
+                            sortableColumns={[0, 1]}
                             columnFilters={[
                                 { column: 'role', label: 'Rol' }
                             ]}

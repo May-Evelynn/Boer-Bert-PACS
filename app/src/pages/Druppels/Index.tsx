@@ -139,6 +139,7 @@ const Druppels: React.FC<DruppelsProps> = ({ user }) => {
               }}
               data={druppels}
               searchFilters={['druppelCode']}
+              sortableColumns={[0, 1, 2]}
               columnFilters={[
                 {
                   column: 'buitengebruik',
