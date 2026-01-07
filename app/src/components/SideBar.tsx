@@ -70,7 +70,7 @@ const SideBar: React.FC<SideBarProps> = ({ user, setUser }) => {
                 <div className="flex flex-col justify-center w-full mb-10">
                     <div className="flex justify-center items-center overflow-x-hidden space-x-2 mb-4">
                         <img
-                            src="/tauri.svg"
+                            src="/logo.png"
                             alt="Boer Bert Logo"
                             className="w-8 h-8"
                         />

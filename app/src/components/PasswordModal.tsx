@@ -141,7 +141,7 @@ const PasswordModal: React.FC<PasswordModalProps> = ({ setIsPasswordModalOpen, u
             >
                 <div className="flex justify-center items-center overflow-x-hidden space-x-3 mb-8">
                     <img
-                        src="/tauri.svg"
+                        src="/logo.png"
                         alt="Boer Bert Logo"
                         className="w-10 h-10"
                     />
