@@ -121,3 +121,55 @@ export async function initNewKeyfob(keyfob_key) {
         await pool.end();
     }
 }
+
+export async function createTestLogs(amount) {
+    function randomDate(start, end, startHour, endHour) {
+        var date = new Date(+start + Math.random() * (end - start));
+        var hour = startHour + Math.random() * (endHour - startHour) | 0;
+        date.setHours(hour);
+        return date;
+    }
+    const pool = mariadb.getConnection(vpool);
+    let conn;
+    let finalQuery;
+    let fuckshit = [];
+    try {
+        conn = await pool.getConnection();
+        const allFacilities = conn.query("select * from facilities");
+
+        for (x = 0; x < allFacilities.length; x++) {
+            fuckshit.push({"out" : allFacilities[x]});
+        }
+
+        
+        console.log(fuckshit);
+
+        finalQuery = "INSERT INTO logs (keyfob_id, facility_id, timestamp, in_out) VALUES ";
+
+        randDatetime = randomDate(new Date(2023, 0, 1), new Date(2023,2,31), 6, 22);
+        // convert to epoch
+        const epochTime = Date.parse(randDatetime);
+
+
+        for (x = 0; x < amount; x++){
+            const curFacility = allFacilities[Math.random(allFacilities.length())]
+            
+            finalQuery += "(1, ${curFacility[1]}, ${epochTime}, )"
+        }
+        
+        
+        conn.query(finalQuery);
+    } catch {
+        console.error('Error inserting rows: ', error)
+        throw new Error('Error inserting rows')
+    } finally {
+        if (conn) {conn.release();}
+        await pool.end();
+    }
+}
+// get rand time within set timespan (3 montbhs?)
+// get rand facility
+// check if last time curFacility scan = in/out and flip
+// add values to finalQuery
+// continue to next iteration
+
