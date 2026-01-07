@@ -19,6 +19,10 @@ interface DruppelDisplay {
   druppelCode: string;
   attached_user_id: number;
   buitengebruik: boolean;
+  firstName?: string;
+  lastName?: string;
+  affix?: string;
+  role?: string;
 }
 
 const Druppels: React.FC<DruppelsProps> = ({ user }) => {
@@ -57,6 +61,10 @@ const Druppels: React.FC<DruppelsProps> = ({ user }) => {
     druppelCode: String(keyfob.keyfob_key).padStart(5, '0'),
     attached_user_id: keyfob.attached_user_id || 0,
     buitengebruik: keyfob.buitengebruik,
+    firstName: keyfob.firstName,
+    lastName: keyfob.lastName,
+    affix: keyfob.affix,
+    role: keyfob.role,
   }));
 
   const toggleDruppelModal = (druppel: DruppelDisplay) => {
@@ -163,6 +171,7 @@ const Druppels: React.FC<DruppelsProps> = ({ user }) => {
               isDruppelModalOpen={isDruppelModalOpen}
               setIsDruppelModalOpen={setIsDruppelModalOpen}
               druppel={selectedDruppel!}
+              onUpdate={refreshKeyfobs}
             />
           )}
           <CreateDruppelModal
