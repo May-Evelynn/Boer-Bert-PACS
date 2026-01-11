@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaTimes } from "react-icons/fa";
+import { FaTimes, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { authService } from "../services/authService";
-
 import { User } from '../types';
 
 interface TempPasswordChange {
@@ -12,22 +11,26 @@ interface TempPasswordChange {
 }
 
 interface PasswordModalProps {
-    isPasswordModalOpen: boolean,
+    isPasswordModalOpen: boolean;
     setIsPasswordModalOpen: (show: boolean) => void;
     user: User | null;
     setUser: (user: User | null) => void;
+}
+
+interface Message {
+    text: string;
+    type: 'success' | 'error';
 }
 
 const PasswordModal: React.FC<PasswordModalProps> = ({ setIsPasswordModalOpen, user, setUser }) => {
     const navigate = useNavigate();
 
     const [oldPassword, setOldPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
-    const [message, setMessage] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [message, setMessage] = useState<Message | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Load temp password data if available (from first-time login flow)
     useEffect(() => {
         const tempData = localStorage.getItem('tempPasswordChange');
         if (tempData) {
@@ -36,60 +39,92 @@ const PasswordModal: React.FC<PasswordModalProps> = ({ setIsPasswordModalOpen, u
         }
     }, []);
 
-    const handleClose = () => {
+    const clearSession = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         localStorage.removeItem('tempPasswordChange');
+    };
+
+    const handleClose = () => {
+        clearSession();
         setUser(null);
         setIsPasswordModalOpen(false);
         navigate('/');
     };
 
-    const handlePasswordChange = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setMessage('');
+    const showError = (text: string) => {
+        setMessage({ text, type: 'error' });
+    };
 
+    const showSuccess = (text: string) => {
+        setMessage({ text, type: 'success' });
+    };
+
+    const validatePasswords = (): boolean => {
         if (newPassword !== confirmPassword) {
-            setMessage("Wachtwoorden komen niet overeen.");
-            setIsLoading(false);
-            return;
+            showError("Wachtwoorden komen niet overeen.");
+            return false;
         }
 
         if (newPassword.length < 6) {
-            setMessage("Wachtwoord moet minstens 6 tekens lang zijn.");
+            showError("Wachtwoord moet minstens 6 tekens lang zijn.");
+            return false;
+        }
+
+        if (!/[A-Z]/.test(newPassword)) {
+            showError("Wachtwoord moet minstens één hoofdletter bevatten.");
+            return false;
+        }
+
+        if (newPassword === oldPassword) {
+            showError("Nieuw wachtwoord moet verschillen van het oude wachtwoord.");
+            return false;
+        }
+
+        return true;
+    };
+
+    const handlePasswordChange = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setMessage(null);
+
+        if (!validatePasswords()) {
             setIsLoading(false);
             return;
         }
 
-        if (newPassword === oldPassword) {
-            setMessage("Nieuw wachtwoord moet verschillen van het oude wachtwoord.");
+        if (!user) {
+            showError("Geen gebruiker gevonden.");
             setIsLoading(false);
             return;
         }
 
         try {
-            if (user) {
-                console.log('Changing password for user:', user.username, oldPassword, newPassword);
-                const data = await authService.changePassword(user.username || '', oldPassword, newPassword);
-                if (data) {
-                    setMessage(data.message || "Wachtwoord succesvol gewijzigd.");
-                    // Re-login with new password to get fresh token
-                    const loginData = await authService.login({ username: user?.username || '', password: newPassword });
-                    // Update user state with the new user data (is_first_login should now be 0)
-                    setUser(loginData.user);
-                }
-                // Clean up temp data
+            const data = await authService.changePassword(user.username || '', oldPassword, newPassword);
+            
+            if (data) {
+                showSuccess(data.message || "Wachtwoord succesvol gewijzigd.");
+                
+                const loginData = await authService.login({ 
+                    username: user.username || '', 
+                    password: newPassword 
+                });
+                
+                setUser(loginData.user);
                 localStorage.removeItem('tempPasswordChange');
-                setIsPasswordModalOpen(false);
+                
+                setTimeout(() => {
+                    setIsPasswordModalOpen(false);
+                }, 1000);
             }
         } catch (error: any) {
-            console.error('Login error:', error);
-            setMessage(error.message || "Ongeldige gegevemns");
+            console.error('Password change error:', error);
+            showError(error.message || "Er is een fout opgetreden bij het wijzigen van het wachtwoord.");
         } finally {
             setIsLoading(false);
         }
-    }
+    };
 
     return (
         <motion.div
@@ -153,12 +188,30 @@ const PasswordModal: React.FC<PasswordModalProps> = ({ setIsPasswordModalOpen, u
                         />
                     </div>
                     <button
+                        type="submit"
                         className="bg-blue-600 hover:bg-blue-700 rounded-lg p-3 font-bold mt-2 transition-colors duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={isLoading}
                     >
                         {isLoading ? 'Bezig met wijzigen...' : 'Wachtwoord wijzigen'}
                     </button>
-                    {message && <p className="text-red-500 mt-2">{message}</p>}
+
+                    {message && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`flex items-center gap-2 p-3 rounded-lg mt-2 ${
+                                message.type === 'success' 
+                                    ? 'bg-green-500/20 border border-green-500/50 text-green-400' 
+                                    : 'bg-red-500/20 border border-red-500/50 text-red-400'
+                            }`}
+                        >
+                            {message.type === 'success' 
+                                ? <FaCheckCircle className="w-4 h-4 shrink-0" /> 
+                                : <FaExclamationCircle className="w-4 h-4 shrink-0" />
+                            }
+                            <span className="text-sm">{message.text}</span>
+                        </motion.div>
+                    )}
                 </form>
             </motion.div>
         </motion.div>

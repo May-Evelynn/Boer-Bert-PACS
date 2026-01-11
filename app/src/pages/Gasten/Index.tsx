@@ -31,8 +31,17 @@ const Personen: React.FC<PersonenProps> = ({ user }) => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
+        staggerChildren: 0.05
       }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.4, ease: "easeOut" as const }
     }
   };
 
@@ -63,7 +72,6 @@ const Personen: React.FC<PersonenProps> = ({ user }) => {
             initial="hidden"
             animate="visible"
           >
-
             <Table
               table={{
                 title: 'Gasten',
@@ -75,8 +83,12 @@ const Personen: React.FC<PersonenProps> = ({ user }) => {
                 item.last_name,
                 item.first_name,
                 item.affix || '-',
-                item.tag_id,
+                <span className="font-mono text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">
+                  {item.tag_id}
+                </span>,
               ]}
+              emptyMessage="Geen gasten gevonden."
+              variants={itemVariants}
             />
           </motion.section>
         </div>

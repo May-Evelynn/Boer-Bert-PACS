@@ -10,12 +10,18 @@ var vpool = {
 }
 
 export async function logScan(tag_id, location_id, time, inout) {
+
     const pool = mariadb.createPool(vpool);
     let conn;
     try {
+        let allowed = await verifyAllowed(tag_id) ? 1 : 0;
         conn = await pool.getConnection();
-        const result = await conn.query("INSERT INTO logs (keyfob_id, facility_id, timestamp, in_out) VALUES (?, ?, ?, ?)", [tag_id, location_id, time, inout]);
-        return result;
+        const result = await conn.query("INSERT INTO logs (keyfob_id, facility_id, timestamp, in_out, allowed) VALUES (?, ?, ?, ?, ?)", [tag_id, location_id, time, inout, allowed]);
+        if (allowed === 1) {
+            return { message: 'Access granted', state: 1, logResult: "Scan logged with grant" };
+        } else {
+            return { message: 'Access denied', state: 0, logResult: "Scan logged with denial" };
+        }
     } catch (error) {
         console.error('Error logging scan:', error);
         throw new Error('Error logging scan');
@@ -94,7 +100,7 @@ export async function getKeyfobs() {
     let conn;
     try {
         conn = await pool.getConnection();
-        const rows = await conn.query("SELECT * FROM keyfobs WHERE kapot = 0");
+        const rows = await conn.query("SELECT * FROM keyfobs WHERE buitengebruik = 0");
         return rows;
     } catch (error) {
         console.error('Error retrieving keyfobs:', error);
@@ -105,7 +111,6 @@ export async function getKeyfobs() {
     }
 }
 
-// initialize new keyfob before linking to individual person
 export async function initNewKeyfob(keyfob_key) {
     const pool = mariadb.createPool(vpool);
     let conn;
@@ -118,6 +123,22 @@ export async function initNewKeyfob(keyfob_key) {
         throw new Error('Error initializing keyfob')
     } finally {
         if (conn) {conn.release();}
+        await pool.end();
+    }
+}
+
+async function verifyAllowed(keyfob_id) {
+    const pool = mariadb.createPool(vpool);
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const rows = await conn.query("SELECT * FROM keyfobs WHERE keyfob_id = ? AND attached_user_id IS NOT NULL AND buitengebruik = 0", [keyfob_id]);
+        return rows.length > 0;
+    } catch (error) {
+        console.error('Error verifying keyfob access:', error);
+        throw new Error('Error verifying keyfob access');
+    } finally {
+        if (conn) conn.release();
         await pool.end();
     }
 }
@@ -176,8 +197,4 @@ export async function createTestLogs(amount) {
         await pool.end();
     }
 }
-
-// get rand facility
-// add values to finalQuery
-// continue to next iteration
 

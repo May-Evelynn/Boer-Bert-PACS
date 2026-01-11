@@ -44,6 +44,7 @@ const UserCreation: React.FC = () => {
     // Gebruikersnaam maken op basis van voor- en achternaam
     // Moet nog aangepast worden om duplicates te voorkomen
     const createUsername = (first_name: string, last_name: string) => {
+        if (!first_name && !last_name) return '';
         // Verwijder spaties uit voornaam
         const sanitizedFirstName = first_name.replace(/\s+/g, '');
         const sanitizedLastName = last_name.replace(/\s+/g, '');

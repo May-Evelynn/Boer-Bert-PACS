@@ -53,7 +53,7 @@ export interface Keyfob {
   keyfob_id: number;
   keyfob_key: number;
   attached_user_id?: number;
-  kapot: boolean;
+  buitengebruik: boolean;
   druppelId?: number;
   druppelCode?: string;
   firstName?: string;
@@ -63,9 +63,10 @@ export interface Keyfob {
 }
 
 export interface Facility {
-  facility_id: number;
+  facilities_id: number;
   facility_type: string;
   capacity: number;
+  broken: boolean;
   active: boolean;
 }
 

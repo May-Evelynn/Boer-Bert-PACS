@@ -1,18 +1,19 @@
 import api from './api';
-import { Scan, PaginatedResponse } from '../types';
+import { Scan, ScansResponse } from '../types';
+
+export interface LogScanData {
+  tag_id: number;
+  location_id: number;
+  inout: 'in' | 'out';
+}
 
 export const scanService = {
-  async getRecentScans(limit = 10): Promise<Scan[]> {
-    const response = await api.get<Scan[]>('/scans/recent', {
-      params: { limit }
-    });
-    return response.data;
+  async getScans(): Promise<Scan[]> {
+    const response = await api.get<ScansResponse>('/druppel/scans');
+    return response.data.scans;
   },
 
-  async getAllScans(page = 1, limit = 10): Promise<PaginatedResponse<Scan>> {
-    const response = await api.get<PaginatedResponse<Scan>>('/scans', {
-      params: { page, limit }
-    });
-    return response.data;
+  async logScan(data: LogScanData): Promise<void> {
+    await api.post('/druppel/scans', data);
   }
 };

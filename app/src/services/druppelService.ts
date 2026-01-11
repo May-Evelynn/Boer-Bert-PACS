@@ -1,30 +1,43 @@
 import api from './api';
-import { Druppel, PaginatedResponse } from '../types';
+import { Keyfob, KeyfobsResponse } from '../types';
+
+export interface AttachUserData {
+  userId: number;
+  keyfobId: number;
+}
+
+export interface DetachUserData {
+  keyfobId: number;
+}
+
+export interface SetKeyfobKeyData {
+  keyfobId: number;
+  newKey: number;
+}
+
+export interface InitKeyfobData {
+  keyfob_key: number;
+}
 
 export const druppelService = {
-  async getDruppels(page = 1, limit = 10): Promise<PaginatedResponse<Druppel>> {
-    const response = await api.get<PaginatedResponse<Druppel>>('/druppels', {
-      params: { page, limit }
-    });
-    return response.data;
+  async getKeyfobs(): Promise<Keyfob[]> {
+    const response = await api.get<KeyfobsResponse>('/druppel/keyfobs');
+    return response.data.keyfobs;
   },
 
-  async getDruppelById(id: string): Promise<Druppel> {
-    const response = await api.get<Druppel>(`/druppels/${id}`);
-    return response.data;
+  async attachUserToKeyfob(data: AttachUserData): Promise<void> {
+    await api.put('/druppel/attach-user', data);
   },
 
-  async createDruppel(data: Partial<Druppel>): Promise<Druppel> {
-    const response = await api.post<Druppel>('/druppels', data);
-    return response.data;
+  async detachUserFromKeyfob(data: DetachUserData): Promise<void> {
+    await api.put('/druppel/detach-user', data);
   },
 
-  async updateDruppel(id: string, data: Partial<Druppel>): Promise<Druppel> {
-    const response = await api.put<Druppel>(`/druppels/${id}`, data);
-    return response.data;
+  async setKeyfobKey(data: SetKeyfobKeyData): Promise<void> {
+    await api.put('/druppel/set-keyfob-key', data);
   },
 
-  async deleteDruppel(id: string): Promise<void> {
-    await api.delete(`/druppels/${id}`);
+  async initKeyfob(data: InitKeyfobData): Promise<void> {
+    await api.put('/druppel/init-keyfob', data);
   }
 };

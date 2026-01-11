@@ -46,7 +46,7 @@ export async function deleteFacility(facility_id) {
     let conn;
     try {
         conn = await pool.getConnection();
-        const result = await conn.query("UPDATE faciliteiten SET active = false WHERE faciliteiten_id = ?", [facility_id]);
+        const result = await conn.query("UPDATE facilities SET active = false WHERE facilities_id = ?", [facility_id]);
         return result;
     } catch (error) {
         console.error('Error deleting facility:', error);
