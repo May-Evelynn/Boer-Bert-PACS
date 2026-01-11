@@ -129,36 +129,39 @@ export async function createTestLogs(amount) {
         date.setHours(hour);
         return date;
     }
-    const pool = mariadb.getConnection(vpool);
+
+    function getRandomInt(max) {
+        return Math.floor(Math.random() * max);
+    }
+
+    const pool = mariadb.createPool(vpool);
     let conn;
     let finalQuery;
+    let allFacilities;
     let fuckshit = [];
     try {
-        conn = await pool.getConnection();
-        const allFacilities = conn.query("select * from facilities");
-
-        for (x = 0; x < allFacilities.length; x++) {
-            fuckshit.push({"out" : allFacilities[x]});
-        }
-
-        
-        console.log(fuckshit);
-
         finalQuery = "INSERT INTO logs (keyfob_id, facility_id, timestamp, in_out) VALUES ";
 
+        conn = await pool.getConnection();
+        allFacilities = await conn.query("select * from facilities");
+        console.log(allFacilities);
+        
+        for (let x = 0; x < allFacilities.length; x++) {
+            console.log("fuckshit: ", fuckshit);
+            fuckshit.push({"out" : allFacilities[x].facilities_id});
+        }
+        
+        // get rand datetime within set timespan (3 months)
         randDatetime = randomDate(new Date(2023, 0, 1), new Date(2023,2,31), 6, 22);
-        // convert to epoch
         const epochTime = Date.parse(randDatetime);
 
-
         for (x = 0; x < amount; x++){
-            const curFacility = allFacilities[Math.random(allFacilities.length())]
-            
+            const curFacility = allFacilities[getRandomInt(allFacilities.length)];
+            // if 
             finalQuery += "(1, ${curFacility[1]}, ${epochTime}, )"
         }
         
-        
-        conn.query(finalQuery);
+        await conn.query(finalQuery);
     } catch {
         console.error('Error inserting rows: ', error)
         throw new Error('Error inserting rows')
@@ -167,7 +170,6 @@ export async function createTestLogs(amount) {
         await pool.end();
     }
 }
-// get rand time within set timespan (3 montbhs?)
 // get rand facility
 // check if last time curFacility scan = in/out and flip
 // add values to finalQuery
