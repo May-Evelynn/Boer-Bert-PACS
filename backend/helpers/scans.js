@@ -138,29 +138,35 @@ export async function createTestLogs(amount) {
     let conn;
     let finalQuery;
     let allFacilities;
-    let fuckshit = [];
+    let inorout;
     try {
-        finalQuery = "INSERT INTO logs (keyfob_id, facility_id, timestamp, in_out) VALUES ";
+        finalQuery = "INSERT INTO logs (keyfob_id, facility_id, timestamp, in_out, allowed) VALUES ";
 
         conn = await pool.getConnection();
         allFacilities = await conn.query("select * from facilities");
         console.log(allFacilities);
         
-        for (let x = 0; x < allFacilities.length; x++) {
-            console.log("fuckshit: ", fuckshit);
-            fuckshit.push({"out" : allFacilities[x].facilities_id});
-        }
-        
-        // get rand datetime within set timespan (3 months)
-        randDatetime = randomDate(new Date(2023, 0, 1), new Date(2023,2,31), 6, 22);
-        const epochTime = Date.parse(randDatetime);
+        // check if last time curFacility scan = in/out and flip
 
-        for (x = 0; x < amount; x++){
+        
+        for (let x = 0; x < amount; x++){
+            console.log("iteration",x+1);
+            const randDatetime = randomDate(new Date(2023, 0, 1), new Date(2023,2,31), 6, 22);
+            const epochTime = Date.parse(randDatetime);
             const curFacility = allFacilities[getRandomInt(allFacilities.length)];
-            // if 
-            finalQuery += "(1, ${curFacility[1]}, ${epochTime}, )"
+            // inorout = (getRandomInt(1) === 1) ? "out" : "in";
+            if (getRandomInt(2) === 1) { inorout = "out"; } else { inorout = "in"; }
+            console.log(epochTime);
+            console.log(curFacility);
+
+            // get rand datetime within set timespan (3 months)
+
+            // construct query
+            finalQuery += `(1, ${curFacility.facilities_id}, ${epochTime}, "${inorout}", 1)`;
+            if (x === amount-1) { break } else { finalQuery+="," };
         }
         
+        console.log(finalQuery);
         await conn.query(finalQuery);
     } catch {
         console.error('Error inserting rows: ', error)
@@ -170,8 +176,8 @@ export async function createTestLogs(amount) {
         await pool.end();
     }
 }
+
 // get rand facility
-// check if last time curFacility scan = in/out and flip
 // add values to finalQuery
 // continue to next iteration
 
