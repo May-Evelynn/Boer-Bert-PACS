@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { logScan, getScans, attachUserToKeyfob, detachUserFromKeyfob, getKeyfobs, setKeyfobKey, initNewKeyfob } = require('../helpers/scans.js');
+const { logScan, getScans, attachUserToKeyfob, detachUserFromKeyfob, getKeyfobs, setKeyfobKey, initNewKeyfob, createTestLogs } = require('../helpers/scans.js');
+
 const { toSerializable } = require('../helpers/serializable.js');
 
 router.post('/scans', async (req, res) => {
@@ -152,5 +153,18 @@ router.put('/init-keyfob', async (req, res) => {
     }
 });
 
-
+router.post('/create-data', async (req, res) => {
+    try {
+        if (!req.body || Object.keys(req.body).length === 0) {
+            console.log(req.body);
+            console.log(Object.keys(req.body));
+            return res.status(400).json({ error: 'Request body is emjkpty' });
+        }
+        let { amount } = req.body || {};
+        let result = await createTestLogs(amount);
+        return res.status(200).json({ res : result });
+    } catch (error) {
+        return res.status(500).json({ error: 'failed to insert rows', details: error.message }) 
+    } 
+})
 module.exports = router;

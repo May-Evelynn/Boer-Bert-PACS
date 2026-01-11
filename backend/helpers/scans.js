@@ -142,3 +142,59 @@ async function verifyAllowed(keyfob_id) {
         await pool.end();
     }
 }
+
+export async function createTestLogs(amount) {
+    function randomDate(start, end, startHour, endHour) {
+        var date = new Date(+start + Math.random() * (end - start));
+        var hour = startHour + Math.random() * (endHour - startHour) | 0;
+        date.setHours(hour);
+        return date;
+    }
+
+    function getRandomInt(max) {
+        return Math.floor(Math.random() * max);
+    }
+
+    const pool = mariadb.createPool(vpool);
+    let conn;
+    let finalQuery;
+    let allFacilities;
+    let inorout;
+    try {
+        finalQuery = "INSERT INTO logs (keyfob_id, facility_id, timestamp, in_out, allowed) VALUES ";
+
+        conn = await pool.getConnection();
+        allFacilities = await conn.query("select * from facilities");
+        console.log(allFacilities);
+        
+        // check if last time curFacility scan = in/out and flip
+
+        
+        for (let x = 0; x < amount; x++){
+            console.log("iteration",x+1);
+            const randDatetime = randomDate(new Date(2023, 0, 1), new Date(2023,2,31), 6, 22);
+            const epochTime = Date.parse(randDatetime);
+            const curFacility = allFacilities[getRandomInt(allFacilities.length)];
+            // inorout = (getRandomInt(1) === 1) ? "out" : "in";
+            if (getRandomInt(2) === 1) { inorout = "out"; } else { inorout = "in"; }
+            console.log(epochTime);
+            console.log(curFacility);
+
+            // get rand datetime within set timespan (3 months)
+
+            // construct query
+            finalQuery += `(1, ${curFacility.facilities_id}, ${epochTime}, "${inorout}", 1)`;
+            if (x === amount-1) { break } else { finalQuery+="," };
+        }
+        
+        console.log(finalQuery);
+        await conn.query(finalQuery);
+    } catch {
+        console.error('Error inserting rows: ', error)
+        throw new Error('Error inserting rows')
+    } finally {
+        if (conn) {conn.release();}
+        await pool.end();
+    }
+}
+
