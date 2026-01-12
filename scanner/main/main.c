@@ -26,6 +26,9 @@
     #define PIN_NUM_CLK  18
     #define PIN_NUM_CS   21
     #define PIN_NUM_RST  22
+    #define PIN_BEEPER   33
+    #define PIN_RED_LED  35
+    #define PIN_GREEN_LED 32
 
     // RC522 Commands
     #define PCD_IDLE              0x00
@@ -112,6 +115,95 @@
         } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
             ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
             printf("[WiFi] Got IP: " IPSTR "\n", IP2STR(&event->ip_info.ip));
+        }
+    }
+
+    // Initialize beeper GPIO
+    void beeper_init(void) {
+        gpio_reset_pin(PIN_BEEPER);
+        gpio_set_direction(PIN_BEEPER, GPIO_MODE_OUTPUT);
+        gpio_set_level(PIN_BEEPER, 0); // Start with beeper off
+        printf("[Beeper] Initialized on GPIO %d\n", PIN_BEEPER);
+    }
+
+    // Initialize green led GPIO
+    void green_init(void) {
+        gpio_reset_pin(PIN_GREEN_LED);
+        gpio_set_direction(PIN_GREEN_LED, GPIO_MODE_OUTPUT);
+        gpio_set_level(PIN_GREEN_LED, 0); // Start with beeper off
+        printf("[Green led] Initialized on GPIO %d\n", PIN_GREEN_LED);
+    }
+
+    // Initialize red led GPIO
+    void red_init(void) {
+        gpio_reset_pin(PIN_RED_LED);
+        gpio_set_direction(PIN_RED_LED, GPIO_MODE_OUTPUT);
+        gpio_set_level(PIN_RED_LED, 0); // Start with beeper off
+        printf("[Red led] Initialized on GPIO %d\n", PIN_RED_LED);
+    }
+
+    // Single beep
+    void beep_single(void) {
+        printf("[Beeper] Beep!\n");
+        gpio_set_level(PIN_BEEPER, 1);
+        vTaskDelay(pdMS_TO_TICKS(200));  // Beep for 200ms
+        gpio_set_level(PIN_BEEPER, 0);
+    }
+
+    // Success led pattern (good scan)
+    void led_success(void) {
+        printf("[Green led] Success!\n");
+        // Two short beeps
+        for (int i = 0; i < 1; i++) {
+            gpio_set_level(PIN_GREEN_LED, 1);
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            gpio_set_level(PIN_GREEN_LED, 0);
+            vTaskDelay(pdMS_TO_TICKS(50));
+        }
+    }
+
+    // failed led pattern (bad scan)
+    void led_failed(void) {
+        printf("[Red led] Success!\n");
+        // Two short beeps
+        for (int i = 0; i < 1; i++) {
+            gpio_set_level(PIN_RED_LED, 1);
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            gpio_set_level(PIN_RED_LED, 0);
+            vTaskDelay(pdMS_TO_TICKS(50));
+        }
+    }
+
+    // Success beep pattern (good scan)
+    void beep_success(void) {
+        printf("[Beeper] Success beep!\n");
+        // Two short beeps
+        for (int i = 0; i < 2; i++) {
+            gpio_set_level(PIN_BEEPER, 1);
+            vTaskDelay(pdMS_TO_TICKS(100));
+            gpio_set_level(PIN_BEEPER, 0);
+            vTaskDelay(pdMS_TO_TICKS(50));
+        }
+    }
+
+    // Error beep pattern (failed scan)
+    void beep_error(void) {
+        printf("[Beeper] Error beep!\n");
+        // One long beep
+        gpio_set_level(PIN_BEEPER, 1);
+        vTaskDelay(pdMS_TO_TICKS(500));
+        gpio_set_level(PIN_BEEPER, 0);
+    }
+
+    // Network/connection beep
+    void beep_network_connected(void) {
+        printf("[Beeper] Network connected!\n");
+        // Three quick beeps
+        for (int i = 0; i < 3; i++) {
+            gpio_set_level(PIN_BEEPER, 1);
+            vTaskDelay(pdMS_TO_TICKS(80));
+            gpio_set_level(PIN_BEEPER, 0);
+            vTaskDelay(pdMS_TO_TICKS(40));
         }
     }
 
@@ -496,12 +588,32 @@
         // Initialize WiFi first
         printf("[WiFi] Initializing WiFi...\n");
         wifi_init_sta();
+
+        // Initialize beeper
+        printf("[Beeper] Initializing beeper...\n");
+        beeper_init();
+
+        // Initialize green led
+        printf("[Green led] Initializing led...\n");
+        green_init();
+
+        // Initialize red led
+        printf("[Red led] Initializing led...\n");
+        red_init();
         
         // Wait for WiFi connection
         printf("[WiFi] Waiting for connection...\n");
         for (int i = 0; i < 20; i++) {
             printf(".");
             vTaskDelay(pdMS_TO_TICKS(500));
+
+            // Beep once when WiFi connects
+            static bool wifi_connected = false;
+            wifi_ap_record_t ap_info;
+            if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK && !wifi_connected) {
+                wifi_connected = true;
+                beep_network_connected();
+            }
         }
         printf("\n");
         
@@ -566,13 +678,24 @@
                         // Store this UID and timestamp
                         strcpy(last_uid, uid_hex);
                         last_scan_time = current_time;
+
+                        // BEEP: Card successfully read
+                        beep_success();
+                        led_success();
                         
                         // Send to backend
                         printf("[HTTP] Sending scan to backend...\n");
                         send_scan_to_backend(uid_hex);
                     } else {
                         printf("[INFO] Same card detected recently, waiting...\n");
+                        // Quick single beep for duplicate card
+                        beep_single();
                     }
+                } else {
+                    // BEEP: Card detected but failed to read UID
+                    beep_error();
+                    led_failed();
+                    printf("[ERROR] Failed to read UID\n");
                 }
                 
             } else if (!detected && card_present) {
