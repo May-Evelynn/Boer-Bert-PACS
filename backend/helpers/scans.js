@@ -100,7 +100,7 @@ export async function getKeyfobs() {
     let conn;
     try {
         conn = await pool.getConnection();
-        const rows = await conn.query("SELECT * FROM keyfobs WHERE buitengebruik = 0");
+        const rows = await conn.query("SELECT * FROM keyfobs");
         return rows;
     } catch (error) {
         console.error('Error retrieving keyfobs:', error);
@@ -142,6 +142,22 @@ async function verifyAllowed(keyfob_id) {
         await pool.end();
     }
 }
+
+export async function toggleKeyfob(keyfob_id, bool) {
+    const pool = mariadb.createPool(vpool);
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const result = await conn.query("UPDATE keyfobs SET buitengebruik = ? WHERE keyfob_id = ?", [bool, keyfob_id]);
+        return result;
+    } catch (error) {
+        console.error('Error updating keyfob:', error);
+        throw new Error('Error updating keyfob');
+    } finally {
+        if (conn) conn.release();
+        await pool.end();
+    }
+} 
 
 export async function createTestLogs(amount) {
     function randomDate(start, end, startHour, endHour) {

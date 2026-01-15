@@ -32,13 +32,14 @@ export async function createUser(first_name, last_name, affix, email, username, 
         const hashedPassword = await hashPassword(otp);
         const result = await conn.query("INSERT INTO users (first_name, last_name, affix, role, email, username, password) VALUES (?, ?, ?, ?, ?, ?, ?)", [first_name, last_name, affix, role, email, username, hashedPassword]);
 
-        // await sendMail(otp); TODOOOO
+        await sendMail(otp, email);
         return result;
     } catch (error) {
         console.error('Error creating user:', error);
         throw new Error('Error creating user');
     } finally {
         if (conn) conn.release();
+        await pool.end();
     }
 }
 
