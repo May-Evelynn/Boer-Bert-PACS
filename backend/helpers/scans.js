@@ -172,7 +172,7 @@ export async function createTestLogs(amount) {
         
         for (let x = 0; x < amount; x++){
             console.log("iteration",x+1);
-            const randDatetime = randomDate(new Date(2023, 0, 1), new Date(2023,2,31), 6, 22);
+            const randDatetime = randomDate(new Date(2026, 10, 1), new Date(2026,0,16), 6, 22);
             const epochTime = Date.parse(randDatetime);
             const curFacility = allFacilities[getRandomInt(allFacilities.length)];
             // inorout = (getRandomInt(1) === 1) ? "out" : "in";
