@@ -18,14 +18,11 @@ export interface SetKeyfobKeyData {
 export interface InitKeyfobData {
   keyfob_key: number;
 }
-<<<<<<< HEAD
 
 export interface SetBuitengebruikData {
   keyfobId: number;
   buitengebruik: boolean;
 }
-=======
->>>>>>> origin/dev
 
 export const druppelService = {
   async getKeyfobs(): Promise<Keyfob[]> {
@@ -47,12 +44,9 @@ export const druppelService = {
 
   async initKeyfob(data: InitKeyfobData): Promise<void> {
     await api.put('/druppel/init-keyfob', data);
-<<<<<<< HEAD
   },
 
   async setBuitengebruik(data: SetBuitengebruikData): Promise<void> {
     await api.put('/druppel/set-buitengebruik', data);
-=======
->>>>>>> origin/dev
   }
 };
