@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { toSerializable } = require('../helpers/serializable.js');
-const { createFacility, getFacilities, deleteFacility } = require('../helpers/facility.js');
+const { createFacility, getFacilities, updateFacility } = require('../helpers/facility.js');
 
 router.put('/create-facility', async (req, res) => {
     if (!req.body || Object.keys(req.body).length === 0) {

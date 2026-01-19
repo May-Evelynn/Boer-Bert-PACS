@@ -39,6 +39,7 @@ export async function createUser(first_name, last_name, affix, email, username, 
         throw new Error('Error creating user');
     } finally {
         if (conn) conn.release();
+        await pool.end();
     }
 }
 
