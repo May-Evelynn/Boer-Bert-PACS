@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { userService } from '../../../services/userService';
 
-const UserCreation: React.FC = () => {
+const UserCreation: React.FC<{ handleUserUpdate: () => void }> = ({ handleUserUpdate }) => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [first_name, setFirstName] = useState('');
@@ -37,6 +37,7 @@ const UserCreation: React.FC = () => {
             console.error('Error creating user:', error);
             setMessage({ type: 'error', text: error.message || 'Er is een fout opgetreden bij het aanmaken van de gebruiker.' });
         } finally {
+            handleUserUpdate();
             setIsSubmitting(false);
         }
     };

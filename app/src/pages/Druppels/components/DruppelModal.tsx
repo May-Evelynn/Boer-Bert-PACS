@@ -37,6 +37,7 @@ const DruppelModal: React.FC<DruppelModalProps> = ({ setIsDruppelModalOpen, drup
     const [isFetchingUsers, setIsFetchingUsers] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [isBuitengebruik, setIsBuitengebruik] = useState(druppel.buitengebruik);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -106,6 +107,27 @@ const DruppelModal: React.FC<DruppelModalProps> = ({ setIsDruppelModalOpen, drup
         }
     };
 
+    const handleToggleBuitengebruik = async () => {
+        try {
+            setIsLoading(true);
+            setError(null);
+            const newValue = !isBuitengebruik;
+            await druppelService.setBuitengebruik({
+                keyfobId: druppel.druppelId,
+                buitengebruik: newValue,
+            });
+            setIsBuitengebruik(newValue);
+            setSuccessMessage(newValue ? "Druppel buiten gebruik gezet!" : "Druppel weer in gebruik!");
+            onUpdate?.();
+            setTimeout(() => setSuccessMessage(null), 2000);
+        } catch (err) {
+            console.error("Failed to toggle buitengebruik:", err);
+            setError("Kon status niet wijzigen");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const hasAttachedUser = currentAttachedUserId && currentAttachedUserId > 0;
 
     const attachedUser = users.find(u => u.id === currentAttachedUserId);
@@ -148,6 +170,33 @@ const DruppelModal: React.FC<DruppelModalProps> = ({ setIsDruppelModalOpen, drup
                     <p className="text-lg font-mono font-semibold">{druppel.druppelCode}</p>
                     <p className="text-sm text-neutral-400 mt-3 mb-1">Druppel ID</p>
                     <p className="text-lg font-mono">{druppel.druppelId}</p>
+                    
+                    {/* Buitengebruik Toggle */}
+                    <div className="mt-4 pt-4 border-t border-neutral-700">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-neutral-400">Status</p>
+                                <p className={`font-medium ${isBuitengebruik ? 'text-red-400' : 'text-emerald-400'}`}>
+                                    {isBuitengebruik ? 'Buiten gebruik' : 'In gebruik'}
+                                </p>
+                            </div>
+                            <button
+                                onClick={handleToggleBuitengebruik}
+                                disabled={isLoading}
+                                className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${
+                                    isBuitengebruik 
+                                        ? 'bg-red-600' 
+                                        : 'bg-emerald-600'
+                                } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                            >
+                                <div 
+                                    className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform duration-200 ${
+                                        isBuitengebruik ? 'translate-x-1' : 'translate-x-8'
+                                    }`}
+                                />
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Current User */}

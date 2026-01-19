@@ -21,8 +21,9 @@ const LaatsteScans: React.FC<LaatsteScansProps> = ({ scans, variants, user, load
     const getLocationColor = (location: string) => {
         const colors: Record<string, string> = {
             'Zwembad': 'bg-sky-500/20 text-sky-400 border-sky-500/30',
-            'Sauna': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-            'Vlindertuin': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+            'Toilet': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+            'Douche': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+            'Wasmachine': 'bg-violet-500/20 text-violet-400 border-violet-500/30',
         };
         return colors[location] || 'bg-neutral-600/20 text-neutral-400 border-neutral-500/30';
     };

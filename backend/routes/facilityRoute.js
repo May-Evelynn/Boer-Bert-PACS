@@ -18,14 +18,14 @@ router.put('/create-facility', async (req, res) => {
 
     if (typeof capacity !== 'number') {
         const parsed = parseInt(capacity, 10);
-        if (isNaN(parsed)) return res.status(400).json({ error: "'capacity' must be a number" });
+        if (isNaN(parsed)) return res.status(400).json({ error: "'capacity' moet een nummer zijn" });
         capacity = parsed;
     }
 
     try {
         let result = await createFacility(facilityType, capacity);
         const safeResult = toSerializable(result);
-        return res.status(201).json({ message: 'Facility created successfully', result: safeResult });
+        return res.status(201).json({ message: 'Faciliteit aangemaakt', result: safeResult });
     } catch (err) {
         return res.status(500).json({ error: err.message || 'Internal Server Error' });
     }
@@ -44,12 +44,12 @@ router.get('/facilities', async (req, res) => {
 router.delete('/delete-facility/:id', async (req, res) => {
     const facilityId = req.params.id;
     if (!facilityId) {
-        return res.status(400).json({ error: 'Facility ID is required' });
+        return res.status(400).json({ error: 'Facility ID is vereist' });
     }
     try {
         let result = await deleteFacility(facilityId);
         const safeResult = toSerializable(result);
-        return res.status(200).json({ message: 'Facility deleted successfully', result: safeResult });
+        return res.status(200).json({ message: 'Faciliteit verwijderd', result: safeResult });
     } catch (err) {
         return res.status(500).json({ error: err.message || 'Internal Server Error' });
     }

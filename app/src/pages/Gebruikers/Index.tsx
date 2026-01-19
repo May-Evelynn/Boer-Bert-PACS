@@ -99,7 +99,7 @@ const Gebruikers: React.FC<GebruikersProps> = ({ user }) => {
                         initial="hidden"
                         animate="visible"
                     >
-                        <UserCreation />
+                        <UserCreation handleUserUpdate={handleUserUpdate} />
 
                         <Table
                             table={{

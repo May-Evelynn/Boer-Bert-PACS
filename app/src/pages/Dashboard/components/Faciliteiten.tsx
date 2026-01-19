@@ -1,5 +1,5 @@
 import { motion, Variants } from 'framer-motion';
-import { FaLock, FaTools } from 'react-icons/fa';
+import { FaLock, FaShower, FaSwimmingPool, FaToilet, FaTools } from 'react-icons/fa';
 import { MdLocalLaundryService } from 'react-icons/md';
 
 import { User, Facility } from '../../../types';
@@ -27,6 +27,15 @@ const Faciliteiten: React.FC<FaciliteitenProps> = ({ facilities, variants, user,
         if (lowerType.includes('was') || lowerType.includes('laundry') || lowerType.includes('droger')) {
             return <MdLocalLaundryService className="w-5 h-5" />;
         }
+        if (lowerType.includes('zwembad') || lowerType.includes('pool')) {
+            return <FaSwimmingPool className="w-4 h-4" />;
+        }
+        if (lowerType.includes('toilet') || lowerType.includes('wc')) {
+            return <FaToilet className="w-4 h-4" />;
+        }
+        if (lowerType.includes('douche') || lowerType.includes('shower')) {
+            return <FaShower className="w-4 h-4" />;
+        }
         return <FaTools className="w-4 h-4" />;
     };
 
@@ -42,7 +51,7 @@ const Faciliteiten: React.FC<FaciliteitenProps> = ({ facilities, variants, user,
 
     return (
         <motion.div
-            className="bg-neutral-950 border border-neutral-700 p-4 rounded-3xl"
+            className="col-span-2 bg-neutral-950 border border-neutral-700 p-4 rounded-3xl"
             variants={variants}
         >
             <div className="flex justify-between items-center mb-4">
@@ -69,7 +78,7 @@ const Faciliteiten: React.FC<FaciliteitenProps> = ({ facilities, variants, user,
                             <p className="text-neutral-400">Laden...</p>
                         </div>
                     ) : facilities.length > 0 ? (
-                        <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-4">
                             {Object.entries(groupedFacilities).map(([type, typeFacilities], groupIndex) => (
                                 <motion.div
                                     key={type}

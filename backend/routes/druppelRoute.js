@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { logScan, getScans, attachUserToKeyfob, detachUserFromKeyfob, getKeyfobs, setKeyfobKey, initNewKeyfob } = require('../helpers/scans.js');
+const { logScan, getScans, attachUserToKeyfob, detachUserFromKeyfob, getKeyfobs, setKeyfobKey, initNewKeyfob, setBuitengebruik } = require('../helpers/scans.js');
 const { toSerializable } = require('../helpers/serializable.js');
 
 router.post('/scans', async (req, res) => {
@@ -152,5 +152,27 @@ router.put('/init-keyfob', async (req, res) => {
     }
 });
 
+router.put('/set-buitengebruik', async (req, res) => {
+    if (!req.body || Object.keys(req.body).length === 0) {
+        return res.status(400).json({ error: 'Request body is vereist' });
+    }
+
+    let { keyfobId, buitengebruik } = req.body || {};
+    if (keyfobId == null || buitengebruik == null) {
+        return res.status(400).json({ error: 'Missing field(s): keyfobId, buitengebruik' });
+    }
+
+    if (typeof keyfobId !== 'number' || typeof buitengebruik !== 'boolean') {
+        return res.status(400).json({ error: "'keyfobId' moet een nummer zijn en 'buitengebruik' moet een boolean zijn" });
+    }
+
+    try {
+        let result = await setBuitengebruik(keyfobId, buitengebruik);
+        const safeResult = toSerializable(result);
+        return res.status(200).json({ message: 'Druppel bijgewerkt', result: safeResult });
+    } catch (error) {
+        return res.status(500).json({ error: 'Bijwerken van buitengebruik mislukt', details: error.message });
+    }
+});
 
 module.exports = router;

@@ -4,6 +4,7 @@ import { BsFillGrid1X2Fill } from "react-icons/bs";
 import LaatsteScans from './components/LaatsteScans';
 import Weer from './components/Weer';
 import Faciliteiten from './components/Faciliteiten';
+import ScanGrafiek from './components/ScanGrafiek';
 import { scanService } from '../../services/scanService';
 import { facilityService } from '../../services/facilityService';
 
@@ -42,12 +43,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   }, [user]);
 
   // Transform scans data for display
-  const displayScans = scans.slice(0, 10).map((scan) => {
+  const displayScans = scans.slice(0, 4 ).map((scan) => {
     const facility = facilities.find(f => f.facilities_id === scan.facility_id);
     return {
       id: scan.id,
       location: facility?.facility_type || `Facility ${scan.facility_id}`,
-      time: new Date(scan.timestamp).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
+      time: new Date(scan.timestamp).toLocaleString('nl-NL', { year: 'numeric', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }),
       tagId: String(scan.keyfob_id).padStart(5, '0')
     };
   });
@@ -97,6 +98,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         animate="visible"
       >
         <LaatsteScans scans={displayScans} variants={itemVariants} user={user} loading={loading} />
+
+        <ScanGrafiek scans={scans} facilities={facilities} variants={itemVariants} user={user} loading={loading} />
 
         <Weer variants={itemVariants} />
 

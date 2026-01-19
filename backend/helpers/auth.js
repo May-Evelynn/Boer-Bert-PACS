@@ -28,11 +28,11 @@ export async function createUser(first_name, last_name, affix, email, username, 
     try {
         conn = await pool.getConnection();
         const otp = generateOTP();
-        // console.log('Generated OTP:', otp);
+        console.log('Generated OTP:', otp);
         const hashedPassword = await hashPassword(otp);
         const result = await conn.query("INSERT INTO users (first_name, last_name, affix, role, email, username, password) VALUES (?, ?, ?, ?, ?, ?, ?)", [first_name, last_name, affix, role, email, username, hashedPassword]);
 
-        // await sendMail(otp); TODOOOO
+        await sendMail(otp, email);
         return result;
     } catch (error) {
         console.error('Error creating user:', error);
@@ -52,7 +52,7 @@ export async function sendMail(otp, toEmail) {
 
     try {
         const info = await transporter.sendMail(mailOptions);
-        // console.log('Email sent:', info.response || info);
+        console.log('Email sent:', info.response || info);
         return info;
     } catch (error) {
         console.error('Error sending email:', error);

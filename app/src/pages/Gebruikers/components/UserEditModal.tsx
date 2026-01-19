@@ -57,7 +57,6 @@ const UserEditModal: React.FC<UserEditModalProps> = ({
 
     const handleDelete = async () => {
         if (!gebruiker) return;
-        if (!window.confirm("Weet je zeker dat je deze gebruiker wilt verwijderen?")) return;
 
         setIsLoading(true);
         setError(null);

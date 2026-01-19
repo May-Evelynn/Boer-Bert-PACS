@@ -30,7 +30,7 @@ export async function getScans() {
     let conn;
     try {
         conn = await pool.getConnection();
-        const rows = await conn.query("SELECT * FROM logs");
+        const rows = await conn.query("SELECT * FROM logs ORDER BY timestamp DESC");
         return rows;
     } catch (error) {
         console.error('Error retrieving scans:', error);
@@ -94,7 +94,7 @@ export async function getKeyfobs() {
     let conn;
     try {
         conn = await pool.getConnection();
-        const rows = await conn.query("SELECT * FROM keyfobs WHERE buitengebruik = 0");
+        const rows = await conn.query("SELECT * FROM keyfobs");
         return rows;
     } catch (error) {
         console.error('Error retrieving keyfobs:', error);
@@ -118,6 +118,22 @@ export async function initNewKeyfob(keyfob_key) {
         throw new Error('Error initializing keyfob')
     } finally {
         if (conn) {conn.release();}
+        await pool.end();
+    }
+}
+
+export async function setBuitengebruik(keyfob_id, buitengebruik) {
+    const pool = mariadb.createPool(vpool);
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const result = await conn.query("UPDATE keyfobs SET buitengebruik = ? WHERE keyfob_id = ?", [buitengebruik, keyfob_id]);
+        return result;
+    } catch (error) {
+        console.error('Error setting buitengebruik:', error);
+        throw new Error('Error setting buitengebruik');
+    } finally {
+        if (conn) conn.release();
         await pool.end();
     }
 }
