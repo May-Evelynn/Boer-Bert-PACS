@@ -9,7 +9,6 @@ import {
     Tooltip,
     Legend,
     ResponsiveContainer,
-    Cell,
 } from 'recharts';
 import { User, Scan, Facility } from '../../../types';
 import { FaSpinner } from 'react-icons/fa';
@@ -62,10 +61,10 @@ const ScanGrafiek: React.FC<ScanGrafiekProps> = ({ scans, facilities, variants, 
         const grouped: Record<string, Record<string, number>> = {};
         const scanDetails: Record<string, ScanDetail[]> = {};
         const facilityNames = new Set<string>();
-        const dayTimestamps: Record<string, number> = {}; // Track first timestamp per day for sorting
+        const dayTimestamps: Record<string, number> = {};
 
         scans.forEach((scan) => {
-            const date = new Date(scan.timestamp);
+            const date = new Date(scan.timestamp * 1000);
             let key: string;
             let displayKey: string;
 
@@ -73,10 +72,8 @@ const ScanGrafiek: React.FC<ScanGrafiekProps> = ({ scans, facilities, variants, 
                 key = date.toLocaleTimeString('nl-NL', { hour: '2-digit' }) + ':00';
                 displayKey = key;
             } else {
-                // Group by date string (day)
                 displayKey = date.toLocaleDateString('nl-NL', { month: 'short', weekday: 'short', day: 'numeric' });
                 key = displayKey;
-                // Store earliest timestamp for this day for sorting
                 if (!dayTimestamps[key] || date.getTime() < dayTimestamps[key]) {
                     dayTimestamps[key] = date.getTime();
                 }
@@ -93,7 +90,7 @@ const ScanGrafiek: React.FC<ScanGrafiekProps> = ({ scans, facilities, variants, 
             grouped[key][facilityName] = (grouped[key][facilityName] || 0) + 1;
 
             scanDetails[displayKey].push({
-                time: date.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
+                time: date.toLocaleString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
                 location: facilityName,
                 tagId: String(scan.keyfob_id).padStart(5, '0'),
             });
@@ -103,7 +100,6 @@ const ScanGrafiek: React.FC<ScanGrafiekProps> = ({ scans, facilities, variants, 
             if (viewMode === 'hour') {
                 return parseInt(a) - parseInt(b);
             }
-            // Sort by timestamp ascending (oldest first)
             return (dayTimestamps[a] || 0) - (dayTimestamps[b] || 0);
         });
 

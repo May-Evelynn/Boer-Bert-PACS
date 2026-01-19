@@ -42,13 +42,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     fetchData();
   }, [user]);
 
-  // Transform scans data for display
   const displayScans = scans.slice(0, 4 ).map((scan) => {
     const facility = facilities.find(f => f.facilities_id === scan.facility_id);
     return {
       id: scan.id,
       location: facility?.facility_type || `Facility ${scan.facility_id}`,
-      time: new Date(scan.timestamp).toLocaleString('nl-NL', { year: 'numeric', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }),
+      time: new Date((scan.timestamp * 1000)).toLocaleString('nl-NL', { year: 'numeric', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
       tagId: String(scan.keyfob_id).padStart(5, '0')
     };
   });
