@@ -1,9 +1,15 @@
-import { useState } from "react";
-import { FaTimes } from "react-icons/fa";
-import { motion } from "framer-motion";
+import { useEffect, useState, useRef } from "react";
+import { FaTimes, FaChevronDown } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 import { authService } from "../services/authService";
 
 import { User } from '../types';
+
+interface ApiUrl {
+    value: string;
+    label: string;
+    isOnline: boolean;
+}
 
 interface LoginModalProps {
     isLoginModalOpen: boolean,
@@ -11,9 +17,11 @@ interface LoginModalProps {
     setIsPasswordModalOpen: (show: boolean) => void;
     user: User | null;
     setUser: (user: User | null) => void;
+    apiUrl: string;
+    setApiUrl: (url: string) => void;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPasswordModalOpen, setUser }) => {
+const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPasswordModalOpen, setUser, apiUrl, setApiUrl }) => {
 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -21,7 +29,48 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
     const [isLoading, setIsLoading] = useState(false);
     const [isFirstLogin, setIsFirstLogin] = useState(false);
     const [tempUserData, setTempUserData] = useState<{ user: User; password: string } | null>(null);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [apiUrls, setApiUrls] = useState<ApiUrl[]>([
+        { value: 'http://localhost:3000', label: 'localhost:3000', isOnline: false },
+        { value: 'https://boerbert.spoekle.com', label: 'boerbert.spoekle.com', isOnline: false },
+    ]);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
+    const checkApiOnline = async (url: string) => {
+        try {
+            const response = await fetch(url);
+            return response.ok;
+        } catch (error) {
+            return false;
+        }
+    };
+
+    const checkApiUrls = async () => {
+        const updatedUrls = await Promise.all(
+            apiUrls.map(async (api) => ({
+                ...api,
+                isOnline: await checkApiOnline(api.value),
+            }))
+        );
+        setApiUrls(updatedUrls);
+    };
+
+    useEffect(() => {
+        checkApiUrls();
+    }, []);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const selectedApi = apiUrls.find(api => api.value === apiUrl) || apiUrls[0];
 
     const handleClose = () => {
         setIsLoginModalOpen(false);
@@ -122,6 +171,51 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
                         </button>
                     }
                     {message && <p className="text-red-500 mt-2">{message}</p>}
+                    <div className="flex flex-col items-center gap-1">
+                        <label className="text-sm font-medium text-neutral-500">Wijzig Server:</label>
+                        <div className="relative" ref={dropdownRef}>
+                            <button
+                                type="button"
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                className="flex items-center gap-2 bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm font-medium text-neutral-300 cursor-pointer hover:border-neutral-600 transition-colors min-w-[200px] justify-between"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <span className={`w-2 h-2 rounded-full ${selectedApi.isOnline ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                    {selectedApi.label}
+                                </div>
+                                <FaChevronDown className={`w-3 h-3 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            <AnimatePresence>
+                                {isDropdownOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="absolute top-full left-0 right-0 mt-1 bg-neutral-800 border border-neutral-700 rounded-lg overflow-hidden shadow-xl z-10"
+                                    >
+                                        {apiUrls.map((api) => (
+                                            <button
+                                                key={api.value}
+                                                type="button"
+                                                onClick={() => {
+                                                    setApiUrl(api.value);
+                                                    setIsDropdownOpen(false);
+                                                }}
+                                                className={`flex items-center gap-2 w-full px-3 py-2 text-sm text-left transition-colors ${api.value === apiUrl
+                                                    ? 'bg-blue-600/20 text-blue-400'
+                                                    : 'text-neutral-300 hover:bg-neutral-700'
+                                                    }`}
+                                            >
+                                                <span className={`w-2 h-2 rounded-full ${api.isOnline ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                                {api.label}
+                                            </button>
+                                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    </div>
                 </form>
             </motion.div>
         </motion.div>

@@ -68,14 +68,12 @@ const Table = <T extends { id: number | string }>({
     const [search, setSearch] = useState('');
     const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
     const [sortConfig, setSortConfig] = useState<SortConfig | null>(defaultSort || null);
-
-    // Generate filter options from data for each column filter
+    
     const filterOptions = useMemo(() => {
         const options: Record<string, { value: string; count: number }[]> = {};
 
         columnFilters.forEach((filter) => {
             if (filter.options) {
-                // Use provided options
                 options[filter.column as string] = filter.options.map((opt) => ({
                     value: opt,
                     count: data.filter((item) => {
@@ -87,7 +85,6 @@ const Table = <T extends { id: number | string }>({
                     }).length,
                 }));
             } else {
-                // Auto-generate options from data
                 const valueCounts = new Map<string, number>();
                 data.forEach((item) => {
                     const value = item[filter.column];
@@ -108,10 +105,8 @@ const Table = <T extends { id: number | string }>({
         return options;
     }, [columnFilters, data]);
 
-    // Combined filtering: text search + column filters
     const filteredData = useMemo(() => {
         return data.filter((item) => {
-            // Text search filter
             if (search && searchFilters && searchFilters.length > 0) {
                 const matchesSearch = searchFilters.some((filter) => {
                     const value = item[filter];
@@ -120,7 +115,6 @@ const Table = <T extends { id: number | string }>({
                 if (!matchesSearch) return false;
             }
 
-            // Column filters
             for (const filter of columnFilters) {
                 const selectedValues = activeFilters[filter.column as string];
                 if (selectedValues && selectedValues.length > 0) {
@@ -198,7 +192,6 @@ const Table = <T extends { id: number | string }>({
         }));
     };
 
-    // Get all active filter badges
     const activeFilterBadges = useMemo(() => {
         const badges: { column: string; label: string; value: string }[] = [];
         columnFilters.forEach((filter) => {
@@ -314,12 +307,10 @@ const Table = <T extends { id: number | string }>({
     return (
         <motion.div className="w-full" variants={variants}>
             <div className="bg-neutral-950 border border-neutral-700 p-4 rounded-3xl">
-                {/* Header with title and controls */}
                 <div className="flex flex-col gap-4 mb-4">
                     <div className="flex justify-between items-center">
                         <h2 className="text-2xl font-medium">{table.title}</h2>
                         <div className="flex items-center gap-3">
-                            {/* Search input */}
                             {!hideSearch && (
                                 <input
                                     type="text"
@@ -330,7 +321,6 @@ const Table = <T extends { id: number | string }>({
                                 />
                             )}
 
-                            {/* Column filter dropdowns */}
                             {columnFilters.map((filter) => (
                                 <FilterDropdown
                                     key={filter.column as string}
@@ -342,7 +332,6 @@ const Table = <T extends { id: number | string }>({
                             ))}
 
 
-                            {/* Action button */}
                             {actionButton && (
                                 <button
                                     onClick={actionButton.onClick}
@@ -355,7 +344,6 @@ const Table = <T extends { id: number | string }>({
                         </div>
                     </div>
 
-                    {/* Active filter badges */}
                     <AnimatePresence>
                         {activeFilterBadges.length > 0 && (
                             <motion.div
@@ -382,7 +370,6 @@ const Table = <T extends { id: number | string }>({
                                         </button>
                                     </motion.span>
                                 ))}
-                                {/* Clear all filters button */}
                                 {hasActiveFilters && (
                                     <button
                                         onClick={clearAllFilters}

@@ -15,6 +15,7 @@ import "./CustomScrollbar.css"
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
+  const [apiUrl, setApiUrl] = useState<string>('http://localhost:3000');
 
   useEffect(() => {
     // Controleer of de gebruiker is ingelogd (bijv. door een token in localStorage te controleren)
@@ -32,7 +33,7 @@ function App() {
 
     <Router>
       <div className='select-none flex overflow-hidden h-screen w-screen'>
-        <SideBar user={user} setUser={setUser} />
+        <SideBar user={user} setUser={setUser} apiUrl={apiUrl} setApiUrl={setApiUrl} />
         <div className='flex w-full h-full overflow-auto custom-scrollbar'>
           <Routes>
             <Route path="/" element={<Home user={user} />} />

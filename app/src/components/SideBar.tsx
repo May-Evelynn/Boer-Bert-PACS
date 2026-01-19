@@ -15,9 +15,11 @@ import { User } from '../types';
 interface SideBarProps {
     user: User | null;
     setUser: (user: User | null) => void;
+    apiUrl: string;
+    setApiUrl: (url: string) => void;
 }
 
-const SideBar: React.FC<SideBarProps> = ({ user, setUser }) => {
+const SideBar: React.FC<SideBarProps> = ({ user, setUser, apiUrl, setApiUrl }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const [isOpen, setIsOpen] = useState(true);
@@ -157,6 +159,8 @@ const SideBar: React.FC<SideBarProps> = ({ user, setUser }) => {
                         setIsPasswordModalOpen={setIsPasswordModalOpen}
                         user={user}
                         setUser={setUser}
+                        apiUrl={apiUrl}
+                        setApiUrl={setApiUrl}
                     />
                 }
                 {isPasswordModalOpen &&
