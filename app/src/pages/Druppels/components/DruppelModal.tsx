@@ -139,74 +139,78 @@ const DruppelModal: React.FC<DruppelModalProps> = ({ setIsDruppelModalOpen, drup
     };
 
     return (
-        <motion.div
-            className="absolute flex top-0 left-0 bg-black/50 backdrop-blur-md h-full w-full items-center justify-center text-white z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onMouseDown={handleClose}
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div
+                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                onClick={handleClose}
+            />
             <motion.div
-                className="relative w-[450px] p-8 bg-neutral-900/90 border border-neutral-700 rounded-2xl shadow-2xl"
+                className="relative w-[500px] p-8 bg-neutral-950 border border-neutral-700 rounded-3xl shadow-2xl overflow-hidden"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ type: "spring", duration: 0.3 }}
-                onMouseDown={(e) => e.stopPropagation()}
             >
-                <div className="flex justify-center items-center overflow-x-hidden space-x-3 mb-6">
-                    <h1 className="text-2xl font-bold">Druppel Bewerken</h1>
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-2xl font-bold text-white">Druppel Bewerken</h1>
+                    <button
+                        className="bg-neutral-800 hover:bg-neutral-700 p-2 rounded-xl text-neutral-400 hover:text-white transition-colors"
+                        onClick={handleClose}
+                    >
+                        <FaTimes className="w-4 h-4" />
+                    </button>
                 </div>
-                <button
-                    className="absolute top-4 right-4 bg-red-600 hover:bg-red-700 p-2.5 rounded-xl hover:cursor-pointer transition-colors duration-200"
-                    onClick={handleClose}
-                >
-                    <FaTimes className="w-4 h-4" />
-                </button>
 
-                <div className="mb-6 p-4 bg-neutral-800/50 rounded-xl border border-neutral-700">
-                    <p className="text-sm text-neutral-400 mb-1">Druppel Code</p>
-                    <p className="text-lg font-mono font-semibold">{druppel.druppelCode}</p>
-                    <p className="text-sm text-neutral-400 mt-3 mb-1">Druppel ID</p>
-                    <p className="text-lg font-mono">{druppel.druppelId}</p>
-
-                    <div className="mt-4 pt-4 border-t border-neutral-700">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-neutral-400">Status</p>
-                                <p className={`font-medium ${isInGebruik ? 'text-emerald-400' : 'text-red-400'}`}>
-                                    {isInGebruik ? 'In gebruik' : 'Buiten gebruik'}
-                                </p>
-                            </div>
-                            <button
-                                onClick={handleToggleInGebruik}
-                                disabled={isLoading}
-                                className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${isInGebruik
-                                        ? 'bg-emerald-600'
-                                        : 'bg-red-600'
-                                    } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                            >
-                                <div
-                                    className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform duration-200 ${isInGebruik ? 'translate-x-8' : 'translate-x-1'
-                                        }`}
-                                />
-                            </button>
+                <div className="mb-6 p-5 bg-neutral-900 rounded-2xl border border-neutral-800">
+                    <div className="flex justify-between items-start mb-4">
+                        <div>
+                            <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-1">DRUPPEL CODE</p>
+                            <p className="text-xl font-mono font-semibold text-white tracking-widest">{druppel.druppelCode}</p>
                         </div>
+                        <div className="text-right">
+                            <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-1">ID</p>
+                            <p className="text-sm font-mono text-neutral-300">#{druppel.druppelId}</p>
+                        </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-neutral-800 flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-neutral-400">Status</p>
+                            <p className={`font-medium ${isInGebruik ? 'text-emerald-400' : 'text-red-400'}`}>
+                                {isInGebruik ? 'Actief' : 'Geblokkeerd'}
+                            </p>
+                        </div>
+                        <button
+                            onClick={handleToggleInGebruik}
+                            disabled={isLoading}
+                            className={`relative w-14 h-8 rounded-full transition-colors duration-200 ${isInGebruik
+                                ? 'bg-emerald-500/20 border border-emerald-500/50'
+                                : 'bg-red-500/20 border border-red-500/50'
+                                } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        >
+                            <div
+                                className={`absolute top-1 w-5 h-5 rounded-full transition-all duration-200 shadow-sm ${isInGebruik
+                                    ? 'translate-x-7 bg-emerald-400'
+                                    : 'translate-x-1 bg-red-400'
+                                    }`}
+                            />
+                        </button>
                     </div>
                 </div>
 
-                <div className="mb-6 p-4 bg-neutral-800/50 rounded-xl border border-neutral-700">
-                    <p className="text-sm text-neutral-400 mb-2">Huidige Gebruiker</p>
+                <div className="mb-6 p-5 bg-neutral-900 rounded-2xl border border-neutral-800">
+                    <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-3">HUIDIGE GEBRUIKER</p>
                     {hasAttachedUser ? (
                         <div className="flex items-center justify-between">
-                            <div>
+                            <div className="overflow-hidden">
                                 {isFetchingUsers ? (
-                                    <p className="text-neutral-400">Laden...</p>
+                                    <p className="text-neutral-400 animate-pulse">Gegevens laden...</p>
                                 ) : attachedUser ? (
                                     <>
-                                        <p className="font-semibold">
+                                        <p className="font-semibold text-lg text-white truncate">
                                             {getDisplayName(attachedUser)}
                                         </p>
-                                        <p className="text-sm text-neutral-400">{attachedUser.username}</p>
+                                        <p className="text-sm text-neutral-400 truncate">@{attachedUser.username}</p>
                                     </>
                                 ) : (
                                     <p className="text-neutral-400">Gebruiker ID: {druppel.attached_user_id}</p>
@@ -215,47 +219,56 @@ const DruppelModal: React.FC<DruppelModalProps> = ({ setIsDruppelModalOpen, drup
                             <button
                                 onClick={handleDetachUser}
                                 disabled={isLoading}
-                                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-800 disabled:cursor-not-allowed rounded-lg transition-colors duration-200"
+                                className="ml-4 flex items-center gap-2 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 rounded-xl transition-colors shrink-0"
                             >
                                 {isLoading ? (
                                     <FaSpinner className="w-4 h-4 animate-spin" />
                                 ) : (
                                     <FaUserMinus className="w-4 h-4" />
                                 )}
-                                <span>Ontkoppelen</span>
                             </button>
                         </div>
                     ) : (
-                        <p className="text-neutral-500 italic">Geen gebruiker gekoppeld</p>
+                        <div className="flex items-center text-neutral-500 italic py-2">
+                            <span className="w-2 h-2 rounded-full bg-neutral-700 mr-2"></span>
+                            Nog geen gebruiker gekoppeld
+                        </div>
                     )}
                 </div>
 
-                <div className="p-4 bg-neutral-800/50 rounded-xl border border-neutral-700">
-                    <p className="text-sm text-neutral-400 mb-3">
-                        {hasAttachedUser ? "Andere Gebruiker Koppelen" : "Gebruiker Koppelen"}
+                <div className="p-5 bg-neutral-900 rounded-2xl border border-neutral-800">
+                    <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-3">
+                        {hasAttachedUser ? "GEBRUIKER WISSELEN" : "GEBRUIKER KOPPELEN"}
                     </p>
                     <div className="flex gap-3">
-                        <select
-                            value={selectedUserId || ""}
-                            onChange={(e) => setSelectedUserId(e.target.value ? Number(e.target.value) : null)}
-                            disabled={isFetchingUsers || isLoading}
-                            className="flex-1 px-4 py-2.5 bg-neutral-900 border border-neutral-600 rounded-lg text-white focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <option value="">
-                                {isFetchingUsers ? "Laden..." : "Selecteer gebruiker"}
-                            </option>
-                            {users
-                                .filter((user) => user.id !== druppel.attached_user_id)
-                                .map((user) => (
-                                    <option key={user.id} value={user.id}>
-                                        {getDisplayName(user)} ({user.username})
-                                    </option>
-                                ))}
-                        </select>
+                        <div className="relative flex-1">
+                            <select
+                                value={selectedUserId || ""}
+                                onChange={(e) => setSelectedUserId(e.target.value ? Number(e.target.value) : null)}
+                                disabled={isFetchingUsers || isLoading}
+                                className="w-full pl-4 pr-8 py-3 bg-neutral-950 border border-neutral-700 rounded-xl text-white focus:outline-none focus:border-emerald-500 disabled:opacity-50 appearance-none"
+                            >
+                                <option value="">
+                                    {isFetchingUsers ? "Laden..." : "Selecteer gebruiker..."}
+                                </option>
+                                {users
+                                    .filter((user) => user.id !== druppel.attached_user_id)
+                                    .map((user) => (
+                                        <option key={user.id} value={user.id}>
+                                            {getDisplayName(user)}
+                                        </option>
+                                    ))}
+                            </select>
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </div>
                         <button
                             onClick={handleAttachUser}
                             disabled={!selectedUserId || isLoading}
-                            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:cursor-not-allowed rounded-lg transition-colors duration-200"
+                            className="flex items-center gap-2 px-4 py-3 bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-colors font-medium shrink-0"
                         >
                             {isLoading ? (
                                 <FaSpinner className="w-4 h-4 animate-spin" />
@@ -269,24 +282,24 @@ const DruppelModal: React.FC<DruppelModalProps> = ({ setIsDruppelModalOpen, drup
 
                 {error && (
                     <motion.div
-                        initial={{ opacity: 0, y: -10 }}
+                        initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mt-4 p-3 bg-red-600/20 border border-red-600 rounded-lg text-red-400 text-sm text-center"
+                        className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm text-center"
                     >
                         {error}
                     </motion.div>
                 )}
                 {successMessage && (
                     <motion.div
-                        initial={{ opacity: 0, y: -10 }}
+                        initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mt-4 p-3 bg-green-600/20 border border-green-600 rounded-lg text-green-400 text-sm text-center"
+                        className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-sm text-center"
                     >
                         {successMessage}
                     </motion.div>
                 )}
             </motion.div>
-        </motion.div>
+        </div>
     );
 };
 

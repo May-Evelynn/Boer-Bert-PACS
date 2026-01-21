@@ -118,16 +118,6 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
                                 })
                             )}
                         </div>
-                        {hasSelection && (
-                            <div className="border-t border-neutral-700 p-2">
-                                <button
-                                    onClick={() => onChange([])}
-                                    className="w-full px-3 py-1.5 text-sm text-neutral-400 hover:text-neutral-200 transition-colors rounded-lg hover:bg-neutral-700/50"
-                                >
-                                    Wis selectie
-                                </button>
-                            </div>
-                        )}
                     </motion.div>
                 )}
             </AnimatePresence>

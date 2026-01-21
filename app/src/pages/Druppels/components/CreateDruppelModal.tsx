@@ -41,14 +41,14 @@ const CreateDruppelModal: React.FC<CreateDruppelModalProps> = ({ isOpen, setIsOp
     setLoading(true);
     try {
       await druppelService.initKeyfob({ keyfob_key: keyNumber });
-      
+
       if (userId !== null) {
-        await druppelService.attachUserToKeyfob({ 
-          userId: userId, 
+        await druppelService.attachUserToKeyfob({
+          userId: userId,
           keyfobId: keyNumber
         });
       }
-      
+
       handleClose();
       onSuccess();
     } catch (err: any) {
@@ -62,85 +62,84 @@ const CreateDruppelModal: React.FC<CreateDruppelModalProps> = ({ isOpen, setIsOp
   if (!isOpen) return null;
 
   return (
-    <motion.div
-      className="fixed inset-0 flex bg-black/50 backdrop-blur-md items-center justify-center text-white z-50"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onMouseDown={handleClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={handleClose}
+      />
       <motion.div
-        className="relative w-96 p-8 bg-neutral-900/90 border border-neutral-700 rounded-2xl shadow-2xl"
+        className="relative w-96 p-8 bg-neutral-950 border border-neutral-700 rounded-3xl shadow-2xl"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
         transition={{ type: 'spring', duration: 0.3 }}
-        onMouseDown={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-center items-center space-x-3 mb-6">
-          <FaPlus className="w-6 h-6 text-emerald-400" />
-          <h1 className="text-2xl font-bold">Nieuwe Druppel</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-white">Nieuwe Druppel</h1>
+          <button
+            className="bg-neutral-800 hover:bg-neutral-700 p-2 rounded-xl text-neutral-400 hover:text-white transition-colors"
+            onClick={handleClose}
+          >
+            <FaTimes className="w-4 h-4" />
+          </button>
         </div>
-        <button
-          className="absolute top-4 right-4 bg-red-600 hover:bg-red-700 p-2.5 rounded-xl hover:cursor-pointer transition-colors duration-200"
-          onClick={handleClose}
-        >
-          <FaTimes className="w-4 h-4" />
-        </button>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-neutral-300 mb-2">
-              Druppel Code <span className="text-red-400">*</span>
+            <label className="block text-sm font-medium text-neutral-400 mb-2">
+              Druppel Code <span className="text-emerald-400">*</span>
             </label>
             <input
               type="text"
               value={keyfobKey}
               onChange={(e) => setKeyfobKey(e.target.value)}
               placeholder="Bijv. 12345"
-              className="w-full p-3 rounded-lg bg-neutral-800 border border-neutral-600 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors text-white placeholder-neutral-600"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-neutral-300 mb-2">
-              Gebruiker ID koppelen <span className="text-neutral-500">(optioneel)</span>
+            <label className="block text-sm font-medium text-neutral-400 mb-2">
+              Gebruiker ID koppelen <span className="text-neutral-600 font-normal">(optioneel)</span>
             </label>
             <input
               type="text"
               value={attachUserId}
               onChange={(e) => setAttachUserId(e.target.value)}
               placeholder="Bijv. 1"
-              className="w-full p-3 rounded-lg bg-neutral-800 border border-neutral-600 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors text-white placeholder-neutral-600"
             />
           </div>
 
           {error && (
-            <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-center">
               <p className="text-red-400 text-sm">{error}</p>
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full p-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-800 disabled:cursor-not-allowed rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <>
-                <FaSpinner className="animate-spin" />
-                Aanmaken...
-              </>
-            ) : (
-              <>
-                <FaPlus />
-                Druppel Aanmaken
-              </>
-            )}
-          </button>
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 text-emerald-400 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <>
+                  <FaSpinner className="animate-spin" />
+                  Aanmaken...
+                </>
+              ) : (
+                <>
+                  <FaPlus />
+                  Druppel Aanmaken
+                </>
+              )}
+            </button>
+          </div>
         </form>
       </motion.div>
-    </motion.div>
+    </div>
   );
 };
 

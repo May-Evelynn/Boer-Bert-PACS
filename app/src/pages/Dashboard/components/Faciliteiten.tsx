@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { motion, Variants } from 'framer-motion';
-import { FaLock, FaShower, FaSwimmingPool, FaToilet, FaTools } from 'react-icons/fa';
+import { FaLock, FaShower, FaSpinner, FaSwimmingPool, FaToilet, FaTools } from 'react-icons/fa';
 import { MdLocalLaundryService } from 'react-icons/md';
 
 import { DataContext, DataContextType, Facility } from '../../../types';
@@ -73,8 +73,8 @@ const Faciliteiten: React.FC<FaciliteitenProps> = ({ facilities, variants, loadi
             <div className="bg-neutral-900 rounded-2xl p-3">
                 {user ? (
                     loading ? (
-                        <div className="text-center py-4">
-                            <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                        <div className="p-6 text-center">
+                            <FaSpinner className="mx-auto mb-4 size-12 text-neutral-500 animate-spin" />
                             <p className="text-neutral-400">Laden...</p>
                         </div>
                     ) : facilities.length > 0 ? (

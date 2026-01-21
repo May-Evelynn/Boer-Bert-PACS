@@ -37,7 +37,7 @@ const Dashboard: React.FC = () => {
     fetchData();
   }, [user, setScans, setFacilities]);
 
-  const displayScans = scans.slice(0, 4 ).map((scan) => {
+  const displayScans = scans.slice(0, 4).map((scan) => {
     const facility = facilities.find(f => f.facilities_id === scan.facility_id);
     return {
       id: scan.id,
@@ -68,7 +68,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="z-10 bg-neutral-900 min-h-screen w-full h-screen p-4 flex flex-col items-center justify-start text-white">
-      <motion.div 
+      <motion.div
         className='absolute bottom-16 right-16 -z-10 blur-sm'
         initial={{ opacity: 0, scale: 0.8, translateX: -50, translateY: 10 }}
         animate={{ opacity: 1, scale: 1, translateX: 0, translateY: 0 }}
@@ -76,7 +76,7 @@ const Dashboard: React.FC = () => {
       >
         <BsFillGrid1X2Fill className="size-96 text-neutral-800 rotate-12" />
       </motion.div>
-      <motion.div 
+      <motion.div
         className="w-full p-4 rounded-3xl justify-center items-center flex space-x-4 mb-8 flex-row"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -85,8 +85,8 @@ const Dashboard: React.FC = () => {
         <BsFillGrid1X2Fill className="w-8 h-8 text-emerald-400" />
         <h1 className="text-4xl font-semibold">Dashboard</h1>
       </motion.div>
-      <motion.section 
-        className="grid *:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full mb-8"
+      <motion.section
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full mb-8 items-start"
         variants={containerVariants}
         initial="hidden"
         animate="visible"

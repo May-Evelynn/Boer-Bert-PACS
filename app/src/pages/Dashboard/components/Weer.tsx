@@ -132,7 +132,8 @@ const Weer: React.FC<WeerProps> = ({ variants }) => {
         if (loading) {
             return (
                 <div className="bg-neutral-900 rounded-2xl p-6 flex items-center justify-center min-h-32">
-                    <FaSpinner className="animate-spin text-neutral-500 size-8" />
+                    <FaSpinner className="mx-auto mb-4 size-12 text-neutral-500 animate-spin" />
+                    <p className="text-neutral-400">Laden...</p>
                 </div>
             );
         }

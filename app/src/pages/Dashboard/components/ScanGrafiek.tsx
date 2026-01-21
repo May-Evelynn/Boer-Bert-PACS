@@ -149,11 +149,11 @@ const ScanGrafiek: React.FC<ScanGrafiekProps> = ({ scans, facilities, variants, 
 
     const pieData = useMemo(() => {
         const totals: Record<string, number> = {};
-        
+
         filteredFacilityNames.forEach(name => {
             totals[name] = 0;
         });
-        
+
         data.forEach(entry => {
             filteredFacilityNames.forEach(name => {
                 if (entry[name]) {
@@ -161,7 +161,7 @@ const ScanGrafiek: React.FC<ScanGrafiekProps> = ({ scans, facilities, variants, 
                 }
             });
         });
-        
+
         return filteredFacilityNames.map((name, index) => ({
             name,
             value: totals[name],
@@ -232,24 +232,26 @@ const ScanGrafiek: React.FC<ScanGrafiekProps> = ({ scans, facilities, variants, 
                         Per dag
                     </button>
                     <span className="border-l border-neutral-700 mx-1" />
-                    <button
-                        onClick={() => setSelectedGraph('bar')}
-                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${selectedGraph === 'bar'
-                            ? 'bg-blue-500/20 text-blue-400 border-blue-500/50'
-                            : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:bg-neutral-700'
-                            }`}
-                    >
-                        Bar
-                    </button>
-                    <button
-                        onClick={() => setSelectedGraph('pie')}
-                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${selectedGraph === 'pie'
-                            ? 'bg-blue-500/20 text-blue-400 border-blue-500/50'
-                            : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:bg-neutral-700'
-                            }`}
-                    >
-                        Pie
-                    </button>
+                    <div>
+                        <button
+                            onClick={() => setSelectedGraph('bar')}
+                            className={`px-3 py-1.5 rounded-l-xl text-sm font-medium transition-colors border ${selectedGraph === 'bar'
+                                ? 'bg-blue-500/20 text-blue-400 border-blue-500/50'
+                                : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:bg-neutral-700'
+                                }`}
+                        >
+                            Bar
+                        </button>
+                        <button
+                            onClick={() => setSelectedGraph('pie')}
+                            className={`px-3 py-1.5 rounded-r-xl text-sm font-medium transition-colors border ${selectedGraph === 'pie'
+                                ? 'bg-blue-500/20 text-blue-400 border-blue-500/50'
+                                : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:bg-neutral-700'
+                                }`}
+                        >
+                            Pie
+                        </button>
+                    </div>
                 </div>
             </div>
             <div className="flex items-center justify-end mb-4">
@@ -260,8 +262,8 @@ const ScanGrafiek: React.FC<ScanGrafiekProps> = ({ scans, facilities, variants, 
                             <button
                                 key={name}
                                 className={`px-3 py-1.5 text-sm font-medium border rounded-full transition-all ${isActive
-                                        ? getLocationStyle(name)
-                                        : 'bg-neutral-800/50 text-neutral-500 border-neutral-700 opacity-50'
+                                    ? getLocationStyle(name)
+                                    : 'bg-neutral-800/50 text-neutral-500 border-neutral-700 opacity-50'
                                     }`}
                                 onClick={() => toggleFilter(name)}
                             >

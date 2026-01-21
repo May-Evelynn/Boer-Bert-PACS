@@ -1,12 +1,14 @@
 import { useEffect, useState, useMemo } from 'react';
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import SideBar from './components/SideBar'
+import RoleGuard from './components/RoleGuard';
 
 import Home from './pages/Home'
 import Dashboard from './pages/Dashboard/Index';
 import Druppels from './pages/Druppels/Index';
 import Gasten from './pages/Gasten/Index';
-import Gebruikers from './pages/Gebruikers/Index';
+import Personeel from './pages/Personeel/Index';
+import Faciliteiten from './pages/Faciliteiten/Index';
 
 import { User, ApiUrl, Scan, Facility, Keyfob, DataContext, DEFAULT_API_URLS } from './types';
 import { setApiBaseUrl, getApiBaseUrl } from './services/api';
@@ -16,14 +18,14 @@ import "./CustomScrollbar.css"
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
-  
+
   const [apiUrls, setApiUrls] = useState<ApiUrl[]>(DEFAULT_API_URLS);
   const [activeApiUrl, setActiveApiUrlState] = useState<string>(getApiBaseUrl());
-  
+
   const [scans, setScans] = useState<Scan[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [keyfobs, setKeyfobs] = useState<Keyfob[]>([]);
-  
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const setActiveApiUrl = (url: string) => {
@@ -70,10 +72,11 @@ function App() {
           <div className='flex w-full h-full overflow-auto custom-scrollbar'>
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/druppels" element={<Druppels />} />
-              <Route path="/gasten" element={<Gasten />} />
-              <Route path='/gebruikers' element={<Gebruikers />} />
+              <Route path="/dashboard" element={<RoleGuard path="/dashboard"><Dashboard /></RoleGuard>} />
+              <Route path="/druppels" element={<RoleGuard path="/druppels"><Druppels /></RoleGuard>} />
+              <Route path="/gasten" element={<RoleGuard path="/gasten"><Gasten /></RoleGuard>} />
+              <Route path='/personeel' element={<RoleGuard path="/personeel"><Personeel /></RoleGuard>} />
+              <Route path='/faciliteiten' element={<RoleGuard path="/faciliteiten"><Faciliteiten /></RoleGuard>} />
             </Routes>
           </div>
         </div>

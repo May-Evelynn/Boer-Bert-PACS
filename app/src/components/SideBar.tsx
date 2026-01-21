@@ -2,13 +2,14 @@ import { useState, useEffect, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 
-import { FaArrowLeft, FaCogs, FaHome } from "react-icons/fa";
+import { FaArrowLeft, FaCogs, FaHome, FaTools } from "react-icons/fa";
 import { MdLogout, MdLogin } from "react-icons/md";
 import { BsFillGrid1X2Fill } from "react-icons/bs";
 import { FaPeopleGroup, FaPerson } from "react-icons/fa6";
 
 import LoginModal from './LoginModal'
 import PasswordModal from "./PasswordModal";
+import { hasRoleAccess } from "./RoleGuard";
 
 import { DataContext, DataContextType } from '../types';
 
@@ -50,11 +51,17 @@ const SideBar: React.FC = () => {
         { path: '/', icon: FaHome, label: 'Home' },
         { path: '/dashboard', icon: BsFillGrid1X2Fill, label: 'Dashboard' },
         { path: '/gasten', icon: FaPerson, label: 'Gasten' },
-        { path: '/gebruikers', icon: FaPeopleGroup, label: 'Gebruikers' },
+        { path: '/personeel', icon: FaPeopleGroup, label: 'Personeel' },
         { path: '/druppels', icon: FaCogs, label: 'Druppels' },
+        { path: '/faciliteiten', icon: FaTools, label: 'Faciliteiten' },
     ];
 
-    const activeIndex = navItems.findIndex(item => item.path === location.pathname);
+    // Filter nav items based on user role
+    const filteredNavItems = navItems.filter(item =>
+        hasRoleAccess(user?.role, item.path)
+    );
+
+    const activeIndex = filteredNavItems.findIndex(item => item.path === location.pathname);
 
     return (
         <div className="z-20 bg-neutral-900">
@@ -88,7 +95,7 @@ const SideBar: React.FC = () => {
                                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
                             />
                         )}
-                        {navItems.map((item) => {
+                        {filteredNavItems.map((item) => {
                             const Icon = item.icon;
                             const isActive = location.pathname === item.path;
                             return (
