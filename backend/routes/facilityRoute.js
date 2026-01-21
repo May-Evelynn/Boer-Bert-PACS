@@ -7,7 +7,7 @@ router.put('/create-facility', async (req, res) => {
     if (!req.body || Object.keys(req.body).length === 0) {
         return res.status(400).json({ error: 'Request body is empty' });
     }
-    
+
     let { facilityType, capacity } = req.body || {};
     const dataArr = [facilityType, capacity];
     const dataNames = ['facilityType', 'capacity'];
@@ -41,6 +41,32 @@ router.get('/facilities', async (req, res) => {
     }
 });
 
+router.put('/update-facility/:id', async (req, res) => {
+    const facilityId = req.params.id;
+    if (!facilityId) {
+        return res.status(400).json({ error: 'Facility ID is vereist' });
+    }
+
+    if (!req.body || Object.keys(req.body).length === 0) {
+        return res.status(400).json({ error: 'Request body is empty' });
+    }
+
+    const { facilityType, capacity, active, broken } = req.body;
+
+    try {
+        let result = await updateFacility(facilityId, {
+            facility_type: facilityType,
+            capacity: capacity,
+            active: active !== undefined ? active : true,
+            broken: broken !== undefined ? broken : false
+        });
+        const safeResult = toSerializable(result);
+        return res.status(200).json({ message: 'Faciliteit bijgewerkt', result: safeResult });
+    } catch (err) {
+        return res.status(500).json({ error: err.message || 'Internal Server Error' });
+    }
+});
+
 router.delete('/delete-facility/:id', async (req, res) => {
     const facilityId = req.params.id;
     if (!facilityId) {
@@ -53,6 +79,6 @@ router.delete('/delete-facility/:id', async (req, res) => {
     } catch (err) {
         return res.status(500).json({ error: err.message || 'Internal Server Error' });
     }
-}); 
+});
 
 module.exports = router;
