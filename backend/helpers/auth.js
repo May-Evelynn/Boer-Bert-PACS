@@ -68,13 +68,13 @@ export async function loginUser(username, password) {
         conn = await pool.getConnection();
         const rows = await conn.query("SELECT * FROM users WHERE username = ?", [username]);
         if (!rows || rows.length === 0) {
-            throw new Error('User not found');
+            throw new Error('Gebruiker niet gevonden');
         }
 
         const user = rows[0];
         const isPasswordValid = await comparePassword(password, user.password);
         if (!isPasswordValid) {
-            throw new Error('Invalid password');
+            throw new Error('Ongeldig wachtwoord');
         }
 
         const payload = {
