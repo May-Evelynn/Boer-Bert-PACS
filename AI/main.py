@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-df = pd.read_csv("./test_data.csv")
+df = pd.read_csv("./foo.csv")
 df.info()
 df.plot()
 

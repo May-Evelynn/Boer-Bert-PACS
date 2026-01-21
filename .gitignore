@@ -45,4 +45,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# random files 
 backend/helpers/true.js
+AI/boerbertlogs.csv
+.gitignore
+AI/BBlogs.csv
+AI/foo.csv
