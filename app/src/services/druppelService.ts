@@ -52,5 +52,9 @@ export const druppelService = {
 
   async toggleKeyfob(keyfobId: number, data: ToggleKeyfobData): Promise<void> {
     await api.patch(`/druppel/toggle-keyfob/${keyfobId}`, data);
+  },
+
+  async attachUser(userId: number, keyfobId: number): Promise<void> {
+    await api.put('/druppel/attach-user', { userId, keyfobId });
   }
 };

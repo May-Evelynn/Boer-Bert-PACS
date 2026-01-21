@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 
 export interface User {
   id: number;
+  user_id: number;
   username: string;
   email: string;
   first_name: string;
@@ -136,25 +137,25 @@ export interface DataContextType {
   // User state
   user: User | null;
   setUser: (user: User | null) => void;
-  
+
   // API URLs state
   apiUrls: ApiUrl[];
   setApiUrls: (urls: ApiUrl[]) => void;
   activeApiUrl: string;
   setActiveApiUrl: (url: string) => void;
-  
+
   // Scans state
   scans: Scan[];
   setScans: (scans: Scan[]) => void;
-  
+
   // Facilities state
   facilities: Facility[];
   setFacilities: (facilities: Facility[]) => void;
-  
+
   // Keyfobs state
   keyfobs: Keyfob[];
   setKeyfobs: (keyfobs: Keyfob[]) => void;
-  
+
   // Loading states
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
@@ -167,19 +168,19 @@ export const DEFAULT_API_URLS: ApiUrl[] = [
 
 export const DataContext = createContext<DataContextType>({
   user: null,
-  setUser: () => {},
+  setUser: () => { },
   apiUrls: DEFAULT_API_URLS,
-  setApiUrls: () => {},
+  setApiUrls: () => { },
   activeApiUrl: DEFAULT_API_URLS[0].value,
-  setActiveApiUrl: () => {},
+  setActiveApiUrl: () => { },
   scans: [],
-  setScans: () => {},
+  setScans: () => { },
   facilities: [],
-  setFacilities: () => {},
+  setFacilities: () => { },
   keyfobs: [],
-  setKeyfobs: () => {},
+  setKeyfobs: () => { },
   isLoading: false,
-  setIsLoading: () => {},
+  setIsLoading: () => { },
 });
 
 export const useData = (): DataContextType => {

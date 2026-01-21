@@ -1,28 +1,72 @@
-import { useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { FaPerson } from 'react-icons/fa6';
+import { FaPlus, FaTag, FaTrash } from 'react-icons/fa';
 
 import Table from '../../components/Table';
+import { guestService, Guest } from '../../services/guestService';
+import { druppelService } from '../../services/druppelService';
+import { DataContext, DataContextType, Keyfob } from '../../types';
 
-import { DataContext, DataContextType } from '../../types';
+import CreateGuestModal from './components/CreateGuestModal';
+import TagAssignModal from './components/TagAssignModal';
 
-const Personen: React.FC = () => {
-  const { user } = useContext<DataContextType>(DataContext);
-  // Dummy data voor gasten
-  const gasten = [
-    { id: 1, last_name: 'Hendriks', first_name: 'Frank', affix: 'de', tag_id: '07235' },
-    { id: 2, last_name: 'Visser', first_name: 'Bram', affix: '', tag_id: '02645' },
-    { id: 3, last_name: 'Jansen', first_name: 'Ciska', affix: '', tag_id: '07294' },
-    { id: 4, last_name: 'Bakker', first_name: 'Daan', affix: '', tag_id: '08321' },
-    { id: 5, last_name: 'Smit', first_name: 'Eva', affix: '', tag_id: '09432' },
-    { id: 6, last_name: 'Meijer', first_name: 'Fleur', affix: '', tag_id: '01234' },
-    { id: 7, last_name: 'de Vries', first_name: 'Gert', affix: 'de', tag_id: '04567' },
-    { id: 8, last_name: 'Mulder', first_name: 'Hanneke', affix: '', tag_id: '07890' },
-    { id: 9, last_name: 'Bos', first_name: 'Iris', affix: '', tag_id: '03456' },
-    { id: 10, last_name: 'Kramer', first_name: 'Jeroen', affix: '', tag_id: '06789' },
-    { id: 11, last_name: 'Dekker', first_name: 'Kim', affix: '', tag_id: '09876' },
-    { id: 12, last_name: 'Willems', first_name: 'Lars', affix: '', tag_id: '02345' }
-  ];
+const Gasten: React.FC = () => {
+  const { keyfobs, setKeyfobs } = useContext<DataContextType>(DataContext);
+  const [gasten, setGasten] = useState<Guest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isTagModalOpen, setIsTagModalOpen] = useState(false);
+  const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [guests, keyfobData] = await Promise.all([
+        guestService.getGuests(),
+        druppelService.getKeyfobs()
+      ]);
+      setGasten(guests);
+      setKeyfobs(keyfobData);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch data:', err);
+      setError('Kon gasten niet laden');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleTagClick = (guest: Guest) => {
+    setSelectedGuest(guest);
+    setIsTagModalOpen(true);
+  };
+
+  const handleDelete = async (guest: Guest) => {
+    if (!confirm(`Weet je zeker dat je "${guest.first_name} ${guest.last_name}" wilt verwijderen?`)) {
+      return;
+    }
+    try {
+      const keyfob = getGuestKeyfob(guest.user_id);
+      if (keyfob) {
+        await druppelService.detachUserFromKeyfob({ keyfobId: keyfob.keyfob_id });
+      }
+      await guestService.deleteGuest(guest.user_id);
+      await fetchData();
+    } catch (err) {
+      console.error('Failed to delete guest:', err);
+      alert('Kon gast niet verwijderen');
+    }
+  };
+
+  const getGuestKeyfob = (userId: number): Keyfob | undefined => {
+    return keyfobs.find(k => k.attached_user_id === userId);
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -43,66 +87,112 @@ const Personen: React.FC = () => {
     }
   };
 
+  const formatName = (guest: Guest) => {
+    const parts = [guest.first_name];
+    if (guest.affix) parts.push(guest.affix);
+    if (guest.last_name) parts.push(guest.last_name);
+    return parts.join(' ');
+  };
+
   return (
     <>
-      {user ? (
-        <div className="z-10 bg-neutral-900 min-h-screen w-full p-4 flex flex-col items-center justify-start text-white">
-          <motion.div
-            className='absolute bottom-16 right-16 -z-10 blur-sm'
-            initial={{ opacity: 0, scale: 0.8, translateX: -50, translateY: 10 }}
-            animate={{ opacity: 1, scale: 1, translateX: 0, translateY: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <FaPerson className="size-96 text-neutral-800 rotate-12" />
-          </motion.div>
-          <motion.div
-            className="w-full p-4 rounded-3xl justify-center items-center flex space-x-4 mb-8 flex-row"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <FaPerson className="w-8 h-8 text-emerald-400" />
-            <h1 className="text-4xl font-semibold">Gasten</h1>
-          </motion.div>
-          <motion.section
-            className="flex flex-col w-full gap-8 mb-8"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <Table
-              table={{
-                title: 'Gasten',
-                columns: ['Achternaam', 'Voornaam', 'Tussenvoegsel', 'Tag ID'],
-              }}
-              data={gasten}
-              searchFilters={['last_name', 'first_name', 'tag_id']}
-              renderRow={(item) => [
-                item.last_name,
-                item.first_name,
-                item.affix || '-',
-                <span className="font-mono text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">
-                  {item.tag_id}
-                </span>,
-              ]}
-              emptyMessage="Geen gasten gevonden."
-              variants={itemVariants}
-            />
-          </motion.section>
-        </div>
-      ) : (
+      <div className="z-10 bg-neutral-900 min-h-screen w-full p-4 flex flex-col items-center justify-start text-white">
         <motion.div
-          className="z-10 bg-neutral-900 min-h-screen w-full p-4 flex flex-col items-center justify-center text-white h-screen"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          className='absolute bottom-16 right-16 -z-10 blur-sm'
+          initial={{ opacity: 0, scale: 0.8, translateX: -50, translateY: 10 }}
+          animate={{ opacity: 1, scale: 1, translateX: 0, translateY: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <FaPerson className="size-96 text-neutral-800 rotate-12" />
+        </motion.div>
+        <motion.div
+          className="w-full p-4 rounded-3xl justify-center items-center flex space-x-4 mb-8 flex-row"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <h1 className="text-3xl mb-4">Toegang Geweigerd</h1>
-          <p className="text-neutral-400 mb-2">Je moet ingelogd zijn om de personen te bekijken.</p>
+          <FaPerson className="w-8 h-8 text-emerald-400" />
+          <h1 className="text-4xl font-semibold">Gasten</h1>
         </motion.div>
+        <motion.section
+          className="flex flex-col w-full gap-8 mb-8"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <Table
+            table={{
+              title: 'Gasten',
+              columns: ['Naam', 'Tag', 'Acties'],
+            }}
+            data={gasten}
+            searchFilters={['first_name', 'last_name']}
+            sortableColumns={[0]}
+            renderRow={(guest) => {
+              const keyfob = getGuestKeyfob(guest.user_id);
+              return [
+                formatName(guest),
+                keyfob ? (
+                  <span className="font-mono text-blue-400 bg-blue-500/10 px-2 py-1 rounded flex items-center gap-1 w-fit">
+                    <FaTag className="w-3 h-3" />
+                    #{keyfob.keyfob_id}
+                  </span>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleTagClick(guest);
+                    }}
+                    className="px-2 py-1 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors text-sm flex items-center gap-1"
+                  >
+                    <FaTag className="w-3 h-3" />
+                    Koppelen
+                  </button>
+                ),
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(guest);
+                  }}
+                  className="p-2 rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 hover:bg-rose-500/30 transition-colors"
+                  title="Verwijderen"
+                >
+                  <FaTrash className="w-4 h-4" />
+                </button>,
+              ];
+            }}
+            loading={loading}
+            error={error}
+            emptyMessage="Geen gasten gevonden."
+            actionButton={{
+              label: 'Nieuwe Gast',
+              icon: <FaPlus />,
+              onClick: () => setIsCreateModalOpen(true),
+            }}
+            variants={itemVariants}
+          />
+        </motion.section>
+      </div>
+
+      {isCreateModalOpen && (
+        <CreateGuestModal
+          isOpen={isCreateModalOpen}
+          setIsOpen={setIsCreateModalOpen}
+          onSuccess={fetchData}
+        />
+      )}
+
+      {isTagModalOpen && selectedGuest && (
+        <TagAssignModal
+          isOpen={isTagModalOpen}
+          setIsOpen={setIsTagModalOpen}
+          guest={selectedGuest}
+          availableKeyfobs={keyfobs.filter(k => !k.attached_user_id && !k.buitengebruik)}
+          onSuccess={fetchData}
+        />
       )}
     </>
   );
 }
 
-export default Personen;
+export default Gasten;
