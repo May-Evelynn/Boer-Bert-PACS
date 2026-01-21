@@ -15,7 +15,7 @@ app.use((err, req, res, next) => {
 // best wel lenient, later dichtzetten
 app.use(cors({
   origin: "*",
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
