@@ -1,8 +1,11 @@
+import { useContext, useState, useEffect, useMemo } from 'react';
 import { motion, Variants } from 'framer-motion';
-import { useState } from 'react';
 import {
     BarChart,
+    PieChart,
     Bar,
+    Pie,
+    Cell,
     XAxis,
     YAxis,
     CartesianGrid,
@@ -10,14 +13,13 @@ import {
     Legend,
     ResponsiveContainer,
 } from 'recharts';
-import { User, Scan, Facility } from '../../../types';
+import { DataContext, DataContextType, Scan, Facility } from '../../../types';
 import { FaSpinner } from 'react-icons/fa';
 
 interface ScanGrafiekProps {
     scans: Scan[];
     facilities: Facility[];
     variants?: Variants;
-    user: User | null;
     loading?: boolean;
 }
 
@@ -53,12 +55,16 @@ const getLocationStyle = (location: string) => {
     return LOCATION_STYLES[location] || 'bg-neutral-600/20 text-neutral-400 border-neutral-500/30';
 };
 
-const ScanGrafiek: React.FC<ScanGrafiekProps> = ({ scans, facilities, variants, user, loading }) => {
+const ScanGrafiek: React.FC<ScanGrafiekProps> = ({ scans, facilities, variants, loading }) => {
+    const { user } = useContext<DataContextType>(DataContext);
     const [viewMode, setViewMode] = useState<ViewMode>('hour');
     const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null);
+    const [activeFilters, setActiveFilters] = useState<string[]>([]);
+    const [initialized, setInitialized] = useState(false);
+    const [selectedGraph, setSelectedGraph] = useState<'bar' | 'pie'>('pie');
 
     const processData = () => {
-        const grouped: Record<string, Record<string, number>> = {};
+        const grouped: Record<string, Record<string, string | number>> = {};
         const scanDetails: Record<string, ScanDetail[]> = {};
         const facilityNames = new Set<string>();
         const dayTimestamps: Record<string, number> = {};
@@ -78,7 +84,7 @@ const ScanGrafiek: React.FC<ScanGrafiekProps> = ({ scans, facilities, variants, 
                     dayTimestamps[key] = date.getTime();
                 }
             }
-            
+
             const facility = facilities.find(f => f.facilities_id === scan.facility_id);
             const facilityName = facility?.facility_type || `Facility ${scan.facility_id}`;
             facilityNames.add(facilityName);
@@ -87,7 +93,7 @@ const ScanGrafiek: React.FC<ScanGrafiekProps> = ({ scans, facilities, variants, 
                 grouped[key] = { name: displayKey };
                 scanDetails[displayKey] = [];
             }
-            grouped[key][facilityName] = (grouped[key][facilityName] || 0) + 1;
+            grouped[key][facilityName] = ((grouped[key][facilityName] as number) || 0) + 1;
 
             scanDetails[displayKey].push({
                 time: date.toLocaleString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
@@ -112,12 +118,56 @@ const ScanGrafiek: React.FC<ScanGrafiekProps> = ({ scans, facilities, variants, 
 
     const { data, scanDetails, facilityNames } = processData();
 
+    useEffect(() => {
+        if (facilityNames.length > 0 && !initialized) {
+            setActiveFilters(facilityNames);
+            setInitialized(true);
+        }
+    }, [facilityNames, initialized]);
+
     const handleBarClick = (data: any) => {
         if (data?.name) {
             const period = data.name;
             setSelectedPeriod(selectedPeriod === period ? null : period);
         }
     };
+
+    const toggleFilter = (location: string) => {
+        setActiveFilters((prev) => {
+            if (prev.includes(location)) {
+                if (prev.length === 1) return prev;
+                return prev.filter((loc) => loc !== location);
+            } else {
+                return [...prev, location];
+            }
+        });
+    };
+
+    const filteredFacilityNames = useMemo(() => {
+        return facilityNames.filter(name => activeFilters.includes(name));
+    }, [facilityNames, activeFilters]);
+
+    const pieData = useMemo(() => {
+        const totals: Record<string, number> = {};
+        
+        filteredFacilityNames.forEach(name => {
+            totals[name] = 0;
+        });
+        
+        data.forEach(entry => {
+            filteredFacilityNames.forEach(name => {
+                if (entry[name]) {
+                    totals[name] += entry[name] as number;
+                }
+            });
+        });
+        
+        return filteredFacilityNames.map((name, index) => ({
+            name,
+            value: totals[name],
+            color: getColor(name, index)
+        })).filter(item => item.value > 0);
+    }, [data, filteredFacilityNames]);
 
     const selectedDetails = selectedPeriod ? scanDetails[selectedPeriod] || [] : [];
     const selectedTotal = selectedDetails.length;
@@ -181,6 +231,44 @@ const ScanGrafiek: React.FC<ScanGrafiekProps> = ({ scans, facilities, variants, 
                     >
                         Per dag
                     </button>
+                    <span className="border-l border-neutral-700 mx-1" />
+                    <button
+                        onClick={() => setSelectedGraph('bar')}
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${selectedGraph === 'bar'
+                            ? 'bg-blue-500/20 text-blue-400 border-blue-500/50'
+                            : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:bg-neutral-700'
+                            }`}
+                    >
+                        Bar
+                    </button>
+                    <button
+                        onClick={() => setSelectedGraph('pie')}
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${selectedGraph === 'pie'
+                            ? 'bg-blue-500/20 text-blue-400 border-blue-500/50'
+                            : 'bg-neutral-800 text-neutral-400 border-neutral-700 hover:bg-neutral-700'
+                            }`}
+                    >
+                        Pie
+                    </button>
+                </div>
+            </div>
+            <div className="flex items-center justify-end mb-4">
+                <div className="flex gap-2">
+                    {facilityNames.map((name) => {
+                        const isActive = activeFilters.includes(name);
+                        return (
+                            <button
+                                key={name}
+                                className={`px-3 py-1.5 text-sm font-medium border rounded-full transition-all ${isActive
+                                        ? getLocationStyle(name)
+                                        : 'bg-neutral-800/50 text-neutral-500 border-neutral-700 opacity-50'
+                                    }`}
+                                onClick={() => toggleFilter(name)}
+                            >
+                                {name}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
@@ -191,58 +279,82 @@ const ScanGrafiek: React.FC<ScanGrafiekProps> = ({ scans, facilities, variants, 
                     </div>
                 ) : (
                     <>
-                        <div className="h-48 w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart
-                                    data={data}
-                                    margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
-                                >
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#404040" />
-                                    <XAxis
-                                        dataKey="name"
-                                        tick={{ fill: '#a3a3a3', fontSize: 12 }}
-                                        axisLine={{ stroke: '#525252' }}
-                                        tickLine={{ stroke: '#525252' }}
-                                    />
-                                    <YAxis
-                                        tick={{ fill: '#a3a3a3', fontSize: 12 }}
-                                        axisLine={{ stroke: '#525252' }}
-                                        tickLine={{ stroke: '#525252' }}
-                                        allowDecimals={false}
-                                    />
-                                    {viewMode === 'hour' && (
-                                        <Tooltip
-                                            cursor={{ fill: 'rgba(255,255,255,0.1)' }}
-                                            wrapperStyle={{ zIndex: 100 }}
-                                            contentStyle={{
-                                                backgroundColor: '#171717',
-                                                border: '1px solid #404040',
-                                                borderRadius: '8px',
-                                                color: '#fff',
-                                            }}
-                                            formatter={(value: number, name: string) => [value, name]}
+                        <div className="h-64 w-full">
+                            {selectedGraph === 'bar' && (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart
+                                        data={data}
+                                        margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+                                    >
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#404040" />
+                                        <XAxis
+                                            dataKey="name"
+                                            tick={{ fill: '#a3a3a3', fontSize: 12 }}
+                                            axisLine={{ stroke: '#525252' }}
+                                            tickLine={{ stroke: '#525252' }}
                                         />
-                                    )}
-                                    <Legend
-                                        wrapperStyle={{ paddingTop: 10 }}
-                                        formatter={(value) => <span style={{ color: '#a3a3a3' }}>{value}</span>}
-                                    />
-                                    {facilityNames.map((name, index) => (
-                                        <Bar
-                                            key={name}
-                                            dataKey={name}
-                                            stackId="a"
-                                            fill={getColor(name, index)}
-                                            radius={index === facilityNames.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
-                                            onClick={viewMode === 'day' ? handleBarClick : undefined}
-                                            style={{ cursor: viewMode === 'day' ? 'pointer' : 'default' }}
+                                        <YAxis
+                                            tick={{ fill: '#a3a3a3', fontSize: 12 }}
+                                            axisLine={{ stroke: '#525252' }}
+                                            tickLine={{ stroke: '#525252' }}
+                                            allowDecimals={false}
                                         />
-                                    ))}
-                                </BarChart>
-                            </ResponsiveContainer>
+                                        {viewMode === 'hour' && (
+                                            <Tooltip
+                                                cursor={{ fill: 'rgba(255,255,255,0.1)' }}
+                                                wrapperStyle={{ zIndex: 100 }}
+                                                contentStyle={{
+                                                    backgroundColor: '#171717',
+                                                    border: '1px solid #404040',
+                                                    borderRadius: '8px',
+                                                    color: '#fff',
+                                                }}
+                                            />
+                                        )}
+                                        <Legend
+                                            wrapperStyle={{ paddingTop: 10 }}
+                                            formatter={(value) => <span style={{ color: '#a3a3a3' }}>{value}</span>}
+                                        />
+                                        {filteredFacilityNames.map((name, index) => (
+                                            <Bar
+                                                key={name}
+                                                dataKey={name}
+                                                stackId="a"
+                                                fill={getColor(name, index)}
+                                                radius={index === filteredFacilityNames.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+                                                onClick={viewMode === 'day' ? handleBarClick : undefined}
+                                                style={{ cursor: viewMode === 'day' ? 'pointer' : 'default' }}
+                                            />
+                                        ))}
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            )}
+                            {selectedGraph === 'pie' && (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={pieData}
+                                            dataKey="value"
+                                            nameKey="name"
+                                            cx="50%"
+                                            cy="50%"
+                                            outerRadius={90}
+                                            label={({ name, percent }) => `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`}
+                                            labelLine={false}
+                                        >
+                                            {pieData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Pie>
+                                        <Legend
+                                            wrapperStyle={{ paddingTop: 10 }}
+                                            formatter={(value) => <span style={{ color: '#a3a3a3' }}>{value}</span>}
+                                        />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            )}
                         </div>
 
-                        {/* Selected period details panel */}
                         {selectedPeriod && (
                             <motion.div
                                 initial={{ opacity: 0, height: 0 }}
