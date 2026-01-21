@@ -1,7 +1,8 @@
+import { useContext } from 'react';
 import { Variants } from 'framer-motion';
 
 import Table from '../../../components/Table';
-import { User } from '../../../types';
+import { DataContext, DataContextType } from '../../../types';
 
 interface Scan {
     id: number;
@@ -13,11 +14,11 @@ interface Scan {
 interface LaatsteScansProps {
     scans: Scan[];
     variants?: Variants;
-    user: User | null;
     loading?: boolean;
 }
 
-const LaatsteScans: React.FC<LaatsteScansProps> = ({ scans, variants, user, loading }) => {
+const LaatsteScans: React.FC<LaatsteScansProps> = ({ scans, variants, loading }) => {
+    const { user } = useContext<DataContextType>(DataContext);
     const getLocationColor = (location: string) => {
         const colors: Record<string, string> = {
             'Zwembad': 'bg-sky-500/20 text-sky-400 border-sky-500/30',

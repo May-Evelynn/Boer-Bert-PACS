@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { BsFillGrid1X2Fill } from "react-icons/bs";
 import LaatsteScans from './components/LaatsteScans';
 import Weer from './components/Weer';
@@ -8,15 +8,10 @@ import ScanGrafiek from './components/ScanGrafiek';
 import { scanService } from '../../services/scanService';
 import { facilityService } from '../../services/facilityService';
 
-import { User, Scan, Facility } from '../../types';
+import { DataContext, DataContextType } from '../../types';
 
-interface DashboardProps {
-    user: User | null;
-}
-
-const Dashboard: React.FC<DashboardProps> = ({ user }) => {
-  const [scans, setScans] = useState<Scan[]>([]);
-  const [facilities, setFacilities] = useState<Facility[]>([]);
+const Dashboard: React.FC = () => {
+  const { user, scans, setScans, facilities, setFacilities } = useContext<DataContextType>(DataContext);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,7 +35,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     };
 
     fetchData();
-  }, [user]);
+  }, [user, setScans, setFacilities]);
 
   const displayScans = scans.slice(0, 4 ).map((scan) => {
     const facility = facilities.find(f => f.facilities_id === scan.facility_id);
@@ -96,13 +91,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         initial="hidden"
         animate="visible"
       >
-        <LaatsteScans scans={displayScans} variants={itemVariants} user={user} loading={loading} />
+        <LaatsteScans scans={displayScans} variants={itemVariants} loading={loading} />
 
-        <ScanGrafiek scans={scans} facilities={facilities} variants={itemVariants} user={user} loading={loading} />
+        <ScanGrafiek scans={scans} facilities={facilities} variants={itemVariants} loading={loading} />
 
         <Weer variants={itemVariants} />
 
-        <Faciliteiten facilities={facilities} variants={itemVariants} user={user} loading={loading} />
+        <Faciliteiten facilities={facilities} variants={itemVariants} loading={loading} />
       </motion.section>
     </div>
   );

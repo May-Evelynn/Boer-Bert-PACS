@@ -42,7 +42,6 @@ const UserEditModal: React.FC<UserEditModalProps> = ({
         setError(null);
 
         try {
-            // Remove id and user_id from payload to prevent backend errors
             const { id, user_id, ...updateData } = formData as any;
             await userService.updateUser(gebruiker.id, updateData);
             onUserUpdated();
@@ -81,12 +80,14 @@ const UserEditModal: React.FC<UserEditModalProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onMouseDown={handleClose}
         >
             <motion.div
                 className="relative w-96 p-8 bg-neutral-900/90 border border-neutral-700 rounded-2xl shadow-2xl"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", duration: 0.3 }}
+                onMouseDown={(e) => e.stopPropagation()}
             >
                 <div className="flex overflow-x-hidden space-x-3 mb-8 items-center justify-between">
                     <h1 className="text-3xl font-bold">Bewerk Gebruiker</h1>

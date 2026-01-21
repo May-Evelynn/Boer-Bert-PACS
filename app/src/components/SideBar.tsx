@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -10,16 +10,10 @@ import { FaPeopleGroup, FaPerson } from "react-icons/fa6";
 import LoginModal from './LoginModal'
 import PasswordModal from "./PasswordModal";
 
-import { User } from '../types';
+import { DataContext, DataContextType } from '../types';
 
-interface SideBarProps {
-    user: User | null;
-    setUser: (user: User | null) => void;
-    apiUrl: string;
-    setApiUrl: (url: string) => void;
-}
-
-const SideBar: React.FC<SideBarProps> = ({ user, setUser, apiUrl, setApiUrl }) => {
+const SideBar: React.FC = () => {
+    const { user, setUser } = useContext<DataContextType>(DataContext);
     const navigate = useNavigate();
     const location = useLocation();
     const [isOpen, setIsOpen] = useState(true);
@@ -157,18 +151,12 @@ const SideBar: React.FC<SideBarProps> = ({ user, setUser, apiUrl, setApiUrl }) =
                         isLoginModalOpen={isLoginModalOpen}
                         setIsLoginModalOpen={setIsLoginModalOpen}
                         setIsPasswordModalOpen={setIsPasswordModalOpen}
-                        user={user}
-                        setUser={setUser}
-                        apiUrl={apiUrl}
-                        setApiUrl={setApiUrl}
                     />
                 }
                 {isPasswordModalOpen &&
                     <PasswordModal
                         isPasswordModalOpen={isPasswordModalOpen}
                         setIsPasswordModalOpen={setIsPasswordModalOpen}
-                        user={user}
-                        setUser={setUser}
                     />
                 }
             </motion.div>

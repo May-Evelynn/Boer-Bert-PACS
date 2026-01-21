@@ -1,17 +1,13 @@
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { FaCogs, FaPlus } from 'react-icons/fa';
 
-import { User, Keyfob } from '../../types';
+import { DataContext, DataContextType } from '../../types';
 import { druppelService } from '../../services/druppelService';
 
 import Table from '../../components/Table';
 import DruppelModal from './components/DruppelModal';
 import CreateDruppelModal from './components/CreateDruppelModal';
-
-interface DruppelsProps {
-  user: User | null;
-}
 
 interface DruppelDisplay {
   id: number;
@@ -25,8 +21,8 @@ interface DruppelDisplay {
   role?: string;
 }
 
-const Druppels: React.FC<DruppelsProps> = ({ user }) => {
-  const [keyfobs, setKeyfobs] = useState<Keyfob[]>([]);
+const Druppels: React.FC = () => {
+  const { user, keyfobs, setKeyfobs } = useContext<DataContextType>(DataContext);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,9 +48,8 @@ const Druppels: React.FC<DruppelsProps> = ({ user }) => {
     };
 
     fetchKeyfobs();
-  }, [user]);
+  }, [user, setKeyfobs]);
 
-  // Transform keyfobs to display format
   const druppels: DruppelDisplay[] = keyfobs.map((keyfob) => ({
     id: keyfob.keyfob_id,
     druppelId: keyfob.keyfob_id,
@@ -135,7 +130,7 @@ const Druppels: React.FC<DruppelsProps> = ({ user }) => {
             <Table
               table={{
                 title: 'Druppels',
-                columns: ['ID', 'Druppel Code', 'Gekoppelde Gebruikers ID', 'Buitengebruik'],
+                columns: ['ID', 'Druppel Code', 'Gekoppelde Gebruikers ID', 'In Gebruik'],
               }}
               data={druppels}
               searchFilters={['druppelCode']}
@@ -143,7 +138,7 @@ const Druppels: React.FC<DruppelsProps> = ({ user }) => {
               columnFilters={[
                 {
                   column: 'buitengebruik',
-                  label: 'Buiten Gebruik',
+                  label: 'In Gebruik',
                   options: ['Ja', 'Nee'],
                   valueFormatter: (value) => value ? 'Ja' : 'Nee'
                 }
@@ -152,7 +147,7 @@ const Druppels: React.FC<DruppelsProps> = ({ user }) => {
                 druppel.druppelId,
                 druppel.druppelCode,
                 druppel.attached_user_id,
-                druppel.buitengebruik ? 'Ja' : 'Nee',
+                druppel.buitengebruik ? 'Nee' : 'Ja',
               ]}
               clickableRows={true}
               clickFunction={toggleDruppelModal}
@@ -167,19 +162,7 @@ const Druppels: React.FC<DruppelsProps> = ({ user }) => {
               variants={itemVariants}
             />
           </motion.section>
-          {isDruppelModalOpen && (
-            <DruppelModal
-              isDruppelModalOpen={isDruppelModalOpen}
-              setIsDruppelModalOpen={setIsDruppelModalOpen}
-              druppel={selectedDruppel!}
-              onUpdate={refreshKeyfobs}
-            />
-          )}
-          <CreateDruppelModal
-            isOpen={isCreateModalOpen}
-            setIsOpen={setIsCreateModalOpen}
-            onSuccess={refreshKeyfobs}
-          />
+
         </div>
       ) : (
         <motion.div
@@ -192,6 +175,19 @@ const Druppels: React.FC<DruppelsProps> = ({ user }) => {
           <p className="text-neutral-400 mb-2">Je moet ingelogd zijn om de druppels te bekijken.</p>
         </motion.div>
       )}
+      {isDruppelModalOpen && (
+        <DruppelModal
+          isDruppelModalOpen={isDruppelModalOpen}
+          setIsDruppelModalOpen={setIsDruppelModalOpen}
+          druppel={selectedDruppel!}
+          onUpdate={refreshKeyfobs}
+        />
+      )}
+      <CreateDruppelModal
+        isOpen={isCreateModalOpen}
+        setIsOpen={setIsCreateModalOpen}
+        onSuccess={refreshKeyfobs}
+      />
     </>
   )
 }

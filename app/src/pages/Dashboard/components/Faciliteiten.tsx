@@ -1,17 +1,18 @@
+import { useContext } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { FaLock, FaShower, FaSwimmingPool, FaToilet, FaTools } from 'react-icons/fa';
 import { MdLocalLaundryService } from 'react-icons/md';
 
-import { User, Facility } from '../../../types';
+import { DataContext, DataContextType, Facility } from '../../../types';
 
 interface FaciliteitenProps {
     facilities: Facility[];
     variants?: Variants;
-    user: User | null;
     loading?: boolean;
 }
 
-const Faciliteiten: React.FC<FaciliteitenProps> = ({ facilities, variants, user, loading }) => {
+const Faciliteiten: React.FC<FaciliteitenProps> = ({ facilities, variants, loading }) => {
+    const { user } = useContext<DataContextType>(DataContext);
     const brokenFacilities = facilities.filter(f => f.broken);
     const workingFacilities = facilities.filter(f => !f.broken);
     const brokenRatio = facilities.length > 0 ? brokenFacilities.length / facilities.length : 0;
@@ -39,7 +40,6 @@ const Faciliteiten: React.FC<FaciliteitenProps> = ({ facilities, variants, user,
         return <FaTools className="w-4 h-4" />;
     };
 
-    // Group facilities by type
     const groupedFacilities = facilities.reduce((acc, facility) => {
         const type = facility.facility_type;
         if (!acc[type]) {

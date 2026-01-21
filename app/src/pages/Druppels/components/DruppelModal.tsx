@@ -37,7 +37,7 @@ const DruppelModal: React.FC<DruppelModalProps> = ({ setIsDruppelModalOpen, drup
     const [isFetchingUsers, setIsFetchingUsers] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
-    const [isBuitengebruik, setIsBuitengebruik] = useState(druppel.buitengebruik);
+    const [isInGebruik, setIsInGebruik] = useState(!druppel.buitengebruik);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -55,7 +55,6 @@ const DruppelModal: React.FC<DruppelModalProps> = ({ setIsDruppelModalOpen, drup
         fetchUsers();
     }, []);
 
-    // Local state to track attached user (updates after operations)
     const [currentAttachedUserId, setCurrentAttachedUserId] = useState(druppel.attached_user_id);
 
     const handleClose = () => {
@@ -107,17 +106,17 @@ const DruppelModal: React.FC<DruppelModalProps> = ({ setIsDruppelModalOpen, drup
         }
     };
 
-    const handleToggleBuitengebruik = async () => {
+    const handleToggleInGebruik = async () => {
         try {
             setIsLoading(true);
             setError(null);
-            const newValue = !isBuitengebruik;
-            await druppelService.setBuitengebruik({
-                keyfobId: druppel.druppelId,
-                buitengebruik: newValue,
-            });
-            setIsBuitengebruik(newValue);
-            setSuccessMessage(newValue ? "Druppel buiten gebruik gezet!" : "Druppel weer in gebruik!");
+            const newValue = !isInGebruik;
+            await druppelService.toggleKeyfob(
+                druppel.druppelId,
+                { toggle: newValue ? 0 : 1 }
+            );
+            setIsInGebruik(newValue);
+            setSuccessMessage(newValue ? "Druppel weer in gebruik gezet!" : "Druppel buiten gebruik gezet!");
             onUpdate?.();
             setTimeout(() => setSuccessMessage(null), 2000);
         } catch (err) {
@@ -145,14 +144,14 @@ const DruppelModal: React.FC<DruppelModalProps> = ({ setIsDruppelModalOpen, drup
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={handleClose}
+            onMouseDown={handleClose}
         >
             <motion.div
                 className="relative w-[450px] p-8 bg-neutral-900/90 border border-neutral-700 rounded-2xl shadow-2xl"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", duration: 0.3 }}
-                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
             >
                 <div className="flex justify-center items-center overflow-x-hidden space-x-3 mb-6">
                     <h1 className="text-2xl font-bold">Druppel Bewerken</h1>
@@ -164,42 +163,37 @@ const DruppelModal: React.FC<DruppelModalProps> = ({ setIsDruppelModalOpen, drup
                     <FaTimes className="w-4 h-4" />
                 </button>
 
-                {/* Druppel Info */}
                 <div className="mb-6 p-4 bg-neutral-800/50 rounded-xl border border-neutral-700">
                     <p className="text-sm text-neutral-400 mb-1">Druppel Code</p>
                     <p className="text-lg font-mono font-semibold">{druppel.druppelCode}</p>
                     <p className="text-sm text-neutral-400 mt-3 mb-1">Druppel ID</p>
                     <p className="text-lg font-mono">{druppel.druppelId}</p>
-                    
-                    {/* Buitengebruik Toggle */}
+
                     <div className="mt-4 pt-4 border-t border-neutral-700">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-neutral-400">Status</p>
-                                <p className={`font-medium ${isBuitengebruik ? 'text-red-400' : 'text-emerald-400'}`}>
-                                    {isBuitengebruik ? 'Buiten gebruik' : 'In gebruik'}
+                                <p className={`font-medium ${isInGebruik ? 'text-emerald-400' : 'text-red-400'}`}>
+                                    {isInGebruik ? 'In gebruik' : 'Buiten gebruik'}
                                 </p>
                             </div>
                             <button
-                                onClick={handleToggleBuitengebruik}
+                                onClick={handleToggleInGebruik}
                                 disabled={isLoading}
-                                className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${
-                                    isBuitengebruik 
-                                        ? 'bg-red-600' 
-                                        : 'bg-emerald-600'
-                                } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${isInGebruik
+                                        ? 'bg-emerald-600'
+                                        : 'bg-red-600'
+                                    } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                             >
-                                <div 
-                                    className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform duration-200 ${
-                                        isBuitengebruik ? 'translate-x-1' : 'translate-x-8'
-                                    }`}
+                                <div
+                                    className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform duration-200 ${isInGebruik ? 'translate-x-8' : 'translate-x-1'
+                                        }`}
                                 />
                             </button>
                         </div>
                     </div>
                 </div>
 
-                {/* Current User */}
                 <div className="mb-6 p-4 bg-neutral-800/50 rounded-xl border border-neutral-700">
                     <p className="text-sm text-neutral-400 mb-2">Huidige Gebruiker</p>
                     {hasAttachedUser ? (
@@ -236,7 +230,6 @@ const DruppelModal: React.FC<DruppelModalProps> = ({ setIsDruppelModalOpen, drup
                     )}
                 </div>
 
-                {/* Attach New User */}
                 <div className="p-4 bg-neutral-800/50 rounded-xl border border-neutral-700">
                     <p className="text-sm text-neutral-400 mb-3">
                         {hasAttachedUser ? "Andere Gebruiker Koppelen" : "Gebruiker Koppelen"}
@@ -274,7 +267,6 @@ const DruppelModal: React.FC<DruppelModalProps> = ({ setIsDruppelModalOpen, drup
                     </div>
                 </div>
 
-                {/* Messages */}
                 {error && (
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}

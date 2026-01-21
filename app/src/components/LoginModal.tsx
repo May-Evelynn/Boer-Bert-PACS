@@ -1,28 +1,18 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import { FaTimes, FaChevronDown } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { authService } from "../services/authService";
 
-import { User } from '../types';
-
-interface ApiUrl {
-    value: string;
-    label: string;
-    isOnline: boolean;
-}
+import { DataContext, DataContextType, User } from '../types';
 
 interface LoginModalProps {
-    isLoginModalOpen: boolean,
+    isLoginModalOpen: boolean;
     setIsLoginModalOpen: (show: boolean) => void;
     setIsPasswordModalOpen: (show: boolean) => void;
-    user: User | null;
-    setUser: (user: User | null) => void;
-    apiUrl: string;
-    setApiUrl: (url: string) => void;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPasswordModalOpen, setUser, apiUrl, setApiUrl }) => {
-
+const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPasswordModalOpen }) => {
+    const { setUser, apiUrls, setApiUrls, activeApiUrl, setActiveApiUrl } = useContext<DataContextType>(DataContext);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
@@ -30,10 +20,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
     const [isFirstLogin, setIsFirstLogin] = useState(false);
     const [tempUserData, setTempUserData] = useState<{ user: User; password: string } | null>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [apiUrls, setApiUrls] = useState<ApiUrl[]>([
-        { value: 'http://localhost:3000', label: 'localhost:3000', isOnline: false },
-        { value: 'https://boerbert.spoekle.com', label: 'boerbert.spoekle.com', isOnline: false },
-    ]);
+
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const checkApiOnline = async (url: string) => {
@@ -70,7 +57,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const selectedApi = apiUrls.find(api => api.value === apiUrl) || apiUrls[0];
+    const selectedApi = apiUrls.find(api => api.value === activeApiUrl) || apiUrls[0];
 
     const handleClose = () => {
         setIsLoginModalOpen(false);
@@ -86,17 +73,15 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
             if (data.user.is_first_login === 1) {
                 setMessage("Dit is de eerste keer dat u inlogt. Wijzig alstublieft uw wachtwoord.");
                 setIsFirstLogin(true);
-                // Store user data and password for the password change flow
                 setTempUserData({ user: data.user, password });
                 setIsLoading(false);
                 return;
             }
-            // Update user state for normal login
             setUser(data.user);
             setIsLoginModalOpen(false);
         } catch (error: any) {
             console.error('Login error:', error);
-            setMessage(error.message || "Ongeldige inloggegevens");
+            setMessage(error?.message || "Ongeldige inloggegevens");
         } finally {
             setIsLoading(false);
         }
@@ -199,10 +184,10 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
                                                 key={api.value}
                                                 type="button"
                                                 onClick={() => {
-                                                    setApiUrl(api.value);
+                                                    setActiveApiUrl(api.value);
                                                     setIsDropdownOpen(false);
                                                 }}
-                                                className={`flex items-center gap-2 w-full px-3 py-2 text-sm text-left transition-colors ${api.value === apiUrl
+                                                className={`flex items-center gap-2 w-full px-3 py-2 text-sm text-left transition-colors ${api.value === activeApiUrl
                                                     ? 'bg-blue-600/20 text-blue-400'
                                                     : 'text-neutral-300 hover:bg-neutral-700'
                                                     }`}

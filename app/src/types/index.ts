@@ -1,3 +1,5 @@
+import { createContext, useContext } from "react";
+
 export interface User {
   id: number;
   username: string;
@@ -122,3 +124,68 @@ export interface KeyfobsResponse {
 export interface FacilitiesResponse {
   facilities: Facility[];
 }
+
+export interface ApiUrl {
+  value: string;
+  label: string;
+  isOnline: boolean;
+  active: boolean;
+}
+
+export interface DataContextType {
+  // User state
+  user: User | null;
+  setUser: (user: User | null) => void;
+  
+  // API URLs state
+  apiUrls: ApiUrl[];
+  setApiUrls: (urls: ApiUrl[]) => void;
+  activeApiUrl: string;
+  setActiveApiUrl: (url: string) => void;
+  
+  // Scans state
+  scans: Scan[];
+  setScans: (scans: Scan[]) => void;
+  
+  // Facilities state
+  facilities: Facility[];
+  setFacilities: (facilities: Facility[]) => void;
+  
+  // Keyfobs state
+  keyfobs: Keyfob[];
+  setKeyfobs: (keyfobs: Keyfob[]) => void;
+  
+  // Loading states
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
+}
+
+export const DEFAULT_API_URLS: ApiUrl[] = [
+  { value: 'http://localhost:3000/api', label: 'localhost:3000', isOnline: false, active: true },
+  { value: 'https://boerbert.spoekle.com/api', label: 'boerbert.spoekle.com', isOnline: false, active: false },
+];
+
+export const DataContext = createContext<DataContextType>({
+  user: null,
+  setUser: () => {},
+  apiUrls: DEFAULT_API_URLS,
+  setApiUrls: () => {},
+  activeApiUrl: DEFAULT_API_URLS[0].value,
+  setActiveApiUrl: () => {},
+  scans: [],
+  setScans: () => {},
+  facilities: [],
+  setFacilities: () => {},
+  keyfobs: [],
+  setKeyfobs: () => {},
+  isLoading: false,
+  setIsLoading: () => {},
+});
+
+export const useData = (): DataContextType => {
+  const context = useContext(DataContext);
+  if (!context) {
+    throw new Error('useData must be used within a DataContext.Provider');
+  }
+  return context;
+};

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { FaPeopleGroup } from 'react-icons/fa6';
 
@@ -8,13 +8,10 @@ import UserEditModal from './components/UserEditModal';
 import Table from '../../components/Table';
 
 import { userService } from '../../services/userService';
-import { User } from '../../types';
+import { DataContext, DataContextType, User } from '../../types';
 
-interface GebruikersProps {
-    user: User | null;
-}
-
-const Gebruikers: React.FC<GebruikersProps> = ({ user }) => {
+const Gebruikers: React.FC = () => {
+    const { user } = useContext<DataContextType>(DataContext);
     const [isUserEditModalOpen, setIsUserEditModalOpen] = useState(false);
     const [selectedGebruiker, setSelectedGebruiker] = useState<User | null>(null);
     const [gebruikers, setGebruikers] = useState<User[]>([]);
@@ -94,13 +91,11 @@ const Gebruikers: React.FC<GebruikersProps> = ({ user }) => {
                         <h1 className="text-4xl font-semibold">Gebruikers</h1>
                     </motion.div>
                     <motion.section
-                        className="grid grid-cols-1 md:grid-cols-2 w-full gap-8 mb-8 justify-center items-start"
+                        className="flex flex-col w-full space-y-8 mb-8 justify-center items-start"
                         variants={containerVariants}
                         initial="hidden"
                         animate="visible"
                     >
-                        <UserCreation handleUserUpdate={handleUserUpdate} />
-
                         <Table
                             table={{
                                 title: 'Gebruikers',
@@ -123,6 +118,8 @@ const Gebruikers: React.FC<GebruikersProps> = ({ user }) => {
                             emptyMessage="Geen gebruikers gevonden."
                             variants={itemVariants}
                         />
+
+                        <UserCreation handleUserUpdate={handleUserUpdate} />
                     </motion.section>
                 </div>
             ) : (

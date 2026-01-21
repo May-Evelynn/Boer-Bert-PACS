@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaTimes, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { authService } from "../services/authService";
-import { User } from '../types';
+import { User, DataContext, DataContextType } from '../types';
 
 interface TempPasswordChange {
     user: User;
@@ -13,8 +13,6 @@ interface TempPasswordChange {
 interface PasswordModalProps {
     isPasswordModalOpen: boolean;
     setIsPasswordModalOpen: (show: boolean) => void;
-    user: User | null;
-    setUser: (user: User | null) => void;
 }
 
 interface Message {
@@ -22,7 +20,8 @@ interface Message {
     type: 'success' | 'error';
 }
 
-const PasswordModal: React.FC<PasswordModalProps> = ({ setIsPasswordModalOpen, user, setUser }) => {
+const PasswordModal: React.FC<PasswordModalProps> = ({ setIsPasswordModalOpen }) => {
+    const { user, setUser } = useContext<DataContextType>(DataContext);
     const navigate = useNavigate();
 
     const [oldPassword, setOldPassword] = useState('');

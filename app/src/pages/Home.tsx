@@ -1,14 +1,12 @@
+import { useContext } from "react";
 import { motion } from "framer-motion";
 import { SiTauri } from "react-icons/si";
 import { FaHome } from "react-icons/fa";
 
-import { User } from '../types';
+import { DataContext, DataContextType } from '../types';
 
-interface HomeProps {
-  user: User | null;
-}
-
-const Home: React.FC<HomeProps> = ({ user }) => {
+const Home: React.FC = () => {
+  const { user } = useContext<DataContextType>(DataContext);
 
   return (
     <div className="z-10 bg-neutral-900 min-h-screen w-full p-4 flex flex-col items-center justify-start text-white">

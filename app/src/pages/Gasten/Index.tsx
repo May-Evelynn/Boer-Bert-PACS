@@ -1,15 +1,13 @@
+import { useContext } from 'react';
 import { motion } from 'framer-motion';
 import { FaPerson } from 'react-icons/fa6';
 
 import Table from '../../components/Table';
 
-import { User } from '../../types';
+import { DataContext, DataContextType } from '../../types';
 
-interface PersonenProps {
-  user: User | null;
-}
-
-const Personen: React.FC<PersonenProps> = ({ user }) => {
+const Personen: React.FC = () => {
+  const { user } = useContext<DataContextType>(DataContext);
   // Dummy data voor gasten
   const gasten = [
     { id: 1, last_name: 'Hendriks', first_name: 'Frank', affix: 'de', tag_id: '07235' },
