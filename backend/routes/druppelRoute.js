@@ -101,29 +101,6 @@ router.put('/init-keyfob', async (req, res) => {
     }
 });
 
-router.put('/set-buitengebruik', async (req, res) => {
-    if (!req.body || Object.keys(req.body).length === 0) {
-        return res.status(400).json({ error: 'Request body is vereist' });
-    }
-
-    let { keyfobId, buitengebruik } = req.body || {};
-    if (keyfobId == null || buitengebruik == null) {
-        return res.status(400).json({ error: 'Missing field(s): keyfobId, buitengebruik' });
-    }
-
-    if (typeof keyfobId !== 'number' || typeof buitengebruik !== 'boolean') {
-        return res.status(400).json({ error: "'keyfobId' moet een nummer zijn en 'buitengebruik' moet een boolean zijn" });
-    }
-
-    try {
-        let result = await setBuitengebruik(keyfobId, buitengebruik);
-        const safeResult = toSerializable(result);
-        return res.status(200).json({ message: 'Druppel bijgewerkt', result: safeResult });
-    } catch (error) {
-        return res.status(500).json({ error: 'Bijwerken van buitengebruik mislukt', details: error.message });
-    }
-});
-
 router.put('/attach-user', async (req, res) => {
     if (!req.body || Object.keys(req.body).length === 0) {
         return res.status(400).json({ error: 'Request body is empty' });
@@ -173,56 +150,6 @@ router.put('/detach-user', async (req, res) => {
         return res.status(200).json({ message: 'User detached from keyfob successfully', result: safeResult });
     } catch (error) {
         return res.status(500).json({ error: 'Failed to detach user from keyfob', details: error.message });
-    }
-});
-
-router.put('/set-keyfob-key', async (req, res) => {
-    if (!req.body || Object.keys(req.body).length === 0) {
-        return res.status(400).json({ error: 'Request body is empty' });
-    }
-
-    let { keyfobId, newKey } = req.body || {};
-    const dataArr = [keyfobId, newKey];
-    const dataNames = ['keyfobId', 'newKey'];
-    const missingFields = dataNames.filter((_, index) => dataArr[index] == null);
-    if (missingFields.length > 0) {
-        return res.status(400).json({ error: `Missing field(s): ${missingFields.join(', ')}` });
-    }
-
-    // Type validation
-    if (typeof keyfobId !== 'number' || typeof newKey !== 'number') {
-        return res.status(400).json({ error: "'keyfobId' and 'newKey' must be numbers" });
-    }
-    try {
-        let result = await setKeyfobKey(keyfobId, newKey);
-        const safeResult = toSerializable(result);
-        return res.status(200).json({ message: 'Keyfob key set successfully', result: safeResult });
-    } catch (error) {
-        return res.status(500).json({ error: 'Failed to set keyfob key', details: error.message });
-    }
-});
-
-router.get('/keyfobs', async (req, res) => {
-    try {
-        let result = await getKeyfobs();
-        const safeResult = toSerializable(result);
-        return res.status(200).json({ keyfobs: safeResult });
-    } catch (error) {
-        return res.status(500).json({ error: 'Failed to retrieve keyfobs', details: error.message });
-    }
-});
-
-router.put('/init-keyfob', async (req, res) => {
-    try {
-        if (!req.body || Object.keys(req.body).length === 0) {
-            return res.status(400).json({ error: 'Request body is empty' });
-        }
-
-        let { keyfob_key } = req.body || {};        
-        let result = await initNewKeyfob(keyfob_key);
-        return res.status(200).json({ keyfob: keyfob_key + ' successfully created' });
-    } catch (error) {
-        return res.status(500).json({ error: 'Failed to initialize keyfob', details: error.message });
     }
 });
 
