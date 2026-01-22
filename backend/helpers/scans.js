@@ -172,7 +172,7 @@ export async function createTestLogs(amount) {
         
         for (let x = 0; x < amount; x++){
             console.log("iteration",x+1);
-            const randDatetime = randomDate(new Date(2026, 10, 1), new Date(2026,0,16), 6, 22);
+            const randDatetime = randomDate(new Date(2025, 10, 1), new Date(2026,0,16), 6, 22);
             const epochTime = Date.parse(randDatetime);
             const curFacility = allFacilities[getRandomInt(allFacilities.length)];
             // inorout = (getRandomInt(1) === 1) ? "out" : "in";
@@ -183,7 +183,7 @@ export async function createTestLogs(amount) {
             // get rand datetime within set timespan (3 months)
 
             // construct query
-            finalQuery += `(1, ${curFacility.facilities_id}, ${epochTime}, "${inorout}", 1)`;
+            finalQuery += `(1, ${curFacility.facilities_id}, ${epochTime} / 1000, "${inorout}", 1)`;
             if (x === amount-1) { break } else { finalQuery+="," };
         }
         

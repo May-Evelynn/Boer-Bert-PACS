@@ -17,7 +17,7 @@ sybau = ""
 sdiybt = []
 cnt = -1
 
-df = pd.read_csv("./logs_202601211852.csv")
+df = pd.read_csv("./logs_202601212000.csv")
 inputstring = df.to_string()
 
 splitstr = inputstring.splitlines()
