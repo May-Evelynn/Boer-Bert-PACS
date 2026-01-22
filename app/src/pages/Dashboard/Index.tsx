@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import { useEffect, useState, useContext } from 'react';
+import { useEffect, useState, useContext, useMemo } from 'react';
 import { BsFillGrid1X2Fill } from "react-icons/bs";
+import { FaArrowDown } from "react-icons/fa";
 import LaatsteScans from './components/LaatsteScans';
 import Weer from './components/Weer';
 import Faciliteiten from './components/Faciliteiten';
@@ -13,6 +14,11 @@ import { DataContext, DataContextType } from '../../types';
 const Dashboard: React.FC = () => {
   const { user, scans, setScans, facilities, setFacilities } = useContext<DataContextType>(DataContext);
   const [loading, setLoading] = useState(true);
+  const [showWeer, setShowWeer] = useState(true);
+
+  const toggleWeer = () => {
+    setShowWeer(!showWeer);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,6 +53,15 @@ const Dashboard: React.FC = () => {
     };
   });
 
+  const filteredScans = useMemo(() => {
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - 1);
+    const cutoffSeconds = Math.floor(cutoff.getTime() / 1000);
+    return scans.filter(s => s.timestamp >= cutoffSeconds);
+  }, [scans]);
+
+
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -77,25 +92,35 @@ const Dashboard: React.FC = () => {
         <BsFillGrid1X2Fill className="size-96 text-neutral-800 rotate-12" />
       </motion.div>
       <motion.div
-        className="w-full p-4 rounded-3xl justify-center items-center flex space-x-4 mb-8 flex-row"
+        className="w-full p-4 rounded-3xl justify-between items-center flex space-x-4 mb-8 flex-row"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <BsFillGrid1X2Fill className="w-8 h-8 text-emerald-400" />
-        <h1 className="text-4xl font-semibold">Dashboard</h1>
+        <div className="flex items-center space-x-4">
+          <BsFillGrid1X2Fill className="w-8 h-8 text-emerald-400" />
+          <h1 className="text-4xl font-semibold">Dashboard</h1>
+        </div>
+
       </motion.div>
+      <motion.div
+        className="w-full mb-4 rounded-3xl justify-between items-center flex space-x-4 flex-row"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      > 
+      <Weer variants={itemVariants} />  
+      </motion.div>
+
       <motion.section
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full mb-8 items-start"
+        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 w-full mb-8 items-start"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         <LaatsteScans scans={displayScans} variants={itemVariants} loading={loading} />
 
-        <ScanGrafiek scans={scans} facilities={facilities} variants={itemVariants} loading={loading} />
-
-        <Weer variants={itemVariants} />
+        <ScanGrafiek scans={filteredScans} facilities={facilities} variants={itemVariants} loading={loading} />
 
         <Faciliteiten facilities={facilities} variants={itemVariants} loading={loading} />
       </motion.section>

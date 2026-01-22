@@ -143,7 +143,7 @@ const Druppels: React.FC = () => {
           <FaCogs className="size-96 text-neutral-800 rotate-12" />
         </motion.div>
         <motion.div
-          className="w-full p-4 rounded-3xl justify-center items-center flex space-x-4 mb-8 flex-row"
+          className="w-full p-4 rounded-3xl justify-start items-center flex space-x-4 mb-8 flex-row"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}

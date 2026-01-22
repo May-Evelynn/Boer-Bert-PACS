@@ -9,7 +9,7 @@ export const ROLE_PERMISSIONS: Record<string, UserRole[]> = {
     '/': ['Eigenaar', 'Manager', 'Receptionist', 'Schoonmaker'],
     '/dashboard': ['Eigenaar', 'Manager', 'Receptionist', 'Schoonmaker'],
     '/gasten': ['Eigenaar', 'Manager', 'Receptionist'],
-    '/gebruikers': ['Eigenaar', 'Manager'],
+    '/personeel': ['Eigenaar', 'Manager'],
     '/druppels': ['Eigenaar', 'Manager', 'Receptionist'],
     '/faciliteiten': ['Eigenaar', 'Manager'],
 };

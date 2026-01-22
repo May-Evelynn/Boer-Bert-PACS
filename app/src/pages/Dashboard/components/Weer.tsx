@@ -131,7 +131,7 @@ const Weer: React.FC<WeerProps> = ({ variants }) => {
     const renderContent = () => {
         if (loading) {
             return (
-                <div className="bg-neutral-900 rounded-2xl p-6 flex items-center justify-center min-h-32">
+                <div className="bg-neutral-900 rounded-2xl px-6 flex items-center justify-center min-h-28">
                     <FaSpinner className="mx-auto mb-4 size-12 text-neutral-500 animate-spin" />
                     <p className="text-neutral-400">Laden...</p>
                 </div>
@@ -140,7 +140,7 @@ const Weer: React.FC<WeerProps> = ({ variants }) => {
 
         if (error || !weather) {
             return (
-                <div className="bg-neutral-900 rounded-2xl p-6 text-center">
+                <div className="bg-neutral-900 rounded-2xl px-6 text-center min-h-28">
                     <p className="text-red-400">{error || 'Geen weerdata beschikbaar'}</p>
                 </div>
             );
@@ -151,18 +151,9 @@ const Weer: React.FC<WeerProps> = ({ variants }) => {
         const weatherIcon = getWeatherIcon(condition);
 
         return (
-            <div className="bg-neutral-900 rounded-2xl p-4 space-y-4">
+            <div className="flex items-center justify-between bg-neutral-900 rounded-2xl p-2 space-x-3">
                 {/* Main weer ding */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <p className="text-5xl font-light text-white">
-                            {Math.round(current.temperature_2m)}°C
-                        </p>
-                        <p className="text-neutral-400 mt-1">{weatherIcon.label}</p>
-                        <p className="text-neutral-500 text-sm mt-0.5">
-                            Voelt als {Math.round(current.apparent_temperature)}°C
-                        </p>
-                    </div>
+                <div className="flex items-center justify-between space-x-2">
                     <motion.div
                         className={weatherIcon.color}
                         initial={{ scale: 0.8, opacity: 0 }}
@@ -171,80 +162,67 @@ const Weer: React.FC<WeerProps> = ({ variants }) => {
                     >
                         {weatherIcon.icon}
                     </motion.div>
+                    <div>
+                        <p className="text-3xl font-light text-white">
+                            {Math.round(current.temperature_2m)}°C
+                        </p>
+                        <p className="text-neutral-400 mt-1">{weatherIcon.label}</p>
+                        <p className="text-neutral-500 text-sm mt-0.5">
+                            Voelt als {Math.round(current.apparent_temperature)}°C
+                        </p>
+                    </div>
                 </div>
 
                 {/* Details over weer */}
-                <div className="grid grid-cols-3 gap-3 pt-3 border-t border-neutral-800">
-                    {/* Wind */}
-                    <div className="flex flex-col items-center text-center">
-                        <FaWind className="text-teal-400 mb-1" size={18} />
-                        <span className="text-white text-sm font-medium">
-                            {Math.round(current.wind_speed_10m)} km/u
-                        </span>
-                        <span className="text-neutral-500 text-xs">
-                            {getWindDirection(current.wind_direction_10m)}
-                        </span>
-                    </div>
+                <div className="flex flex-col items-center justify-between gap-2">
+                    <div className="grid grid-cols-3 gap-3 pl-2 border-l border-neutral-800">
+                        {/* Wind */}
+                        <div className="flex flex-col items-center text-center">
+                            <FaWind className="text-teal-400 mb-1" size={18} />
+                            <span className="text-white text-sm font-medium">
+                                {Math.round(current.wind_speed_10m)} km/u
+                            </span>
+                            <span className="text-neutral-500 text-xs">
+                                {getWindDirection(current.wind_direction_10m)}
+                            </span>
+                        </div>
 
-                    {/* Regen */}
-                    <div className="flex flex-col items-center text-center">
-                        <FaTint className="text-blue-400 mb-1" size={18} />
-                        <span className="text-white text-sm font-medium">
-                            {current.precipitation} mm
-                        </span>
-                        <span className="text-neutral-500 text-xs">Neerslag</span>
-                    </div>
+                        {/* Regen */}
+                        <div className="flex flex-col items-center text-center">
+                            <FaTint className="text-blue-400 mb-1" size={18} />
+                            <span className="text-white text-sm font-medium">
+                                {current.precipitation} mm
+                            </span>
+                            <span className="text-neutral-500 text-xs">Neerslag</span>
+                        </div>
 
-                    {/* Wolken */}
-                    <div className="flex flex-col items-center text-center">
-                        <FaCloud className="text-neutral-400 mb-1" size={18} />
-                        <span className="text-white text-sm font-medium">
-                            {current.cloud_cover}%
-                        </span>
-                        <span className="text-neutral-500 text-xs">Bewolking</span>
+                        {/* Wolken */}
+                        <div className="flex flex-col items-center text-center">
+                            <FaCloud className="text-neutral-400 mb-1" size={18} />
+                            <span className="text-white text-sm font-medium">
+                                {current.cloud_cover}%
+                            </span>
+                            <span className="text-neutral-500 text-xs">Bewolking</span>
+                        </div>
                     </div>
+                    {lastUpdated && (
+                        <p className="text-xs font-semibold text-neutral-500">
+                            Laatst bijgewerkt: {formatLastUpdated(lastUpdated)}
+                        </p>
+                    )}
                 </div>
-
-                {(current.snowfall > 0 || current.wind_gusts_10m > 50) && (
-                    <div className="pt-3 border-t border-neutral-800 space-y-2">
-                        {current.snowfall > 0 && (
-                            <div className="flex items-center gap-2 text-sky-300">
-                                <FaSnowflake size={14} />
-                                <span className="text-sm">
-                                    Sneeuwval: {current.snowfall} cm
-                                </span>
-                            </div>
-                        )}
-                        {current.wind_gusts_10m > 50 && (
-                            <div className="flex items-center gap-2 text-orange-400">
-                                <FaWind size={14} />
-                                <span className="text-sm">
-                                    Windstoten tot {Math.round(current.wind_gusts_10m)} km/u
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                )}
             </div>
         );
     };
 
     return (
         <motion.div
-            className="flex flex-col bg-neutral-950 border border-neutral-700 p-4 rounded-3xl justify-between"
+            className="flex flex-col bg-neutral-950 border border-neutral-700 p-2 rounded-3xl justify-between"
             variants={variants}
         >
             <div>
-                <div className="flex items-center gap-2 mb-4">
-                    <h2 className="text-2xl font-medium">Weer</h2>
-                </div>
                 {renderContent()}
             </div>
-            {lastUpdated && (
-                <p className="text-sm font-semibold text-neutral-500 mt-4">
-                    Laatst bijgewerkt: {formatLastUpdated(lastUpdated)}
-                </p>
-            )}
         </motion.div>
     );
 };
