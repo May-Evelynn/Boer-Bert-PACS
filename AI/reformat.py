@@ -22,19 +22,27 @@ inputstring = df.to_string()
 
 splitstr = inputstring.splitlines()
 
-
+# split csv into lines and format date into yyyymmddhhmm
+# append date to array
 for val in splitstr:
     datum.append(val[5:9] + val[10:12] + val[13:15] + val[16:18])
 
+# sort alphabetically
 datum.sort()
 for x in datum:
+    # for datum check if current index = previous index
     if x == sybau:
+        # add to total scans in said hour
         eachday[cnt] += 1
     else:
+        # otherwise create new entry 
         eachday.append(1)
         cnt += 1
+
+    # set previous index to current index before looping
     sybau = x
 
+# export to csv
 np.savetxt("foo.csv", eachday, delimiter=",")
 
 print(eachday)
