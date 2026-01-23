@@ -14,9 +14,9 @@ app.use((err, req, res, next) => {
 
 // best wel lenient, later dichtzetten
 app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 app.get('/', (req, res) => {
@@ -27,11 +27,15 @@ const adminRoute = require('./routes/adminRoute');
 const authRoute = require('./routes/authRoute');
 const druppelRoute = require('./routes/druppelRoute');
 const facilityRoute = require('./routes/facilityRoute');
+const usersRoute = require('./routes/usersRoute');
+const guestRoute = require('./routes/guestRoute');
 
 app.use('/api/admin', adminRoute);
 app.use('/api/auth', authRoute);
 app.use('/api/druppel', druppelRoute);
 app.use('/api/facility', facilityRoute);
+app.use('/api/users', usersRoute);
+app.use('/api/guests', guestRoute);
 
 // Fallback
 app.use((req, res) => {

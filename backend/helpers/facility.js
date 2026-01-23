@@ -1,12 +1,12 @@
 const mariadb = require('mariadb');
-const dotenv = require('dotenv').config({quiet: true});
+const dotenv = require('dotenv').config({ quiet: true });
 
 var vpool = {
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASS,
-        database: process.env.DB_NAME,
-        port: process.env.DB_PORT,
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT,
 }
 
 export async function createFacility(facility_type, capacity) {
@@ -30,7 +30,7 @@ export async function getFacilities() {
     let conn;
     try {
         conn = await pool.getConnection();
-        const rows = await conn.query("SELECT * FROM facilities WHERE active = true");
+        const rows = await conn.query("SELECT * FROM facilities");
         return rows;
     } catch (error) {
         console.error('Error retrieving facilities:', error);
@@ -41,18 +41,20 @@ export async function getFacilities() {
     }
 }
 
-export async function deleteFacility(facility_id) {
+export async function updateFacility(facility_id, options) {
     const pool = mariadb.createPool(vpool);
     let conn;
     try {
         conn = await pool.getConnection();
-        const result = await conn.query("UPDATE facilities SET active = false WHERE facilities_id = ?", [facility_id]);
+        const result = await conn.query(
+            "UPDATE facilities SET facility_type = ?, capacity = ?, active = ?, broken = ? WHERE facilities_id = ?",
+            [options.facility_type, options.capacity, options.active, options.broken, facility_id]
+        );
         return result;
     } catch (error) {
-        console.error('Error deleting facility:', error);
-        throw new Error('Error deleting facility');
-    }
-    finally {
+        console.error('Error updating facility:', error);
+        throw new Error('Error updating facility');
+    } finally {
         if (conn) conn.release();
         await pool.end();
     }

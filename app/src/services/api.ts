@@ -1,14 +1,32 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { ApiError } from '../types';
+import { ApiError, DEFAULT_API_URLS } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL_STORAGE_KEY = 'activeApiUrl';
+
+const getStoredApiUrl = (): string => {
+  const stored = localStorage.getItem(API_URL_STORAGE_KEY);
+  if (stored) {
+    return stored;
+  }
+  const activeUrl = DEFAULT_API_URLS.find(url => url.active) || DEFAULT_API_URLS[0];
+  return activeUrl.value;
+};
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: getStoredApiUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+export const setApiBaseUrl = (url: string): void => {
+  api.defaults.baseURL = url;
+  localStorage.setItem(API_URL_STORAGE_KEY, url);
+};
+
+export const getApiBaseUrl = (): string => {
+  return api.defaults.baseURL || getStoredApiUrl();
+};
 
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
@@ -23,7 +41,6 @@ api.interceptors.request.use(
   }
 );
 
-
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError<ApiError>) => {
@@ -32,7 +49,7 @@ api.interceptors.response.use(
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
-      
+
       const apiError: ApiError = {
         message: error.response.data?.message || 'An unexpected error occurred',
         status: error.response.status,
@@ -40,7 +57,7 @@ api.interceptors.response.use(
       };
       return Promise.reject(apiError);
     }
-    
+
     return Promise.reject({
       message: error.message || 'Network Error',
       status: 0,

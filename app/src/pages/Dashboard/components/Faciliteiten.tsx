@@ -1,17 +1,18 @@
+import { useContext } from 'react';
 import { motion, Variants } from 'framer-motion';
-import { FaLock, FaTools } from 'react-icons/fa';
+import { FaLock, FaShower, FaSpinner, FaSwimmingPool, FaToilet, FaTools } from 'react-icons/fa';
 import { MdLocalLaundryService } from 'react-icons/md';
 
-import { User, Facility } from '../../../types';
+import { DataContext, DataContextType, Facility } from '../../../types';
 
 interface FaciliteitenProps {
     facilities: Facility[];
     variants?: Variants;
-    user: User | null;
     loading?: boolean;
 }
 
-const Faciliteiten: React.FC<FaciliteitenProps> = ({ facilities, variants, user, loading }) => {
+const Faciliteiten: React.FC<FaciliteitenProps> = ({ facilities, variants, loading }) => {
+    const { user } = useContext<DataContextType>(DataContext);
     const brokenFacilities = facilities.filter(f => f.broken);
     const workingFacilities = facilities.filter(f => !f.broken);
     const brokenRatio = facilities.length > 0 ? brokenFacilities.length / facilities.length : 0;
@@ -27,10 +28,18 @@ const Faciliteiten: React.FC<FaciliteitenProps> = ({ facilities, variants, user,
         if (lowerType.includes('was') || lowerType.includes('laundry') || lowerType.includes('droger')) {
             return <MdLocalLaundryService className="w-5 h-5" />;
         }
+        if (lowerType.includes('zwembad') || lowerType.includes('pool')) {
+            return <FaSwimmingPool className="w-4 h-4" />;
+        }
+        if (lowerType.includes('toilet') || lowerType.includes('wc')) {
+            return <FaToilet className="w-4 h-4" />;
+        }
+        if (lowerType.includes('douche') || lowerType.includes('shower')) {
+            return <FaShower className="w-4 h-4" />;
+        }
         return <FaTools className="w-4 h-4" />;
     };
 
-    // Group facilities by type
     const groupedFacilities = facilities.reduce((acc, facility) => {
         const type = facility.facility_type;
         if (!acc[type]) {
@@ -42,7 +51,7 @@ const Faciliteiten: React.FC<FaciliteitenProps> = ({ facilities, variants, user,
 
     return (
         <motion.div
-            className="bg-neutral-950 border border-neutral-700 p-4 rounded-3xl"
+            className="col-span-2 bg-neutral-950 border border-neutral-700 p-4 rounded-3xl"
             variants={variants}
         >
             <div className="flex justify-between items-center mb-4">
@@ -64,12 +73,12 @@ const Faciliteiten: React.FC<FaciliteitenProps> = ({ facilities, variants, user,
             <div className="bg-neutral-900 rounded-2xl p-3">
                 {user ? (
                     loading ? (
-                        <div className="text-center py-4">
-                            <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                        <div className="p-6 text-center">
+                            <FaSpinner className="mx-auto mb-4 size-12 text-neutral-500 animate-spin" />
                             <p className="text-neutral-400">Laden...</p>
                         </div>
                     ) : facilities.length > 0 ? (
-                        <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-4">
                             {Object.entries(groupedFacilities).map(([type, typeFacilities], groupIndex) => (
                                 <motion.div
                                     key={type}

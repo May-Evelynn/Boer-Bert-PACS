@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { logScan, getScans, attachUserToKeyfob, detachUserFromKeyfob, getKeyfobs, setKeyfobKey, initNewKeyfob } = require('../helpers/scans.js');
+const { logScan, getScans, attachUserToKeyfob, detachUserFromKeyfob, getKeyfobs, setKeyfobKey, initNewKeyfob, createTestLogs, toggleKeyfob } = require('../helpers/scans.js');
+
 const { toSerializable } = require('../helpers/serializable.js');
 
 router.post('/scans', async (req, res) => {
@@ -34,7 +35,7 @@ router.post('/scans', async (req, res) => {
     try {
         let result = await logScan(tag_id, location_id, time, inout);
         const safeResult = toSerializable(result);
-        return res.status(201).json({ message: 'Scan logged successfully', result: safeResult });
+        return res.status(201).json({ result: safeResult });
     } catch (error) {
         return res.status(500).json({ error: 'Failed to log scan', details: error.message });
     }
@@ -47,6 +48,56 @@ router.get('/scans', async (req, res) => {
         return res.status(200).json({ scans: safeResult });
     } catch (error) {
         return res.status(500).json({ error: 'Failed to retrieve scans', details: error.message });
+    }
+});
+
+router.put('/set-keyfob-key', async (req, res) => {
+    if (!req.body || Object.keys(req.body).length === 0) {
+        return res.status(400).json({ error: 'Request body is empty' });
+    }
+
+    let { keyfobId, newKey } = req.body || {};
+    const dataArr = [keyfobId, newKey];
+    const dataNames = ['keyfobId', 'newKey'];
+    const missingFields = dataNames.filter((_, index) => dataArr[index] == null);
+    if (missingFields.length > 0) {
+        return res.status(400).json({ error: `Missing field(s): ${missingFields.join(', ')}` });
+    }
+
+    // Type validation
+    if (typeof keyfobId !== 'number' || typeof newKey !== 'number') {
+        return res.status(400).json({ error: "'keyfobId' and 'newKey' must be numbers" });
+    }
+    try {
+        let result = await setKeyfobKey(keyfobId, newKey);
+        const safeResult = toSerializable(result);
+        return res.status(200).json({ message: 'Keyfob key set successfully', result: safeResult });
+    } catch (error) {
+        return res.status(500).json({ error: 'Failed to set keyfob key', details: error.message });
+    }
+});
+
+router.get('/keyfobs', async (req, res) => {
+    try {
+        let result = await getKeyfobs();
+        const safeResult = toSerializable(result);
+        return res.status(200).json({ keyfobs: safeResult });
+    } catch (error) {
+        return res.status(500).json({ error: 'Failed to retrieve keyfobs', details: error.message });
+    }
+});
+
+router.put('/init-keyfob', async (req, res) => {
+    try {
+        if (!req.body || Object.keys(req.body).length === 0) {
+            return res.status(400).json({ error: 'Request body is empty' });
+        }
+
+        let { keyfob_key } = req.body || {};        
+        let result = await initNewKeyfob(keyfob_key);
+        return res.status(200).json({ keyfob: keyfob_key + ' successfully created' });
+    } catch (error) {
+        return res.status(500).json({ error: 'Failed to initialize keyfob', details: error.message });
     }
 });
 
@@ -102,55 +153,37 @@ router.put('/detach-user', async (req, res) => {
     }
 });
 
-router.put('/set-keyfob-key', async (req, res) => {
-    if (!req.body || Object.keys(req.body).length === 0) {
-        return res.status(400).json({ error: 'Request body is empty' });
-    }
-
-    let { keyfobId, newKey } = req.body || {};
-    const dataArr = [keyfobId, newKey];
-    const dataNames = ['keyfobId', 'newKey'];
-    const missingFields = dataNames.filter((_, index) => dataArr[index] == null);
-    if (missingFields.length > 0) {
-        return res.status(400).json({ error: `Missing field(s): ${missingFields.join(', ')}` });
-    }
-
-    // Type validation
-    if (typeof keyfobId !== 'number' || typeof newKey !== 'number') {
-        return res.status(400).json({ error: "'keyfobId' and 'newKey' must be numbers" });
-    }
+router.patch('/toggle-keyfob/:keyfob_id', async (req, res) => {
     try {
-        let result = await setKeyfobKey(keyfobId, newKey);
-        const safeResult = toSerializable(result);
-        return res.status(200).json({ message: 'Keyfob key set successfully', result: safeResult });
-    } catch (error) {
-        return res.status(500).json({ error: 'Failed to set keyfob key', details: error.message });
-    }
-});
-
-router.get('/keyfobs', async (req, res) => {
-    try {
-        let result = await getKeyfobs();
-        const safeResult = toSerializable(result);
-        return res.status(200).json({ keyfobs: safeResult });
-    } catch (error) {
-        return res.status(500).json({ error: 'Failed to retrieve keyfobs', details: error.message });
-    }
-});
-
-router.put('/init-keyfob', async (req, res) => {
-    try {
-        if (!req.body || Object.keys(req.body).length === 0) {
-            return res.status(400).json({ error: 'Request body is empty' });
+        const { keyfob_id } = req.params;
+        const { toggle } = req.body || {};
+        if (toggle === undefined) {
+            return res.status(400).json({ error: "Missing 'toggle' parameter in body" });
+        }
+        if (toggle !== 0 && toggle !== 1) {
+            return res.status(400).json({ error: "'toggle' must be 0 or 1" });
         }
 
-        let { keyfob_key } = req.body || {};        
-        let result = await initNewKeyfob(keyfob_key);
-        return res.status(200).json({ keyfob: keyfob_key + ' successfully created' });
+        let result = await toggleKeyfob(keyfob_id, toggle);
+        return res.status(200).json({ message: 'Keyfob toggled successfully' });
     } catch (error) {
-        return res.status(500).json({ error: 'Failed to initialize keyfob', details: error.message });
+        return res.status(500).json({ error: 'Failed to toggle keyfob', details: error.message });
     }
 });
 
+router.post('/create-data', async (req, res) => {
+    try {
+        if (!req.body || Object.keys(req.body).length === 0) {
+            console.log(req.body);
+            console.log(Object.keys(req.body));
+            return res.status(400).json({ error: 'Request body is empty' });
+        }
+        let { amount } = req.body || {};
+        let result = await createTestLogs(amount);
+        return res.status(200).json({ res : result });
+    } catch (error) {
+        return res.status(500).json({ error: 'Failed to insert rows', details: error.message }) 
+    } 
+})
 
 module.exports = router;

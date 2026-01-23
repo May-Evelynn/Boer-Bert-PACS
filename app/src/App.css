@@ -6,6 +6,9 @@ html, body, #root {
   background-color: #171717;
   color: white;
 }
+button {
+  @apply focus:outline-none hover:cursor-pointer;
+}
 
 .btn-primary {
   @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded hover:cursor-pointer;
