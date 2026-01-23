@@ -1,8 +1,8 @@
-const express = require('express');
-const router = express.Router();
-const { toSerializable } = require('../helpers/serializable.js');
+import express from 'express';
+import { toSerializable } from '../helpers/serializable.js';
+import { createUser, sendMail } from '../helpers/auth.js';
 
-const { createUser, sendMail } = require('../helpers/auth.js');
+const router = express.Router();
 
 router.post('/create-user', async (req, res) => {
     if (!req.body || Object.keys(req.body).length === 0) {
@@ -30,4 +30,4 @@ router.post('/create-user', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

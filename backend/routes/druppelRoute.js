@@ -1,8 +1,8 @@
-const express = require('express');
-const router = express.Router();
-const { logScan, getScans, attachUserToKeyfob, detachUserFromKeyfob, getKeyfobs, setKeyfobKey, initNewKeyfob, createTestLogs, toggleKeyfob } = require('../helpers/scans.js');
+import express from 'express';
+import { logScan, getScans, attachUserToKeyfob, detachUserFromKeyfob, getKeyfobs, setKeyfobKey, initNewKeyfob, createTestLogs, toggleKeyfob } from '../helpers/scans.js';
+import { toSerializable } from '../helpers/serializable.js';
 
-const { toSerializable } = require('../helpers/serializable.js');
+const router = express.Router();
 
 router.post('/scans', async (req, res) => {
     if (!req.body || Object.keys(req.body).length === 0) {
@@ -186,4 +186,4 @@ router.post('/create-data', async (req, res) => {
     } 
 })
 
-module.exports = router;
+export default router;

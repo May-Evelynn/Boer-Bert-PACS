@@ -1,6 +1,7 @@
-const express = require('express');
-const router = express.Router();
-const { sendMail, loginUser, changePassword, OTPintoResetPassword } = require('../helpers/auth.js'); 
+import express from 'express';
+import { sendMail, loginUser, changePassword, OTPintoResetPassword } from '../helpers/auth.js';
+
+const router = express.Router(); 
 
 router.post('/login', async (req, res) => {
     let { username, password } = req.body;
@@ -47,4 +48,4 @@ router.post('/reset-password-otp', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

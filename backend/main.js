@@ -1,5 +1,12 @@
-const express = require('express');
-const cors = require('cors');
+import express from 'express';
+import cors from 'cors';
+
+import adminRoute from './routes/adminRoute.js';
+import authRoute from './routes/authRoute.js';
+import druppelRoute from './routes/druppelRoute.js';
+import facilityRoute from './routes/facilityRoute.js';
+import usersRoute from './routes/usersRoute.js';
+import guestRoute from './routes/guestRoute.js';
 
 const app = express();
 app.use(express.json());
@@ -22,13 +29,6 @@ app.use(cors({
 app.get('/', (req, res) => {
     res.status(200).json({ message: 'OK' });
 });
-
-const adminRoute = require('./routes/adminRoute');
-const authRoute = require('./routes/authRoute');
-const druppelRoute = require('./routes/druppelRoute');
-const facilityRoute = require('./routes/facilityRoute');
-const usersRoute = require('./routes/usersRoute');
-const guestRoute = require('./routes/guestRoute');
 
 app.use('/api/admin', adminRoute);
 app.use('/api/auth', authRoute);

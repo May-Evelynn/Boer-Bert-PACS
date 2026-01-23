@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
+import { toSerializable } from '../helpers/serializable.js';
+import { createFacility, getFacilities, updateFacility } from '../helpers/facility.js';
+
 const router = express.Router();
-const { toSerializable } = require('../helpers/serializable.js');
-const { createFacility, getFacilities, updateFacility } = require('../helpers/facility.js');
 
 router.put('/create-facility', async (req, res) => {
     if (!req.body || Object.keys(req.body).length === 0) {
@@ -81,4 +82,4 @@ router.delete('/delete-facility/:id', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

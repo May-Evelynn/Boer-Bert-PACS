@@ -1,6 +1,8 @@
-const mariadb = require('mariadb');
-const dotenv = require('dotenv').config({ quiet: true });
-const { hashPassword } = require('./helpers/passwordHandler.js');
+import mariadb from 'mariadb';
+import dotenv from 'dotenv';
+import { hashPassword } from './helpers/passwordHandler.js';
+
+dotenv.config({ quiet: true });
 
 const vpool = {
     host: process.env.DB_HOST,

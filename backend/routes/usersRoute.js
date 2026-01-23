@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
+import { toSerializable } from '../helpers/serializable.js';
+import { getUsers, deleteUser, updateUser } from '../helpers/users.js';
+
 const router = express.Router();
-const { toSerializable } = require('../helpers/serializable.js');
-const { getUsers, deleteUser, updateUser } = require('../helpers/users.js');
 
 router.get('/', async (req, res) => {
     try {
@@ -47,4 +48,4 @@ router.put('/update-user/:id', async (req, res) => {
 
 
 
-module.exports = router;
+export default router;

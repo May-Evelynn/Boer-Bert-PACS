@@ -1,7 +1,8 @@
 import mariadb from 'mariadb';
-const dotenv = require('dotenv').config({quiet: true});
-const nodemailer = require('nodemailer');
-const { hashPassword, comparePassword, generateOTP, generateToken, verifyToken } = require("./passwordHandler.js");
+import nodemailer from 'nodemailer';
+import { hashPassword, comparePassword, generateOTP, generateToken, verifyToken } from './passwordHandler.js';
+import dotenv from 'dotenv';
+dotenv.config({ quiet: true });
 
 var transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,

@@ -1,6 +1,5 @@
-const bcrypt = require('bcrypt');
-const fs = require('fs');
-const jwt = require('jsonwebtoken');
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 const saltRounds = 1;
 
 /**

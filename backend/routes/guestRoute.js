@@ -1,8 +1,10 @@
-const express = require('express');
+import express from 'express';
+import mariadb from 'mariadb';
+import dotenv from 'dotenv';
+import { toSerializable } from '../helpers/serializable.js';
+
+dotenv.config({ quiet: true });
 const router = express.Router();
-const mariadb = require('mariadb');
-const dotenv = require('dotenv').config({ quiet: true });
-const { toSerializable } = require('../helpers/serializable.js');
 
 var vpool = {
     host: process.env.DB_HOST,
@@ -140,4 +142,4 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;
