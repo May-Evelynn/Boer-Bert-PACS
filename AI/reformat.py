@@ -25,7 +25,7 @@ splitstr = inputstring.splitlines()
 # split csv into lines and format date into yyyymmddhhmm
 # append date to array
 for val in splitstr:
-    datum.append(val[5:9] + val[10:12] + val[13:15] + val[16:18])
+    datum.append(val[6:10] + val[11:13] + val[14:16] + val[17:19])
 
 # sort alphabetically
 datum.sort()
