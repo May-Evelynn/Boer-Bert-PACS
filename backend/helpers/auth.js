@@ -1,4 +1,4 @@
-const mariadb = require('mariadb');
+import mariadb from 'mariadb';
 const dotenv = require('dotenv').config({quiet: true});
 const nodemailer = require('nodemailer');
 const { hashPassword, comparePassword, generateOTP, generateToken, verifyToken } = require("./passwordHandler.js");
