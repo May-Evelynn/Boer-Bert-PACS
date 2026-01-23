@@ -14,21 +14,24 @@
     #include "nvs_flash.h"
     #include "esp_http_client.h"
     #include "esp_netif.h"
+    #include <cJSON.h>
 
     // Wifi/API variables
     #define WIFI_SSID "Hamburger"
     #define WIFI_PASS "minediamonds"
-    #define BACKEND_URL "http://192.168.250.242:3000/api/druppel/init-keyfob"
+    // #define BACKEND_URL "http://192.168.250.242:3000/api/druppel/init-keyfob"
+    // #define BACKEND_URL "http://192.168.250.242:3000/api/druppel/scans"
+    #define BACKEND_URL "https://boerbert.spoekle.com/api/druppel/scans"
 
     // Pin definitions
-    #define PIN_NUM_MISO 19
-    #define PIN_NUM_MOSI 23
-    #define PIN_NUM_CLK  18
-    #define PIN_NUM_CS   21
-    #define PIN_NUM_RST  22
-    #define PIN_BEEPER   33
-    #define PIN_RED_LED  35
-    #define PIN_GREEN_LED 32
+    #define PIN_NUM_MISO 18
+    #define PIN_NUM_MOSI 5
+    #define PIN_NUM_CLK  17
+    #define PIN_NUM_CS   16
+    #define PIN_NUM_RST  19
+    #define PIN_BEEPER   22
+    #define PIN_RED_LED  21
+    #define PIN_GREEN_LED 23
 
     // RC522 Commands
     #define PCD_IDLE              0x00
@@ -470,7 +473,7 @@
         
         esp_http_client_config_t config = {
             .url = BACKEND_URL,
-            .method = HTTP_METHOD_PUT,
+            .method = HTTP_METHOD_POST,
             .timeout_ms = 5000,
         };
         
@@ -488,7 +491,7 @@
         char payload[200];
         int64_t timestamp = esp_timer_get_time() / 1000; // Convert to milliseconds
         snprintf(payload, sizeof(payload), 
-        "{\"keyfob_key\":\"%s\",\"device\":\"esp32-rfid-reader\",\"timestamp\":%lld}", uid_hex, timestamp);
+        "{\"tag-id\":\"%s\",\"location_id\":1,\"timestamp\":\"in\"}", uid_hex);
         
         printf("[HTTP] Sending payload: %s\n", payload);
         
@@ -500,21 +503,61 @@
         
         if (err == ESP_OK) {
             int status_code = esp_http_client_get_status_code(client);
-            if (status_code == 200 || status_code == 201) {
-                printf("[HTTP] POST successful (Status: %d)\n", status_code);
-            } else {
-                printf("[HTTP] POST failed (Status: %d)\n", status_code);
-                // Print response body if available
-                int content_len = esp_http_client_get_content_length(client);
-                if (content_len > 0) {
-                    char *buffer = malloc(content_len + 1);
-                    if (buffer) {
-                        esp_http_client_read(client, buffer, content_len);
-                        buffer[content_len] = '\0';
-                        printf("[HTTP] Response: %s\n", buffer);
-                        free(buffer);
+            printf("[HTTP] Response Status Code: %d\n", status_code);
+            
+            // Read response body
+            int content_len = esp_http_client_get_content_length(client);
+            if (content_len > 0) {
+                char *response_buffer = malloc(content_len + 1);
+                if (response_buffer) {
+                    int read_len = esp_http_client_read(client, response_buffer, content_len);
+                    response_buffer[read_len] = '\0';
+                    printf("[HTTP] Response Body: %s\n", response_buffer);
+                    
+                    // Parse JSON response to check state
+                    cJSON *root = cJSON_Parse(response_buffer);
+                    if (root != NULL) {
+                        cJSON *result = cJSON_GetObjectItem(root, "result");
+                        if (result != NULL) {
+                            cJSON *state = cJSON_GetObjectItem(result, "state");
+                            cJSON *message = cJSON_GetObjectItem(result, "message");
+                            cJSON *logResult = cJSON_GetObjectItem(result, "logResult");
+                            
+                            if (state != NULL && cJSON_IsNumber(state)) {
+                                int access_state = state->valueint;
+                                
+                                if (access_state == 1) {
+                                    printf("[HTTP] ACCESS GRANTED - State: %d\n", access_state);
+                                    if (message != NULL && cJSON_IsString(message)) {
+                                        printf("[HTTP] Message: %s\n", message->valuestring);
+                                    }
+                                    led_success();
+                                } else {
+                                    printf("[HTTP] ACCESS DENIED - State: %d\n", access_state);
+                                    if (message != NULL && cJSON_IsString(message)) {
+                                        printf("[HTTP] Message: %s\n", message->valuestring);
+                                    }
+                                    led_failed();
+                                }
+                                
+                                if (logResult != NULL && cJSON_IsString(logResult)) {
+                                    printf("[HTTP] Log Result: %s\n", logResult->valuestring);
+                                }
+                            } else {
+                                printf("[HTTP] No state field found in response\n");
+                            }
+                        } else {
+                            printf("[HTTP] No result field found in response\n");
+                        }
+                        cJSON_Delete(root);
+                    } else {
+                        printf("[HTTP] Failed to parse JSON response\n");
                     }
+                    
+                    free(response_buffer);
                 }
+            } else {
+                printf("[HTTP] No response body received\n");
             }
         } else {
             printf("[HTTP] Request failed: %s\n", esp_err_to_name(err));
