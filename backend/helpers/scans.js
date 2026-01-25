@@ -1,12 +1,13 @@
-const mariadb = require('mariadb');
-const dotenv = require('dotenv').config({quiet: true});
+import mariadb from 'mariadb';
+import dotenv from 'dotenv';
+dotenv.config({ quiet: true });
 
 var vpool = {
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASS,
-        database: process.env.DB_NAME,
-        port: process.env.DB_PORT,
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT,
 }
 
 export async function logScan(tag_id, location_id, time, inout) {
@@ -36,7 +37,7 @@ export async function getScans() {
     let conn;
     try {
         conn = await pool.getConnection();
-        const rows = await conn.query("SELECT * FROM logs");
+        const rows = await conn.query("SELECT * FROM logs ORDER BY timestamp DESC");
         return rows;
     } catch (error) {
         console.error('Error retrieving scans:', error);
@@ -100,7 +101,11 @@ export async function getKeyfobs() {
     let conn;
     try {
         conn = await pool.getConnection();
-        const rows = await conn.query("SELECT * FROM keyfobs");
+        const rows = await conn.query(`
+            SELECT k.*, u.first_name as firstName, u.last_name as lastName, u.affix, u.role 
+            FROM keyfobs k 
+            LEFT JOIN users u ON k.attached_user_id = u.user_id
+        `);
         return rows;
     } catch (error) {
         console.error('Error retrieving keyfobs:', error);
@@ -157,7 +162,7 @@ export async function toggleKeyfob(keyfob_id, bool) {
         if (conn) conn.release();
         await pool.end();
     }
-} 
+}
 
 export async function createTestLogs(amount) {
     function randomDate(start, end, startHour, endHour) {
@@ -182,10 +187,10 @@ export async function createTestLogs(amount) {
         conn = await pool.getConnection();
         allFacilities = await conn.query("select * from facilities");
         console.log(allFacilities);
-        
+
         // check if last time curFacility scan = in/out and flip
 
-        
+
         for (let x = 0; x < amount; x++){
             console.log("iteration",x+1);
             const randDatetime = randomDate(new Date(2023, 0, 1), new Date(2023,2,31), 6, 22);
@@ -202,7 +207,7 @@ export async function createTestLogs(amount) {
             finalQuery += `(1, ${curFacility.facilities_id}, ${epochTime}, "${inorout}", 1)`;
             if (x === amount-1) { break } else { finalQuery+="," };
         }
-        
+
         console.log(finalQuery);
         await conn.query(finalQuery);
     } catch {

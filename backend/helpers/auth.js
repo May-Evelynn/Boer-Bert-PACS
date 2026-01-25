@@ -1,7 +1,8 @@
-const mariadb = require('mariadb');
-const dotenv = require('dotenv').config({quiet: true});
-const nodemailer = require('nodemailer');
-const { hashPassword, comparePassword, generateOTP, generateToken, verifyToken } = require("./passwordHandler.js");
+import mariadb from 'mariadb';
+import nodemailer from 'nodemailer';
+import { hashPassword, comparePassword, generateOTP, generateToken, verifyToken } from './passwordHandler.js';
+import dotenv from 'dotenv';
+dotenv.config({ quiet: true });
 
 var transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -28,7 +29,7 @@ export async function createUser(first_name, last_name, affix, email, username, 
     try {
         conn = await pool.getConnection();
         const otp = generateOTP();
-        // console.log('Generated OTP:', otp);
+        console.log('Generated OTP:', otp);
         const hashedPassword = await hashPassword(otp);
         const result = await conn.query("INSERT INTO users (first_name, last_name, affix, role, email, username, password) VALUES (?, ?, ?, ?, ?, ?, ?)", [first_name, last_name, affix, role, email, username, hashedPassword]);
 
@@ -53,7 +54,7 @@ export async function sendMail(otp, toEmail) {
 
     try {
         const info = await transporter.sendMail(mailOptions);
-        // console.log('Email sent:', info.response || info);
+        console.log('Email sent:', info.response || info);
         return info;
     } catch (error) {
         console.error('Error sending email:', error);
@@ -68,13 +69,13 @@ export async function loginUser(username, password) {
         conn = await pool.getConnection();
         const rows = await conn.query("SELECT * FROM users WHERE username = ?", [username]);
         if (!rows || rows.length === 0) {
-            throw new Error('User not found');
+            throw new Error('Gebruiker niet gevonden');
         }
 
         const user = rows[0];
         const isPasswordValid = await comparePassword(password, user.password);
         if (!isPasswordValid) {
-            throw new Error('Invalid password');
+            throw new Error('Ongeldig wachtwoord');
         }
 
         const payload = {

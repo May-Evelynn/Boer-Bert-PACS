@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
+import { toSerializable } from '../helpers/serializable.js';
+import { getUsers, deleteUser, updateUser } from '../helpers/users.js';
+
 const router = express.Router();
-const { toSerializable } = require('../helpers/serializable.js');
-const { getUsers, deleteUser, updateUser } = require('../helpers/users.js');
 
 router.get('/', async (req, res) => {
     try {
@@ -15,12 +16,12 @@ router.get('/', async (req, res) => {
 router.delete('/delete-user/:id', async (req, res) => {
     const userId = req.params.id;
     if (!userId) {
-        return res.status(400).json({ error: 'User ID is required' });
+        return res.status(400).json({ error: 'User ID is vereist' });
     }
     try {
         let result = await deleteUser(userId);
         const safeResult = toSerializable(result);
-        return res.status(200).json({ message: 'User deleted successfully', result: safeResult });
+        return res.status(200).json({ message: 'Gebruiker verwijderd', result: safeResult });
     } catch (err) {
         return res.status(500).json({ error: err.message || 'Internal Server Error' });
     }
@@ -29,16 +30,16 @@ router.delete('/delete-user/:id', async (req, res) => {
 router.put('/update-user/:id', async (req, res) => {
     const userId = req.params.id;
     if (!userId) {
-        return res.status(400).json({ error: 'User ID is required' });
+        return res.status(400).json({ error: 'User ID is vereist' });
     }
     if (!req.body || Object.keys(req.body).length === 0) {
-        return res.status(400).json({ error: 'Request body is empty' });
+        return res.status(400).json({ error: 'Request body is vereist' });
     }
     const userData = req.body;
     try {
         let result = await updateUser(userId, userData);
         const safeResult = toSerializable(result);
-        return res.status(200).json({ message: 'User updated successfully', result: safeResult });
+        return res.status(200).json({ message: 'Gebruiker aangepast', result: safeResult });
     } catch (err) {
         return res.status(500).json({ error: err.message || 'Internal Server Error' });
     }
@@ -47,4 +48,4 @@ router.put('/update-user/:id', async (req, res) => {
 
 
 
-module.exports = router;
+export default router;

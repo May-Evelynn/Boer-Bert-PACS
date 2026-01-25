@@ -1,5 +1,6 @@
-const mariadb = require('mariadb');
-const dotenv = require('dotenv').config({quiet: true});
+import mariadb from 'mariadb';
+import dotenv from 'dotenv';
+dotenv.config({ quiet: true });
 
 var vpool = {
         host: process.env.DB_HOST,

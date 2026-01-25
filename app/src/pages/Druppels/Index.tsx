@@ -1,17 +1,14 @@
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { FaCogs, FaPlus } from 'react-icons/fa';
 
-import { User, Keyfob } from '../../types';
+import { DataContext, DataContextType } from '../../types';
 import { druppelService } from '../../services/druppelService';
+import { guestService, Guest } from '../../services/guestService';
 
 import Table from '../../components/Table';
 import DruppelModal from './components/DruppelModal';
 import CreateDruppelModal from './components/CreateDruppelModal';
-
-interface DruppelsProps {
-  user: User | null;
-}
 
 interface DruppelDisplay {
   id: number;
@@ -19,10 +16,15 @@ interface DruppelDisplay {
   druppelCode: string;
   attached_user_id: number;
   buitengebruik: boolean;
+  firstName?: string;
+  lastName?: string;
+  affix?: string;
+  role?: string;
 }
 
-const Druppels: React.FC<DruppelsProps> = ({ user }) => {
-  const [keyfobs, setKeyfobs] = useState<Keyfob[]>([]);
+const Druppels: React.FC = () => {
+  const { user, keyfobs, setKeyfobs } = useContext<DataContextType>(DataContext);
+  const [guests, setGuests] = useState<Guest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,32 +33,39 @@ const Druppels: React.FC<DruppelsProps> = ({ user }) => {
   const [selectedDruppel, setSelectedDruppel] = useState<DruppelDisplay | null>(null);
 
   useEffect(() => {
-    const fetchKeyfobs = async () => {
+    const fetchData = async () => {
       if (!user) {
         setLoading(false);
         return;
       }
       try {
-        const data = await druppelService.getKeyfobs();
-        setKeyfobs(data);
+        const [keyfobData, guestData] = await Promise.all([
+          druppelService.getKeyfobs(),
+          guestService.getGuests()
+        ]);
+        setKeyfobs(keyfobData);
+        setGuests(guestData);
       } catch (err) {
-        console.error('Failed to fetch keyfobs:', err);
+        console.error('Failed to fetch data:', err);
         setError('Kon druppels niet laden');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchKeyfobs();
-  }, [user]);
+    fetchData();
+  }, [user, setKeyfobs]);
 
-  // Transform keyfobs to display format
   const druppels: DruppelDisplay[] = keyfobs.map((keyfob) => ({
     id: keyfob.keyfob_id,
     druppelId: keyfob.keyfob_id,
     druppelCode: String(keyfob.keyfob_key).padStart(5, '0'),
     attached_user_id: keyfob.attached_user_id || 0,
     buitengebruik: keyfob.buitengebruik,
+    firstName: keyfob.firstName,
+    lastName: keyfob.lastName,
+    affix: keyfob.affix,
+    role: keyfob.role,
   }));
 
   const toggleDruppelModal = (druppel: DruppelDisplay) => {
@@ -64,18 +73,43 @@ const Druppels: React.FC<DruppelsProps> = ({ user }) => {
     setIsDruppelModalOpen(!isDruppelModalOpen);
   };
 
-  const refreshKeyfobs = async () => {
+  const refreshData = async () => {
     setLoading(true);
     try {
-      const data = await druppelService.getKeyfobs();
-      setKeyfobs(data);
+      const [keyfobData, guestData] = await Promise.all([
+        druppelService.getKeyfobs(),
+        guestService.getGuests()
+      ]);
+      setKeyfobs(keyfobData);
+      setGuests(guestData);
       setError(null);
     } catch (err) {
-      console.error('Failed to fetch keyfobs:', err);
+      console.error('Failed to fetch data:', err);
       setError('Kon druppels niet laden');
     } finally {
       setLoading(false);
     }
+  };
+
+  const getLinkedUserName = (druppel: DruppelDisplay): string => {
+    if (!druppel.attached_user_id) return '-';
+    // First check if the keyfob has name info (staff user)
+    if (druppel.firstName || druppel.lastName) {
+      const parts = [druppel.firstName];
+      if (druppel.affix) parts.push(druppel.affix);
+      if (druppel.lastName) parts.push(druppel.lastName);
+      return parts.filter(Boolean).join(' ');
+    }
+    // Check guests
+    const guest = guests.find(g => g.user_id === druppel.attached_user_id);
+    if (guest) {
+      const parts = [guest.first_name];
+      if (guest.affix) parts.push(guest.affix);
+      if (guest.last_name) parts.push(guest.last_name);
+      return parts.filter(Boolean).join(' ');
+    }
+    // Fallback to ID
+    return `User #${druppel.attached_user_id}`;
   };
 
   const containerVariants = {
@@ -99,81 +133,79 @@ const Druppels: React.FC<DruppelsProps> = ({ user }) => {
 
   return (
     <>
-      {user ? (
-        <div className="z-10 bg-neutral-900 w-full p-4 flex flex-col items-center justify-start text-white">
-          <motion.div
-            className='absolute bottom-16 right-16 -z-10 blur-sm'
-            initial={{ opacity: 0, scale: 0.8, translateX: -50, translateY: 10 }}
-            animate={{ opacity: 1, scale: 1, translateX: 0, translateY: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <FaCogs className="size-96 text-neutral-800 rotate-12" />
-          </motion.div>
-          <motion.div
-            className="w-full p-4 rounded-3xl justify-center items-center flex space-x-4 mb-8 flex-row"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <FaCogs className="w-8 h-8 text-emerald-400" />
-            <h1 className="text-4xl font-semibold">Druppels</h1>
-          </motion.div>
-          <motion.section
-            className="flex flex-col w-full gap-8 mb-8"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <Table
-              table={{
-                title: 'Druppels',
-                columns: ['ID', 'Druppel Code', 'Gekoppelde Gebruikers ID', 'Buitengebruik'],
-              }}
-              data={druppels}
-              searchFilters={['druppelCode']}
-              renderRow={(druppel) => [
-                druppel.druppelId,
-                druppel.druppelCode,
-                druppel.attached_user_id,
-                druppel.buitengebruik ? 'Ja' : 'Nee',
-              ]}
-              clickableRows={true}
-              clickFunction={toggleDruppelModal}
-              loading={loading}
-              error={error}
-              emptyMessage="Geen druppels gevonden."
-              actionButton={{
-                label: 'Nieuwe Druppel',
-                icon: <FaPlus />,
-                onClick: () => setIsCreateModalOpen(true),
-              }}
-              variants={itemVariants}
-            />
-          </motion.section>
-          {isDruppelModalOpen && (
-            <DruppelModal
-              isDruppelModalOpen={isDruppelModalOpen}
-              setIsDruppelModalOpen={setIsDruppelModalOpen}
-              druppel={selectedDruppel!}
-            />
-          )}
-          <CreateDruppelModal
-            isOpen={isCreateModalOpen}
-            setIsOpen={setIsCreateModalOpen}
-            onSuccess={refreshKeyfobs}
-          />
-        </div>
-      ) : (
+      <div className="z-10 bg-neutral-900 w-full p-4 flex flex-col items-center justify-start text-white">
         <motion.div
-          className="z-10 bg-neutral-900 min-h-screen w-full p-4 flex flex-col items-center justify-center text-white h-screen"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          className='absolute bottom-16 right-16 -z-10 blur-sm'
+          initial={{ opacity: 0, scale: 0.8, translateX: -50, translateY: 10 }}
+          animate={{ opacity: 1, scale: 1, translateX: 0, translateY: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <FaCogs className="size-96 text-neutral-800 rotate-12" />
+        </motion.div>
+        <motion.div
+          className="w-full p-4 rounded-3xl justify-start items-center flex space-x-4 mb-8 flex-row"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <h1 className="text-3xl mb-4">Toegang Geweigerd</h1>
-          <p className="text-neutral-400 mb-2">Je moet ingelogd zijn om de druppels te bekijken.</p>
+          <FaCogs className="w-8 h-8 text-emerald-400" />
+          <h1 className="text-4xl font-semibold">Druppels</h1>
         </motion.div>
+        <motion.section
+          className="flex flex-col w-full gap-8 mb-8"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <Table
+            table={{
+              title: 'Druppels',
+              columns: ['ID', 'Druppel Code', 'Gekoppelde Gast', 'In Gebruik'],
+            }}
+            data={druppels}
+            searchFilters={['druppelCode']}
+            sortableColumns={[0, 1, 2]}
+            columnFilters={[
+              {
+                column: 'buitengebruik',
+                label: 'In Gebruik',
+                options: ['Ja', 'Nee'],
+                valueFormatter: (value) => value ? 'Ja' : 'Nee'
+              }
+            ]}
+            renderRow={(druppel) => [
+              druppel.druppelId,
+              druppel.druppelCode,
+              getLinkedUserName(druppel),
+              druppel.buitengebruik ? 'Nee' : 'Ja',
+            ]}
+            clickableRows={true}
+            clickFunction={toggleDruppelModal}
+            loading={loading}
+            error={error}
+            emptyMessage="Geen druppels gevonden."
+            actionButton={{
+              label: 'Nieuwe Druppel',
+              icon: <FaPlus />,
+              onClick: () => setIsCreateModalOpen(true),
+            }}
+            variants={itemVariants}
+          />
+        </motion.section>
+      </div>
+      {isDruppelModalOpen && (
+        <DruppelModal
+          isDruppelModalOpen={isDruppelModalOpen}
+          setIsDruppelModalOpen={setIsDruppelModalOpen}
+          druppel={selectedDruppel!}
+          onUpdate={refreshData}
+        />
       )}
+      <CreateDruppelModal
+        isOpen={isCreateModalOpen}
+        setIsOpen={setIsCreateModalOpen}
+        onSuccess={refreshData}
+      />
     </>
   )
 }

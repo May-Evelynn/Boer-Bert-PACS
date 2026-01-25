@@ -1,13 +1,14 @@
-const express = require('express');
+import express from 'express';
+import { toSerializable } from '../helpers/serializable.js';
+import { createFacility, getFacilities, updateFacility, deleteFacility } from '../helpers/facility.js';
+
 const router = express.Router();
-const { toSerializable } = require('../helpers/serializable.js');
-const { createFacility, getFacilities, updateFacility } = require('../helpers/facility.js');
 
 router.put('/create-facility', async (req, res) => {
     if (!req.body || Object.keys(req.body).length === 0) {
         return res.status(400).json({ error: 'Request body is empty' });
     }
-    
+
     let { facilityType, capacity } = req.body || {};
     const dataArr = [facilityType, capacity];
     const dataNames = ['facilityType', 'capacity'];
@@ -18,14 +19,14 @@ router.put('/create-facility', async (req, res) => {
 
     if (typeof capacity !== 'number') {
         const parsed = parseInt(capacity, 10);
-        if (isNaN(parsed)) return res.status(400).json({ error: "'capacity' must be a number" });
+        if (isNaN(parsed)) return res.status(400).json({ error: "'capacity' moet een nummer zijn" });
         capacity = parsed;
     }
 
     try {
         let result = await createFacility(facilityType, capacity);
         const safeResult = toSerializable(result);
-        return res.status(201).json({ message: 'Facility created successfully', result: safeResult });
+        return res.status(201).json({ message: 'Faciliteit aangemaakt', result: safeResult });
     } catch (err) {
         return res.status(500).json({ error: err.message || 'Internal Server Error' });
     }
@@ -41,39 +42,44 @@ router.get('/facilities', async (req, res) => {
     }
 });
 
-router.delete('/delete-facility/:id', async (req, res) => {
+router.put('/update-facility/:id', async (req, res) => {
     const facilityId = req.params.id;
     if (!facilityId) {
-        return res.status(400).json({ error: 'Facility ID is required' });
+        return res.status(400).json({ error: 'Facility ID is vereist' });
     }
-    try {
-        let result = await deleteFacility(facilityId);
-        const safeResult = toSerializable(result);
-        return res.status(200).json({ message: 'Facility deleted successfully', result: safeResult });
-    } catch (err) {
-        return res.status(500).json({ error: err.message || 'Internal Server Error' });
-    }
-});
 
-router.patch('/update-facility/:id', async (req, res) => {
-    const facilityId = req.params.id;
-    if (!facilityId) {
-        return res.status(400).json({ error: 'Facility ID is required' });
-    }
     if (!req.body || Object.keys(req.body).length === 0) {
         return res.status(400).json({ error: 'Request body is empty' });
     }
 
-    let { facility_type, capacity, active } = req.body || {};
+    const { facilityType, capacity, active, broken } = req.body;
 
     try {
-        let result = await updateFacility(facilityId, { facility_type, capacity, active });
+        let result = await updateFacility(facilityId, {
+            facility_type: facilityType,
+            capacity: capacity,
+            active: active !== undefined ? active : true,
+            broken: broken !== undefined ? broken : false
+        });
         const safeResult = toSerializable(result);
-        return res.status(200).json({ message: 'Facility updated successfully', result: safeResult });
+        return res.status(200).json({ message: 'Faciliteit bijgewerkt', result: safeResult });
     } catch (err) {
         return res.status(500).json({ error: err.message || 'Internal Server Error' });
     }
 });
 
+router.delete('/delete-facility/:id', async (req, res) => {
+    const facilityId = req.params.id;
+    if (!facilityId) {
+        return res.status(400).json({ error: 'Facility ID is vereist' });
+    }
+    try {
+        let result = await deleteFacility(facilityId);
+        const safeResult = toSerializable(result);
+        return res.status(200).json({ message: 'Faciliteit verwijderd', result: safeResult });
+    } catch (err) {
+        return res.status(500).json({ error: err.message || 'Internal Server Error' });
+    }
+});
 
-module.exports = router;
+export default router;

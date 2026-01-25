@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaTimes, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { authService } from "../services/authService";
-import { User } from '../types';
+import { User, DataContext, DataContextType } from '../types';
 
 interface TempPasswordChange {
     user: User;
@@ -13,8 +13,6 @@ interface TempPasswordChange {
 interface PasswordModalProps {
     isPasswordModalOpen: boolean;
     setIsPasswordModalOpen: (show: boolean) => void;
-    user: User | null;
-    setUser: (user: User | null) => void;
 }
 
 interface Message {
@@ -22,7 +20,8 @@ interface Message {
     type: 'success' | 'error';
 }
 
-const PasswordModal: React.FC<PasswordModalProps> = ({ setIsPasswordModalOpen, user, setUser }) => {
+const PasswordModal: React.FC<PasswordModalProps> = ({ setIsPasswordModalOpen }) => {
+    const { user, setUser } = useContext<DataContextType>(DataContext);
     const navigate = useNavigate();
 
     const [oldPassword, setOldPassword] = useState('');
@@ -102,18 +101,18 @@ const PasswordModal: React.FC<PasswordModalProps> = ({ setIsPasswordModalOpen, u
 
         try {
             const data = await authService.changePassword(user.username || '', oldPassword, newPassword);
-            
+
             if (data) {
                 showSuccess(data.message || "Wachtwoord succesvol gewijzigd.");
-                
-                const loginData = await authService.login({ 
-                    username: user.username || '', 
-                    password: newPassword 
+
+                const loginData = await authService.login({
+                    username: user.username || '',
+                    password: newPassword
                 });
-                
+
                 setUser(loginData.user);
                 localStorage.removeItem('tempPasswordChange');
-                
+
                 setTimeout(() => {
                     setIsPasswordModalOpen(false);
                 }, 1000);
@@ -127,40 +126,43 @@ const PasswordModal: React.FC<PasswordModalProps> = ({ setIsPasswordModalOpen, u
     };
 
     return (
-        <motion.div
-            className="absolute flex top-0 left-0 bg-black/50 backdrop-blur-md h-full w-full items-center justify-center text-white z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div
+                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                onClick={handleClose}
+            />
             <motion.div
-                className="relative w-96 p-8 bg-neutral-900/90 border border-neutral-700 rounded-2xl shadow-2xl"
+                className="relative w-96 p-8 bg-neutral-950 border border-neutral-700 rounded-3xl shadow-2xl"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ type: "spring", duration: 0.3 }}
             >
-                <div className="flex justify-center items-center overflow-x-hidden space-x-3 mb-8">
-                    <img
-                        src="/tauri.svg"
-                        alt="Boer Bert Logo"
-                        className="w-10 h-10"
-                    />
-                    <h1 className="text-3xl font-bold">Wijzig uw wachtwoord</h1>
+                <div className="flex justify-between items-center mb-6">
+                    <div className="flex items-center gap-3">
+                        <img
+                            src="/logo.png"
+                            alt="Boer Bert Logo"
+                            className="w-8 h-8"
+                        />
+                        <h1 className="text-xl font-bold text-white">Wachtwoord Wijzigen</h1>
+                    </div>
+                    <button
+                        className="bg-neutral-800 hover:bg-neutral-700 p-2 rounded-xl text-neutral-400 hover:text-white transition-colors"
+                        onClick={handleClose}
+                    >
+                        <FaTimes className="w-4 h-4" />
+                    </button>
                 </div>
-                <button
-                    className="absolute top-4 right-4 bg-red-600 hover:bg-red-700 p-2.5 rounded-xl hover:cursor-pointer transition-colors duration-200"
-                    onClick={handleClose}
-                >
-                    <FaTimes className="w-4 h-4" />
-                </button>
+
                 <form
                     onSubmit={handlePasswordChange}
                     className="flex flex-col space-y-4"
                 >
                     <div className="flex flex-col space-y-2">
-                        <label className="text-sm font-medium text-neutral-300">Oud wachtwoord</label>
+                        <label className="text-sm font-medium text-neutral-400">Oud wachtwoord</label>
                         <input
-                            className="bg-neutral-800 border border-neutral-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors text-white"
                             type="password"
                             placeholder="Voer oud wachtwoord in"
                             value={oldPassword}
@@ -168,9 +170,9 @@ const PasswordModal: React.FC<PasswordModalProps> = ({ setIsPasswordModalOpen, u
                         />
                     </div>
                     <div className="flex flex-col space-y-2">
-                        <label className="text-sm font-medium text-neutral-300">Nieuw Wachtwoord</label>
+                        <label className="text-sm font-medium text-neutral-400">Nieuw Wachtwoord</label>
                         <input
-                            className="bg-neutral-800 border border-neutral-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors text-white"
                             type="password"
                             placeholder="Voer nieuw wachtwoord in"
                             value={newPassword}
@@ -178,9 +180,9 @@ const PasswordModal: React.FC<PasswordModalProps> = ({ setIsPasswordModalOpen, u
                         />
                     </div>
                     <div className="flex flex-col space-y-2">
-                        <label className="text-sm font-medium text-neutral-300">Bevestig wachtwoord</label>
+                        <label className="text-sm font-medium text-neutral-400">Bevestig wachtwoord</label>
                         <input
-                            className="bg-neutral-800 border border-neutral-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors text-white"
                             type="password"
                             placeholder="Bevestig wachtwoord"
                             value={confirmPassword}
@@ -189,7 +191,7 @@ const PasswordModal: React.FC<PasswordModalProps> = ({ setIsPasswordModalOpen, u
                     </div>
                     <button
                         type="submit"
-                        className="bg-blue-600 hover:bg-blue-700 rounded-lg p-3 font-bold mt-2 transition-colors duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/30 rounded-xl p-3 font-bold mt-2 transition-colors duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={isLoading}
                     >
                         {isLoading ? 'Bezig met wijzigen...' : 'Wachtwoord wijzigen'}
@@ -197,16 +199,15 @@ const PasswordModal: React.FC<PasswordModalProps> = ({ setIsPasswordModalOpen, u
 
                     {message && (
                         <motion.div
-                            initial={{ opacity: 0, y: -10 }}
+                            initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className={`flex items-center gap-2 p-3 rounded-lg mt-2 ${
-                                message.type === 'success' 
-                                    ? 'bg-green-500/20 border border-green-500/50 text-green-400' 
+                            className={`flex items-center gap-2 p-3 rounded-xl mt-2 ${message.type === 'success'
+                                    ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400'
                                     : 'bg-red-500/20 border border-red-500/50 text-red-400'
-                            }`}
+                                }`}
                         >
-                            {message.type === 'success' 
-                                ? <FaCheckCircle className="w-4 h-4 shrink-0" /> 
+                            {message.type === 'success'
+                                ? <FaCheckCircle className="w-4 h-4 shrink-0" />
                                 : <FaExclamationCircle className="w-4 h-4 shrink-0" />
                             }
                             <span className="text-sm">{message.text}</span>
@@ -214,7 +215,7 @@ const PasswordModal: React.FC<PasswordModalProps> = ({ setIsPasswordModalOpen, u
                     )}
                 </form>
             </motion.div>
-        </motion.div>
+        </div>
     );
 }
 

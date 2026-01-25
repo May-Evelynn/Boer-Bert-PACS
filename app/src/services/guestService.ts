@@ -1,30 +1,38 @@
 import api from './api';
-import { Guest, PaginatedResponse } from '../types';
+
+export interface Guest {
+  user_id: number;
+  id: number;
+  first_name: string;
+  last_name: string;
+  affix?: string;
+}
+
+export interface GuestsResponse {
+  guests: Guest[];
+}
+
+export interface CreateGuestData {
+  first_name: string;
+  last_name: string;
+  affix?: string;
+}
 
 export const guestService = {
-  async getGuests(page = 1, limit = 10): Promise<PaginatedResponse<Guest>> {
-    const response = await api.get<PaginatedResponse<Guest>>('/guests', {
-      params: { page, limit }
-    });
-    return response.data;
+  async getGuests(): Promise<Guest[]> {
+    const response = await api.get<GuestsResponse>('/guests');
+    return response.data.guests.map(g => ({ ...g, id: g.user_id }));
   },
 
-  async getGuestById(id: string): Promise<Guest> {
-    const response = await api.get<Guest>(`/guests/${id}`);
-    return response.data;
+  async createGuest(data: CreateGuestData): Promise<void> {
+    await api.post('/guests', data);
   },
 
-  async createGuest(data: Partial<Guest>): Promise<Guest> {
-    const response = await api.post<Guest>('/guests', data);
-    return response.data;
+  async updateGuest(id: number, data: Partial<CreateGuestData>): Promise<void> {
+    await api.put(`/guests/${id}`, data);
   },
 
-  async updateGuest(id: string, data: Partial<Guest>): Promise<Guest> {
-    const response = await api.put<Guest>(`/guests/${id}`, data);
-    return response.data;
-  },
-
-  async deleteGuest(id: string): Promise<void> {
+  async deleteGuest(id: number): Promise<void> {
     await api.delete(`/guests/${id}`);
   }
 };
