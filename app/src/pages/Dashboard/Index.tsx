@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState, useContext, useMemo } from 'react';
 import { BsFillGrid1X2Fill } from "react-icons/bs";
-import { FaArrowDown } from "react-icons/fa";
 import LaatsteScans from './components/LaatsteScans';
 import Weer from './components/Weer';
 import Faciliteiten from './components/Faciliteiten';
@@ -14,11 +13,6 @@ import { DataContext, DataContextType } from '../../types';
 const Dashboard: React.FC = () => {
   const { user, scans, setScans, facilities, setFacilities } = useContext<DataContextType>(DataContext);
   const [loading, setLoading] = useState(true);
-  const [showWeer, setShowWeer] = useState(true);
-
-  const toggleWeer = () => {
-    setShowWeer(!showWeer);
-  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -99,7 +93,7 @@ const Dashboard: React.FC = () => {
       >
         <div className="flex items-center space-x-4">
           <BsFillGrid1X2Fill className="w-8 h-8 text-emerald-400" />
-          <h1 className="text-4xl font-semibold">Dashboard</h1>
+          <h1 className="text-4xl font-semibold">DashBert</h1>
         </div>
 
       </motion.div>

@@ -1,14 +1,12 @@
 import { useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FaHome, FaUser, FaArrowRight } from "react-icons/fa";
+import { FaHome, FaUser } from "react-icons/fa";
 import { MdLogin } from "react-icons/md";
 
 import { DataContext, DataContextType } from '../types';
 
 const Home: React.FC = () => {
   const { user } = useContext<DataContextType>(DataContext);
-  const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -63,15 +61,6 @@ const Home: React.FC = () => {
       'Schoonmaker': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
     };
     return colors[role] || 'bg-neutral-600/20 text-neutral-400 border-neutral-500/30';
-  };
-
-  const getColorClasses = (color: string) => {
-    const colorMap: Record<string, { bg: string; border: string; text: string; hover: string }> = {
-      blue: { bg: 'bg-blue-500/10', border: 'border-blue-500/30', text: 'text-blue-400', hover: 'hover:bg-blue-500/20' },
-      emerald: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400', hover: 'hover:bg-emerald-500/20' },
-      purple: { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400', hover: 'hover:bg-purple-500/20' },
-    };
-    return colorMap[color] || colorMap.blue;
   };
 
   return (
