@@ -72,7 +72,7 @@ function App() {
           <div className='flex w-full h-full overflow-auto custom-scrollbar'>
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/dashboard" element={<RoleGuard path="/dashboard"><Dashboard /></RoleGuard>} />
+              <Route path="/dashbert" element={<RoleGuard path="/dashbert"><Dashboard /></RoleGuard>} />
               <Route path="/druppels" element={<RoleGuard path="/druppels"><Druppels /></RoleGuard>} />
               <Route path="/gasten" element={<RoleGuard path="/gasten"><Gasten /></RoleGuard>} />
               <Route path='/personeel' element={<RoleGuard path="/personeel"><Personeel /></RoleGuard>} />

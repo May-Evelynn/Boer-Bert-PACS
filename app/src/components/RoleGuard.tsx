@@ -7,7 +7,7 @@ export type UserRole = 'Eigenaar' | 'Manager' | 'Receptionist' | 'Schoonmaker';
 
 export const ROLE_PERMISSIONS: Record<string, UserRole[]> = {
     '/': ['Eigenaar', 'Manager', 'Receptionist', 'Schoonmaker'],
-    '/dashboard': ['Eigenaar', 'Manager', 'Receptionist', 'Schoonmaker'],
+    '/dashbert': ['Eigenaar', 'Manager', 'Receptionist', 'Schoonmaker'],
     '/gasten': ['Eigenaar', 'Manager', 'Receptionist'],
     '/personeel': ['Eigenaar', 'Manager'],
     '/druppels': ['Eigenaar', 'Manager', 'Receptionist'],

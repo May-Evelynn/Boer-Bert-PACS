@@ -49,7 +49,7 @@ const SideBar: React.FC = () => {
 
     const navItems = [
         { path: '/', icon: FaHome, label: 'Home' },
-        { path: '/dashboard', icon: BsFillGrid1X2Fill, label: 'Dashboard' },
+        { path: '/dashbert', icon: BsFillGrid1X2Fill, label: 'DashBert' },
         { path: '/gasten', icon: FaPerson, label: 'Gasten' },
         { path: '/personeel', icon: FaPeopleGroup, label: 'Personeel' },
         { path: '/druppels', icon: FaCogs, label: 'Druppels' },
