@@ -19,6 +19,7 @@ const Gasten: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
+  const [guestToDelete, setGuestToDelete] = useState<Guest | null>(null);
 
   const fetchData = async () => {
     try {
@@ -48,24 +49,27 @@ const Gasten: React.FC = () => {
   };
 
   const handleDelete = async (guest: Guest) => {
-    if (!confirm(`Weet je zeker dat je "${guest.first_name} ${guest.last_name}" wilt verwijderen?`)) {
-      return;
-    }
+    setGuestToDelete(guest);
+  };
+
+  const confirmDelete = async () => {
+    if (!guestToDelete) return;
     try {
-      const keyfob = getGuestKeyfob(guest.user_id);
-      if (keyfob) {
+      const guestKeyfobs = getGuestKeyfobs(guestToDelete.user_id);
+      for (const keyfob of guestKeyfobs) {
         await druppelService.detachUserFromKeyfob({ keyfobId: keyfob.keyfob_id });
       }
-      await guestService.deleteGuest(guest.user_id);
+      await guestService.deleteGuest(guestToDelete.user_id);
+      setGuestToDelete(null);
       await fetchData();
     } catch (err) {
       console.error('Failed to delete guest:', err);
-      alert('Kon gast niet verwijderen');
+      setGuestToDelete(null);
     }
   };
 
-  const getGuestKeyfob = (userId: number): Keyfob | undefined => {
-    return keyfobs.find(k => k.attached_user_id === userId);
+  const getGuestKeyfobs = (userId: number): Keyfob[] => {
+    return keyfobs.filter(k => k.attached_user_id === userId);
   };
 
   const containerVariants = {
@@ -123,32 +127,48 @@ const Gasten: React.FC = () => {
           <Table
             table={{
               title: 'Gasten',
-              columns: ['Naam', 'Tag', 'Acties'],
+              columns: ['Naam', 'Tags', 'Acties'],
             }}
             data={gasten}
             searchFilters={['first_name', 'last_name']}
             sortableColumns={[0]}
             renderRow={(guest) => {
-              const keyfob = getGuestKeyfob(guest.user_id);
+              const guestKeyfobs = getGuestKeyfobs(guest.user_id);
               return [
                 formatName(guest),
-                keyfob ? (
-                  <span className="font-mono text-blue-400 bg-blue-500/10 px-2 py-1 rounded flex items-center gap-1 w-fit">
-                    <FaTag className="w-3 h-3" />
-                    #{keyfob.keyfob_id}
-                  </span>
-                ) : (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleTagClick(guest);
-                    }}
-                    className="px-2 py-1 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors text-sm flex items-center gap-1"
-                  >
-                    <FaTag className="w-3 h-3" />
-                    Koppelen
-                  </button>
-                ),
+                <div className="flex items-center gap-1 flex-wrap">
+                  {guestKeyfobs.length > 0 ? (
+                    <>
+                      {guestKeyfobs.map(keyfob => (
+                        <span key={keyfob.keyfob_id} className="font-mono text-blue-400 bg-blue-500/10 px-2 py-1 rounded flex items-center gap-1 text-sm">
+                          <FaTag className="w-2.5 h-2.5" />
+                          #{keyfob.keyfob_id}
+                        </span>
+                      ))}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleTagClick(guest);
+                        }}
+                        className="p-1.5 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors"
+                        title="Tags beheren"
+                      >
+                        <FaTag className="w-3 h-3" />
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTagClick(guest);
+                      }}
+                      className="px-2 py-1 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-colors text-sm flex items-center gap-1"
+                    >
+                      <FaTag className="w-3 h-3" />
+                      Koppelen
+                    </button>
+                  )}
+                </div>,
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -188,8 +208,43 @@ const Gasten: React.FC = () => {
           setIsOpen={setIsTagModalOpen}
           guest={selectedGuest}
           availableKeyfobs={keyfobs.filter(k => !k.attached_user_id && !k.buitengebruik)}
+          linkedKeyfobs={getGuestKeyfobs(selectedGuest.user_id)}
           onSuccess={fetchData}
         />
+      )}
+
+      {guestToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm" 
+            onClick={() => setGuestToDelete(null)}
+          />
+          <motion.div
+            className="relative w-96 p-6 bg-neutral-950 border border-neutral-700 rounded-3xl shadow-2xl"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", duration: 0.3 }}
+          >
+            <h2 className="text-xl font-semibold mb-4">Gast verwijderen</h2>
+            <p className="text-neutral-400 mb-6">
+              Weet je zeker dat je "{guestToDelete.first_name} {guestToDelete.last_name}" wilt verwijderen?
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setGuestToDelete(null)}
+                className="px-4 py-2 rounded-xl bg-neutral-800 border border-neutral-600 text-neutral-300 hover:bg-neutral-700 transition-colors"
+              >
+                Annuleren
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 rounded-xl bg-rose-500/20 border border-rose-500/50 text-rose-400 hover:bg-rose-500/30 transition-colors"
+              >
+                Verwijderen
+              </button>
+            </div>
+          </motion.div>
+        </div>
       )}
     </>
   );
