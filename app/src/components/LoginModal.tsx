@@ -20,12 +20,23 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
     const [isFirstLogin, setIsFirstLogin] = useState(false);
     const [tempUserData, setTempUserData] = useState<{ user: User; password: string } | null>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [localApiUrls, setLocalApiUrls] = useState(apiUrls);
 
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const checkApiOnline = async (url: string) => {
+    const checkApiOnline = async (url: string): Promise<boolean> => {
         try {
-            const response = await fetch(url);
+            const baseUrl = url.replace(/\/api\/?$/, '');
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            
+            const response = await fetch(baseUrl, { 
+                method: 'GET',
+                mode: 'cors',
+                signal: controller.signal,
+            });
+            
+            clearTimeout(timeoutId);
             return response.ok;
         } catch (error) {
             return false;
@@ -39,6 +50,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
                 isOnline: await checkApiOnline(api.value),
             }))
         );
+        setLocalApiUrls(updatedUrls);
         setApiUrls(updatedUrls);
     };
 
@@ -57,7 +69,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const selectedApi = apiUrls.find(api => api.value === activeApiUrl) || apiUrls[0];
+    const selectedApi = localApiUrls.find(api => api.value === activeApiUrl) || localApiUrls[0];
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -85,7 +97,10 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+            <div 
+                className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-pointer" 
+                onClick={() => setIsLoginModalOpen(false)}
+            />
             <motion.div
                 className="relative w-96 p-8 bg-neutral-950 border border-neutral-700 rounded-3xl shadow-2xl"
                 initial={{ scale: 0.9, opacity: 0 }}
@@ -166,7 +181,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
                                         transition={{ duration: 0.15 }}
                                         className="absolute bottom-full left-0 right-0 mb-1 bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-xl z-10"
                                     >
-                                        {apiUrls.map((api) => (
+                                        {localApiUrls.map((api) => (
                                             <button
                                                 key={api.value}
                                                 type="button"
