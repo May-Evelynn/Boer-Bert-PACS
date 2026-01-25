@@ -15,6 +15,7 @@ const Faciliteiten: React.FC = () => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
+    const [facilityToDelete, setFacilityToDelete] = useState<Facility | null>(null);
 
     useEffect(() => {
         fetchFacilities();
@@ -35,15 +36,18 @@ const Faciliteiten: React.FC = () => {
     };
 
     const handleDelete = async (facility: Facility) => {
-        if (!confirm(`Weet je zeker dat je "${facility.facility_type}" wilt verwijderen?`)) {
-            return;
-        }
+        setFacilityToDelete(facility);
+    };
+
+    const confirmDelete = async () => {
+        if (!facilityToDelete) return;
         try {
-            await facilityService.deleteFacility(facility.facilities_id);
+            await facilityService.deleteFacility(facilityToDelete.facilities_id);
+            setFacilityToDelete(null);
             await fetchFacilities();
         } catch (err) {
             console.error('Failed to delete facility:', err);
-            alert('Kon faciliteit niet verwijderen');
+            setFacilityToDelete(null);
         }
     };
 
@@ -199,6 +203,40 @@ const Faciliteiten: React.FC = () => {
                     facility={selectedFacility}
                     onSuccess={fetchFacilities}
                 />
+            )}
+
+            {facilityToDelete && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div 
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm" 
+                        onClick={() => setFacilityToDelete(null)}
+                    />
+                    <motion.div
+                        className="relative w-96 p-6 bg-neutral-950 border border-neutral-700 rounded-3xl shadow-2xl"
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", duration: 0.3 }}
+                    >
+                        <h2 className="text-xl font-semibold mb-4">Faciliteit verwijderen</h2>
+                        <p className="text-neutral-400 mb-6">
+                            Weet je zeker dat je "{facilityToDelete.facility_type}" wilt verwijderen?
+                        </p>
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={() => setFacilityToDelete(null)}
+                                className="px-4 py-2 rounded-xl bg-neutral-800 border border-neutral-600 text-neutral-300 hover:bg-neutral-700 transition-colors"
+                            >
+                                Annuleren
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="px-4 py-2 rounded-xl bg-rose-500/20 border border-rose-500/50 text-rose-400 hover:bg-rose-500/30 transition-colors"
+                            >
+                                Verwijderen
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
             )}
         </>
     );

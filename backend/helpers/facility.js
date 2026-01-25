@@ -60,3 +60,22 @@ export async function updateFacility(facility_id, options) {
         await pool.end();
     }
 }
+
+export async function deleteFacility(facility_id) {
+    const pool = mariadb.createPool(vpool);
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const result = await conn.query(
+            "DELETE FROM facilities WHERE facilities_id = ?",
+            [facility_id]
+        );
+        return result;
+    } catch (error) {
+        console.error('Error deleting facility:', error);
+        throw new Error('Error deleting facility');
+    } finally {
+        if (conn) conn.release();
+        await pool.end();
+    }
+}

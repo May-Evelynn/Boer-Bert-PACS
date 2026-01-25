@@ -1,6 +1,6 @@
 import express from 'express';
 import { toSerializable } from '../helpers/serializable.js';
-import { createFacility, getFacilities, updateFacility } from '../helpers/facility.js';
+import { createFacility, getFacilities, updateFacility, deleteFacility } from '../helpers/facility.js';
 
 const router = express.Router();
 
