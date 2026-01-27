@@ -6,7 +6,6 @@ import { DataContext, DataContextType } from '../types';
 export type UserRole = 'Eigenaar' | 'Manager' | 'Receptionist' | 'Schoonmaker';
 
 export const ROLE_PERMISSIONS: Record<string, UserRole[]> = {
-    '/': ['Eigenaar', 'Manager', 'Receptionist', 'Schoonmaker'],
     '/dashbert': ['Eigenaar', 'Manager', 'Receptionist', 'Schoonmaker'],
     '/gasten': ['Eigenaar', 'Manager', 'Receptionist'],
     '/personeel': ['Eigenaar', 'Manager'],
@@ -15,6 +14,7 @@ export const ROLE_PERMISSIONS: Record<string, UserRole[]> = {
 };
 
 export const hasRoleAccess = (userRole: string | undefined, path: string): boolean => {
+    if (path === '/') return true;
     if (!userRole) return false;
     const allowedRoles = ROLE_PERMISSIONS[path];
     if (!allowedRoles) return true;
