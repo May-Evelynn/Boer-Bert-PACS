@@ -38,5 +38,10 @@ export const authService = {
       newPassword
     });
     return response.data;
+  },
+
+  async resetPassword(username: string): Promise<{ message: string }> {
+    const response = await api.post('/auth/reset-password-otp', { username });
+    return response.data;
   }
 };

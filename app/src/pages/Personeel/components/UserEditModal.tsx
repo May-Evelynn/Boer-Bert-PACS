@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { User, Keyfob } from "../../../types";
 import { userService } from "../../../services/userService";
 import { druppelService } from "../../../services/druppelService";
+import { authService } from "../../../services/authService";
 
 interface UserEditModalProps {
     isUserEditModalOpen: boolean;
@@ -20,12 +21,12 @@ const UserEditModal: React.FC<UserEditModalProps> = ({
     const [formData, setFormData] = useState<Partial<User>>({});
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    
+
     const [allKeyfobs, setAllKeyfobs] = useState<Keyfob[]>([]);
     const [userKeyfobs, setUserKeyfobs] = useState<Keyfob[]>([]);
     const [selectedKeyfobId, setSelectedKeyfobId] = useState<number | null>(null);
     const [isLoadingKeyfobs, setIsLoadingKeyfobs] = useState(false);
-    
+
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     useEffect(() => {
@@ -110,6 +111,23 @@ const UserEditModal: React.FC<UserEditModalProps> = ({
         }
     };
 
+    const handleResetPassword = async () => {
+        if (!gebruiker) return;
+        if (!window.confirm(`Weet je zeker dat je het wachtwoord van ${gebruiker.first_name} wilt resetten?`)) return;
+
+        setIsLoading(true);
+        setError(null);
+        try {
+            await authService.resetPassword(gebruiker.username);
+            alert("Wachtwoord succesvol gereset. De gebruiker heeft een e-mail ontvangen.");
+        } catch (err: any) {
+            console.error("Failed to reset password", err);
+            setError(err.message || "Kon wachtwoord niet resetten");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleDelete = () => {
         setShowDeleteConfirm(true);
     };
@@ -163,6 +181,16 @@ const UserEditModal: React.FC<UserEditModalProps> = ({
                             type="text"
                             name="username"
                             value={formData.username || ''}
+                            onChange={handleChange}
+                            className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors text-white"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm text-neutral-400 mb-2">Email</label>
+                        <input
+                            type="email"
+                            name="email"
+                            value={formData.email || ''}
                             onChange={handleChange}
                             className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors text-white"
                         />
@@ -223,7 +251,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({
                                 Gekoppelde Druppels ({userKeyfobs.length})
                             </div>
                         </label>
-                        
+
                         <div className="space-y-2 mb-3 max-h-32 overflow-y-auto custom-scrollbar">
                             {isLoadingKeyfobs ? (
                                 <p className="text-neutral-500 text-sm">Laden...</p>
@@ -231,8 +259,8 @@ const UserEditModal: React.FC<UserEditModalProps> = ({
                                 <p className="text-neutral-500 text-sm italic">Geen druppels gekoppeld</p>
                             ) : (
                                 userKeyfobs.map(keyfob => (
-                                    <div 
-                                        key={keyfob.keyfob_id} 
+                                    <div
+                                        key={keyfob.keyfob_id}
                                         className="flex items-center justify-between bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2"
                                     >
                                         <div className="flex items-center gap-2">
@@ -286,6 +314,16 @@ const UserEditModal: React.FC<UserEditModalProps> = ({
                         </div>
                     </div>
 
+                    <div className="pt-4 border-t border-neutral-800">
+                        <button
+                            onClick={handleResetPassword}
+                            disabled={isLoading}
+                            className="w-full px-4 py-3 bg-orange-500/20 border border-orange-500/50 text-orange-400 rounded-xl hover:bg-orange-500/30 transition-colors disabled:opacity-50 mb-3"
+                        >
+                            Reset Wachtwoord
+                        </button>
+                    </div>
+
                     <div className="flex gap-3 pt-4">
                         <button
                             onClick={handleDelete}
@@ -327,8 +365,8 @@ const UserEditModal: React.FC<UserEditModalProps> = ({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                 >
-                    <div 
-                        className="absolute inset-0 bg-black/50" 
+                    <div
+                        className="absolute inset-0 bg-black/50"
                         onClick={() => setShowDeleteConfirm(false)}
                     />
                     <motion.div

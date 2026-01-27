@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useContext } from "react";
-import { FaChevronDown } from "react-icons/fa";
+import { FaCheck, FaChevronDown } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { authService } from "../services/authService";
 
@@ -21,6 +21,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
     const [tempUserData, setTempUserData] = useState<{ user: User; password: string } | null>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [localApiUrls, setLocalApiUrls] = useState(apiUrls);
+    const [customUrl, setCustomUrl] = useState('');
+    const [customApiOnline, setCustomApiOnline] = useState(false);
 
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -29,13 +31,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
             const baseUrl = url.replace(/\/api\/?$/, '');
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000);
-            
-            const response = await fetch(baseUrl, { 
+
+            const response = await fetch(baseUrl, {
                 method: 'GET',
                 mode: 'cors',
                 signal: controller.signal,
             });
-            
+
             clearTimeout(timeoutId);
             return response.ok;
         } catch (error) {
@@ -52,6 +54,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
         );
         setLocalApiUrls(updatedUrls);
         setApiUrls(updatedUrls);
+
+        if (!updatedUrls.find(api => api.value === activeApiUrl)) {
+            const isOnline = await checkApiOnline(activeApiUrl);
+            setCustomApiOnline(isOnline);
+            setCustomUrl(activeApiUrl);
+        }
     };
 
     useEffect(() => {
@@ -69,7 +77,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const selectedApi = localApiUrls.find(api => api.value === activeApiUrl) || localApiUrls[0];
+    const listMatch = localApiUrls.find(api => api.value === activeApiUrl);
+    const selectedApi = listMatch || {
+        value: activeApiUrl,
+        label: activeApiUrl.replace(/^https?:\/\//, '').replace(/\/api$/, ''),
+        isOnline: customApiOnline,
+        active: true
+    };
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -89,16 +103,46 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
             setIsLoginModalOpen(false);
         } catch (error: any) {
             console.error('Login error:', error);
-            setMessage(error?.message || "Ongeldige inloggegevens");
+
+            if (error?.status === 401) {
+                setMessage("Gebruikersnaam of wachtwoord is onjuist.");
+            } else if (error?.status === 404) {
+                setMessage("De opgegeven server bestaat niet of is onbereikbaar.");
+            } else if (error?.status === 0 || error?.message === 'Network Error') {
+                setMessage("Kan geen verbinding maken met de server. Controleer of de server aan staat.");
+            } else {
+                setMessage(error?.message || "Er is een onverwachte fout opgetreden.");
+            }
         } finally {
             setIsLoading(false);
         }
     }
 
+    const handleAddCustomUrl = async () => {
+        if (!customUrl) return;
+
+        let url = customUrl.trim();
+        if (!url.startsWith('http')) {
+            url = `https://${url}`;
+        }
+
+        if (!url.endsWith('/api')) {
+            if (url.endsWith('/')) url += 'api';
+            else url += '/api';
+        }
+
+        setActiveApiUrl(url);
+        setIsDropdownOpen(false);
+
+        // check online status
+        const isOnline = await checkApiOnline(url);
+        setCustomApiOnline(isOnline);
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div 
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-pointer" 
+            <div
+                className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-pointer"
                 onClick={() => setIsLoginModalOpen(false)}
             />
             <motion.div
@@ -146,6 +190,29 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
                     >
                         {isLoading ? 'Bezig met inloggen...' : 'Log In'}
                     </button>
+                    <button
+                        type="button"
+                        onClick={async () => {
+                            if (!username) {
+                                setMessage("Vul eerst uw gebruikersnaam in.");
+                                return;
+                            }
+                            setIsLoading(true);
+                            setMessage('');
+                            try {
+                                await authService.resetPassword(username);
+                                setMessage("Een tijdelijk wachtwoord is naar uw e-mail verzonden.");
+                            } catch (error: any) {
+                                setMessage(error?.message || "Kon wachtwoord niet resetten.");
+                            } finally {
+                                setIsLoading(false);
+                            }
+                        }}
+                        className="text-neutral-400 text-sm hover:text-white transition-colors self-center mt-2"
+                        disabled={isLoading}
+                    >
+                        Wachtwoord vergeten?
+                    </button>
                     {isFirstLogin && tempUserData &&
                         <button className="bg-orange-500/20 border border-orange-500/50 text-orange-400 hover:bg-orange-500/30 rounded-xl p-3 font-bold mt-2 transition-colors duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed" onClick={() => {
                             // Store temp data for PasswordModal
@@ -157,7 +224,15 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
                             Wijzig wachtwoord
                         </button>
                     }
-                    {message && <p className="text-red-400 mt-2 text-center text-sm">{message}</p>}
+                    {message && (
+                        <p className={`mt-2 text-center text-sm ${
+                            message.includes('verzonden') || isFirstLogin 
+                                ? 'text-emerald-400' 
+                                : 'text-red-400'
+                        }`}>
+                            {message}
+                        </p>
+                    )}
                     <div className="flex flex-col items-center gap-1 mt-4">
                         <label className="text-sm font-medium text-neutral-500">Wijzig Server:</label>
                         <div className="relative" ref={dropdownRef}>
@@ -167,8 +242,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
                                 className="flex items-center gap-2 bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-sm font-medium text-neutral-300 cursor-pointer hover:border-neutral-600 transition-colors min-w-[200px] justify-between"
                             >
                                 <div className="flex items-center gap-2">
-                                    <span className={`w-2 h-2 rounded-full ${selectedApi.isOnline ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                                    {selectedApi.label}
+                                    <span className={`w-2 h-2 rounded-full ${selectedApi?.isOnline ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                    {selectedApi?.label || 'Select Server'}
                                 </div>
                                 <FaChevronDown className={`w-3 h-3 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                             </button>
@@ -179,25 +254,52 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -10 }}
                                         transition={{ duration: 0.15 }}
-                                        className="absolute bottom-full left-0 right-0 mb-1 bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-xl z-10"
+                                        className="absolute bottom-full left-0 right-0 mb-1 bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-xl z-20"
                                     >
-                                        {localApiUrls.map((api) => (
-                                            <button
-                                                key={api.value}
-                                                type="button"
-                                                onClick={() => {
-                                                    setActiveApiUrl(api.value);
-                                                    setIsDropdownOpen(false);
-                                                }}
-                                                className={`flex items-center gap-2 w-full px-3 py-2 text-sm text-left transition-colors ${api.value === activeApiUrl
-                                                    ? 'bg-blue-600/20 text-blue-400'
-                                                    : 'text-neutral-300 hover:bg-neutral-800'
-                                                    }`}
-                                            >
-                                                <span className={`w-2 h-2 rounded-full ${api.isOnline ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                                                {api.label}
-                                            </button>
-                                        ))}
+                                        <div className="max-h-[200px] overflow-y-auto">
+                                            {localApiUrls.map((api) => (
+                                                <button
+                                                    key={api.value}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setActiveApiUrl(api.value);
+                                                        setCustomUrl('');
+                                                        setIsDropdownOpen(false);
+                                                    }}
+                                                    className={`flex items-center gap-2 w-full px-3 py-2 text-sm text-left transition-colors ${api.value === activeApiUrl
+                                                        ? 'bg-blue-600/20 text-blue-400'
+                                                        : 'text-neutral-300 hover:bg-neutral-800'
+                                                        }`}
+                                                >
+                                                    <span className={`w-2 h-2 rounded-full ${api.isOnline ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                                    {api.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className="p-2 border-t border-neutral-700 bg-neutral-950">
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={customUrl}
+                                                    onChange={(e) => setCustomUrl(e.target.value)}
+                                                    placeholder="Custom URL..."
+                                                    className="flex-1 min-w-0 bg-neutral-900 border border-neutral-700 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            e.preventDefault();
+                                                            handleAddCustomUrl();
+                                                        }
+                                                    }}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleAddCustomUrl}
+                                                    className="bg-green-600/20 border border-green-600/50 hover:bg-green-600/40 text-green-400 rounded-lg px-2 flex items-center justify-center transition-colors"
+                                                >
+                                                    <FaCheck size={10} />
+                                                </button>
+                                            </div>
+                                        </div>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -207,6 +309,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ setIsLoginModalOpen, setIsPassw
             </motion.div>
         </div>
     );
-}
+};
 
 export default LoginModal;

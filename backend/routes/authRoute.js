@@ -14,7 +14,10 @@ router.post('/login', async (req, res) => {
         const loginResult = await loginUser(username, password);
         return res.status(200).json({ message: 'Login successful', ...loginResult });
     } catch (err) {
-        return res.status(500).json({ error: err.message || 'Internal Server Error' });
+        if (err.message === 'Gebruiker niet gevonden' || err.message === 'Ongeldig wachtwoord') {
+            return res.status(401).json({ message: 'Gebruikersnaam of wachtwoord is onjuist' });
+        }
+        return res.status(500).json({ message: err.message || 'Internal Server Error' });
     }
 });
 

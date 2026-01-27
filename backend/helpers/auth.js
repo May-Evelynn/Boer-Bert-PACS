@@ -48,8 +48,21 @@ export async function sendMail(otp, toEmail) {
     const mailOptions = {
         from: process.env.SMTP_FROM,
         to: toEmail,
-        subject: 'Your One-Time Password (OTP)',
-        text: `Your OTP is: ${otp}`
+        subject: 'BoerBert - Wachtwoord reset',
+        html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2c3e50;">BoerBert - Wachtwoord Reset</h2>
+            <p style="font-size: 16px; color: #34495e;">Beste gebruiker,</p>
+            <p style="font-size: 16px; color: #34495e;">U heeft een verzoek ingediend om uw wachtwoord te resetten.</p>
+            <p style="font-size: 16px; color: #34495e;">Uw eenmalige wachtwoord (OTP) is:</p>
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; text-align: center;">
+                <span style="font-size: 24px; font-weight: bold; color: #2c3e50;">${otp}</span>
+            </div>
+            <p style="font-size: 16px; color: #34495e;">Als u dit verzoek niet heeft ingediend, kunt u deze e-mail negeren.</p>
+            <p style="font-size: 16px; color: #34495e;">Met vriendelijke groet,</p>
+            <p style="font-size: 16px; color: #34495e;"><strong>BoerBert</strong></p>
+        </div>
+        `
     };
 
     try {
@@ -91,7 +104,7 @@ export async function loginUser(username, password) {
         return { user: userWithoutPassword, token };
     } catch (error) {
         console.error('Error logging in user:', error);
-        throw new Error('Error logging in user');
+        throw error;
     } finally {
         if (conn) conn.release();
         await pool.end();
@@ -136,7 +149,7 @@ export async function OTPintoResetPassword(username) {
         const user = rows[0];
         const otp = generateOTP();
         const hashedOTP = await hashPassword(otp);
-        await conn.query("UPDATE users SET password = ? WHERE username = ?", [hashedOTP, username]);
+        await conn.query("UPDATE users SET password = ?, is_first_login = 1 WHERE username = ?", [hashedOTP, username]);
         await sendMail(otp, user.email);
         return { message: 'OTP sent to email' };
     } catch (error) {
