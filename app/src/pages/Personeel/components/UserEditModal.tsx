@@ -28,6 +28,8 @@ const UserEditModal: React.FC<UserEditModalProps> = ({
     const [isLoadingKeyfobs, setIsLoadingKeyfobs] = useState(false);
 
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [resetSuccessMessage, setResetSuccessMessage] = useState<string | null>(null);
 
     useEffect(() => {
         if (gebruiker) {
@@ -111,18 +113,24 @@ const UserEditModal: React.FC<UserEditModalProps> = ({
         }
     };
 
-    const handleResetPassword = async () => {
+    const handleResetPassword = () => {
         if (!gebruiker) return;
-        if (!window.confirm(`Weet je zeker dat je het wachtwoord van ${gebruiker.first_name} wilt resetten?`)) return;
+        setShowResetConfirm(true);
+    };
 
+    const confirmResetPassword = async () => {
+        if (!gebruiker) return;
         setIsLoading(true);
         setError(null);
+        setResetSuccessMessage(null);
         try {
             await authService.resetPassword(gebruiker.username);
-            alert("Wachtwoord succesvol gereset. De gebruiker heeft een e-mail ontvangen.");
+            setResetSuccessMessage("Wachtwoord succesvol gereset. De gebruiker heeft een e-mail ontvangen.");
+            setShowResetConfirm(false);
         } catch (err: any) {
             console.error("Failed to reset password", err);
             setError(err.message || "Kon wachtwoord niet resetten");
+            setShowResetConfirm(false);
         } finally {
             setIsLoading(false);
         }
@@ -172,6 +180,9 @@ const UserEditModal: React.FC<UserEditModalProps> = ({
 
                 {error && (
                     <p className="mb-4 text-rose-400 text-sm">{error}</p>
+                )}
+                {resetSuccessMessage && (
+                    <p className="mb-4 text-emerald-400 text-sm">{resetSuccessMessage}</p>
                 )}
 
                 <div className="space-y-4">
@@ -392,6 +403,47 @@ const UserEditModal: React.FC<UserEditModalProps> = ({
                                 className="px-4 py-2 rounded-xl bg-rose-500/20 border border-rose-500/50 text-rose-400 hover:bg-rose-500/30 transition-colors text-sm disabled:opacity-50"
                             >
                                 {isLoading ? '...' : 'Verwijderen'}
+                            </button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+
+            {showResetConfirm && (
+                <motion.div
+                    className="absolute inset-0 z-10 flex items-center justify-center"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                >
+                    <div
+                        className="absolute inset-0 bg-black/50"
+                        onClick={() => setShowResetConfirm(false)}
+                    />
+                    <motion.div
+                        className="relative w-80 p-6 bg-neutral-950 border border-neutral-700 rounded-2xl shadow-2xl"
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", duration: 0.3 }}
+                    >
+                        <h3 className="text-lg font-semibold mb-3">Wachtwoord Resetten</h3>
+                        <p className="text-neutral-400 mb-5 text-sm">
+                            Weet je zeker dat je het wachtwoord van {gebruiker?.first_name} wilt resetten?
+                            <br /><br />
+                            De gebruiker ontvangt een e-mail met instructies.
+                        </p>
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={() => setShowResetConfirm(false)}
+                                className="px-4 py-2 rounded-xl bg-neutral-800 border border-neutral-600 text-neutral-300 hover:bg-neutral-700 transition-colors text-sm"
+                            >
+                                Annuleren
+                            </button>
+                            <button
+                                onClick={confirmResetPassword}
+                                disabled={isLoading}
+                                className="px-4 py-2 rounded-xl bg-orange-500/20 border border-orange-500/50 text-orange-400 hover:bg-orange-500/30 transition-colors text-sm disabled:opacity-50"
+                            >
+                                {isLoading ? '...' : 'Resetten'}
                             </button>
                         </div>
                     </motion.div>
