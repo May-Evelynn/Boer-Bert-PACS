@@ -51,16 +51,16 @@ export async function sendMail(otp, toEmail) {
         subject: 'BoerBert - Wachtwoord reset',
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #f3f3f3;">BoerBert - Wachtwoord Reset</h2>
-            <p style="font-size: 16px; color: #f3f3f3;">Beste gebruiker,</p>
-            <p style="font-size: 16px; color: #f3f3f3;">U heeft een verzoek ingediend om uw wachtwoord te resetten.</p>
-            <p style="font-size: 16px; color: #f3f3f3;">Uw eenmalige wachtwoord (OTP) is:</p>
+            <h2 style="color: #0c0c0c;">BoerBert - Wachtwoord Reset</h2>
+            <p style="font-size: 16px; color: #151515;">Beste gebruiker,</p>
+            <p style="font-size: 16px; color: #151515;">U heeft een verzoek ingediend om uw wachtwoord te resetten.</p>
+            <p style="font-size: 16px; color: #151515;">Uw eenmalige wachtwoord (OTP) is:</p>
             <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; text-align: center;">
-                <span style="font-size: 24px; font-weight: bold; color: #f3f3f3;">${otp}</span>
+                <span style="font-size: 24px; font-weight: bold; color: #151515;">${otp}</span>
             </div>
-            <p style="font-size: 16px; color: #dadada;">Als u dit verzoek niet heeft ingediend, kunt u deze e-mail negeren.</p>
-            <p style="font-size: 16px; color: #dadada;">Met vriendelijke groet,</p>
-            <p style="font-size: 16px; color: #dadada;"><strong>BoerBert</strong></p>
+            <p style="font-size: 16px; color: #303030;">Als u dit verzoek niet heeft ingediend, kunt u deze e-mail negeren.</p>
+            <p style="font-size: 16px; color: #303030;">Met vriendelijke groet,</p>
+            <p style="font-size: 16px; color: #303030;"><strong>BoerBert</strong></p>
         </div>
         `
     };
