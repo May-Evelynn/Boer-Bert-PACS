@@ -42,7 +42,7 @@ const Dashboard: React.FC = () => {
     return {
       id: scan.id,
       location: facility?.facility_type || `Facility ${scan.facility_id}`,
-      time: new Date((scan.timestamp * 1000)).toLocaleString('nl-NL', { year: 'numeric', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      time: new Date((scan.timestamp > 10000000000 ? scan.timestamp : scan.timestamp * 1000)).toLocaleString('nl-NL', { year: 'numeric', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
       tagId: String(scan.keyfob_id).padStart(5, '0')
     };
   });
@@ -102,8 +102,8 @@ const Dashboard: React.FC = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-      > 
-      <Weer variants={itemVariants} />  
+      >
+        <Weer variants={itemVariants} />
       </motion.div>
 
       <motion.section

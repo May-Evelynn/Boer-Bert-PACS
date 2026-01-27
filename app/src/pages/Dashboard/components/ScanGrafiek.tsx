@@ -70,7 +70,7 @@ const ScanGrafiek: React.FC<ScanGrafiekProps> = ({ scans, facilities, variants, 
         const dayTimestamps: Record<string, number> = {};
 
         scans.forEach((scan) => {
-            const date = new Date(scan.timestamp * 1000);
+            const date = new Date((scan.timestamp > 10000000000 ? scan.timestamp : scan.timestamp * 1000));
             let key: string;
             let displayKey: string;
 
