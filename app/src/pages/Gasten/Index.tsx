@@ -9,7 +9,9 @@ import { druppelService } from '../../services/druppelService';
 import { DataContext, DataContextType, Keyfob } from '../../types';
 
 import CreateGuestModal from './components/CreateGuestModal';
+import EditGuestModal from './components/EditGuestModal';
 import TagAssignModal from './components/TagAssignModal';
+import { FaEdit } from 'react-icons/fa';
 
 const Gasten: React.FC = () => {
   const { keyfobs, setKeyfobs } = useContext<DataContextType>(DataContext);
@@ -17,6 +19,7 @@ const Gasten: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [guestToDelete, setGuestToDelete] = useState<Guest | null>(null);
@@ -169,16 +172,29 @@ const Gasten: React.FC = () => {
                     </button>
                   )}
                 </div>,
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(guest);
-                  }}
-                  className="p-2 rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 hover:bg-rose-500/30 transition-colors"
-                  title="Verwijderen"
-                >
-                  <FaTrash className="w-4 h-4" />
-                </button>,
+                <div className="flex gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedGuest(guest);
+                      setIsEditModalOpen(true);
+                    }}
+                    className="p-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors"
+                    title="Bewerken"
+                  >
+                    <FaEdit className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(guest);
+                    }}
+                    className="p-2 rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-400 hover:bg-rose-500/30 transition-colors"
+                    title="Verwijderen"
+                  >
+                    <FaTrash className="w-4 h-4" />
+                  </button>
+                </div>,
               ];
             }}
             loading={loading}
@@ -188,6 +204,11 @@ const Gasten: React.FC = () => {
               label: 'Nieuwe Gast',
               icon: <FaPlus />,
               onClick: () => setIsCreateModalOpen(true),
+            }}
+            clickableRows={true}
+            clickFunction={(guest) => {
+              setSelectedGuest(guest);
+              setIsEditModalOpen(true);
             }}
             variants={itemVariants}
           />
@@ -199,6 +220,15 @@ const Gasten: React.FC = () => {
           isOpen={isCreateModalOpen}
           setIsOpen={setIsCreateModalOpen}
           onSuccess={fetchData}
+        />
+      )}
+
+      {isEditModalOpen && selectedGuest && (
+        <EditGuestModal
+          isOpen={isEditModalOpen}
+          setIsOpen={setIsEditModalOpen}
+          onSuccess={fetchData}
+          guest={selectedGuest}
         />
       )}
 
@@ -215,8 +245,8 @@ const Gasten: React.FC = () => {
 
       {guestToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div 
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm" 
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setGuestToDelete(null)}
           />
           <motion.div

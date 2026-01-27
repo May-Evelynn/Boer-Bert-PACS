@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect, useContext } from 'react';
-import { FaCogs, FaPlus } from 'react-icons/fa';
+import { FaCogs, FaPlus, FaEdit } from 'react-icons/fa';
 
 import { DataContext, DataContextType } from '../../types';
 import { druppelService } from '../../services/druppelService';
@@ -160,7 +160,7 @@ const Druppels: React.FC = () => {
           <Table
             table={{
               title: 'Druppels',
-              columns: ['ID', 'Druppel Code', 'Gekoppelde Gast', 'In Gebruik'],
+              columns: ['ID', 'Druppel Code', 'Gekoppelde Gast', 'In Gebruik', 'Acties'],
             }}
             data={druppels}
             searchFilters={['druppelCode']}
@@ -178,6 +178,16 @@ const Druppels: React.FC = () => {
               druppel.druppelCode,
               getLinkedUserName(druppel),
               druppel.buitengebruik ? 'Nee' : 'Ja',
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleDruppelModal(druppel);
+                }}
+                className="p-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-colors"
+                title="Bewerken"
+              >
+                <FaEdit className="w-4 h-4" />
+              </button>
             ]}
             clickableRows={true}
             clickFunction={toggleDruppelModal}
