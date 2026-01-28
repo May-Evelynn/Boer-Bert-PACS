@@ -19,9 +19,9 @@
     // Wifi/API variables
     #define WIFI_SSID "Hamburger"
     #define WIFI_PASS "minediamonds"
-    // #define BACKEND_URL "http://192.168.250.242:3000/api/druppel/init-keyfob"
-    // #define BACKEND_URL "http://192.168.250.242:3000/api/druppel/scans"
-    #define BACKEND_URL "https://boerbert.spoekle.com/api/druppel/scans"
+    // #define BACKEND_URL "http://192.168.200.242:3000/api/druppel/init-keyfob"
+    #define BACKEND_URL "http://192.168.200.242:3000/api/druppel/scans"
+    // #define BACKEND_URL "http://boerbert.spoekle.com/api/druppel/scans"
 
     // Pin definitions
     #define PIN_NUM_MISO 18
@@ -94,7 +94,7 @@
     #define TestDAC2Reg           0x3A
     #define TestADCReg            0x3B
 
-    static const char *TAG = "RC522";
+    // static const char *TAG = "RC522";
     static spi_device_handle_t spi;
 
     // Global variables for UID tracking
@@ -467,7 +467,136 @@
         return true;
     }
 
-    // Function to send HTTP POST request to backend
+    // Improved backend response handler
+    void handle_backend_response(const char *response) {
+        if (!response || strlen(response) == 0) {
+            printf("[JSON] Empty response\n");
+            beep_error();
+            led_failed();
+            return;
+        }
+        
+        printf("[HTTP] Raw response: %s\n", response);
+        
+        cJSON *root = cJSON_Parse(response);
+        if (!root) {
+            printf("[JSON] Parse error: %s\n", cJSON_GetErrorPtr());
+            beep_error();
+            led_failed();
+            return;
+        }
+
+        cJSON *result = cJSON_GetObjectItem(root, "result");
+        if (!cJSON_IsObject(result)) {
+            printf("[JSON] Missing 'result' object\n");
+            // Try to check if response has a different structure
+            cJSON *state = cJSON_GetObjectItem(root, "state");
+            if (cJSON_IsNumber(state)) {
+                if (state->valueint == 1) {
+                    printf("[BACKEND] Success state received\n");
+                    beep_success();
+                    led_success();
+                } else {
+                    printf("[BACKEND] Failure state received\n");
+                    beep_error();
+                    led_failed();
+                }
+                cJSON_Delete(root);
+                return;
+            }
+            goto fail;
+        }
+
+        cJSON *state = cJSON_GetObjectItem(result, "state");
+        if (!cJSON_IsNumber(state)) {
+            printf("[JSON] Missing or invalid 'state'\n");
+            goto fail;
+        }
+
+        if (state->valueint == 1) {
+            printf("[BACKEND] Success state received\n");
+            beep_success();
+            led_success();
+        } else {
+            printf("[BACKEND] Failure state received\n");
+            beep_error();
+            led_failed();
+        }
+
+        cJSON_Delete(root);
+        return;
+
+    fail:
+        beep_error();
+        led_failed();
+        cJSON_Delete(root);
+    }
+
+     // Function to send HTTP POST request to backend FOR INITIALIZATION OF THE KEYFOBS
+    // void send_scan_to_backend(const char* uid_hex) {
+    //     printf("[HTTP] Preparing to send UID: %s\n", uid_hex);
+        
+    //     esp_http_client_config_t config = {
+    //         .url = BACKEND_URL,
+    //         .method = HTTP_METHOD_PUT,
+    //         .timeout_ms = 5000,
+    //         .transport_type = HTTP_TRANSPORT_OVER_TCP,
+    //     };
+        
+    //     esp_http_client_handle_t client = esp_http_client_init(&config);
+        
+    //     if (!client) {
+    //         printf("[HTTP] Failed to initialize HTTP client\n");
+    //         return;
+    //     }
+        
+    //     // Set content type header
+    //     esp_http_client_set_header(client, "Content-Type", "application/json");
+        
+    //     // Create JSON payload
+    //     char payload[200];
+    //     int64_t timestamp = esp_timer_get_time() / 1000; // Convert to milliseconds
+    //     snprintf(payload, sizeof(payload), 
+    //     "{\"keyfob_key\":\"%s\",\"device\":\"esp32-rfid-reader\",\"timestamp\":%lld}", uid_hex, timestamp);
+        
+    //     printf("[HTTP] Sending payload: %s\n", payload);
+        
+    //     // Set POST data
+    //     esp_http_client_set_post_field(client, payload, strlen(payload));
+        
+    //     // Execute request
+    //     esp_err_t err = esp_http_client_perform(client);
+        
+    //     if (err == ESP_OK) {
+    //         int status_code = esp_http_client_get_status_code(client);
+    //         if (status_code == 200 || status_code == 201) {
+    //             printf("[HTTP] POST successful (Status: %d)\n", status_code);
+    //             beep_success();
+    //             led_success();
+    //         } else {
+    //             printf("[HTTP] POST failed (Status: %d)\n", status_code);
+    //             beep_error();
+    //             led_failed();
+    //             // Print response body if available
+    //             int content_len = esp_http_client_get_content_length(client);
+    //             if (content_len > 0) {
+    //                 char *buffer = malloc(content_len + 1);
+    //                 if (buffer) {
+    //                     esp_http_client_read(client, buffer, content_len);
+    //                     buffer[content_len] = '\0';
+    //                     printf("[HTTP] Response: %s\n", buffer);
+    //                     free(buffer);
+    //                 }
+    //             }
+    //         }
+    //     } else {
+    //         printf("[HTTP] Request failed: %s\n", esp_err_to_name(err));
+    //     }
+        
+    //     esp_http_client_cleanup(client);
+    // }
+
+    // Fixed send_scan_to_backend function
     void send_scan_to_backend(const char* uid_hex) {
         printf("[HTTP] Preparing to send UID: %s\n", uid_hex);
         
@@ -475,6 +604,7 @@
             .url = BACKEND_URL,
             .method = HTTP_METHOD_POST,
             .timeout_ms = 5000,
+            .transport_type = HTTP_TRANSPORT_OVER_TCP,
         };
         
         esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -489,80 +619,73 @@
         
         // Create JSON payload
         char payload[200];
-        int64_t timestamp = esp_timer_get_time() / 1000; // Convert to milliseconds
         snprintf(payload, sizeof(payload), 
-        "{\"tag-id\":\"%s\",\"location_id\":1,\"timestamp\":\"in\"}", uid_hex);
+            "{\"tag_id\":1,\"location_id\":1,\"inout\":\"in\"}");
         
         printf("[HTTP] Sending payload: %s\n", payload);
-        
-        // Set POST data
         esp_http_client_set_post_field(client, payload, strlen(payload));
         
-        // Execute request
-        esp_err_t err = esp_http_client_perform(client);
+        esp_err_t err = esp_http_client_open(client, strlen(payload));
         
-        if (err == ESP_OK) {
-            int status_code = esp_http_client_get_status_code(client);
-            printf("[HTTP] Response Status Code: %d\n", status_code);
-            
-            // Read response body
-            int content_len = esp_http_client_get_content_length(client);
-            if (content_len > 0) {
-                char *response_buffer = malloc(content_len + 1);
-                if (response_buffer) {
-                    int read_len = esp_http_client_read(client, response_buffer, content_len);
-                    response_buffer[read_len] = '\0';
-                    printf("[HTTP] Response Body: %s\n", response_buffer);
-                    
-                    // Parse JSON response to check state
-                    cJSON *root = cJSON_Parse(response_buffer);
-                    if (root != NULL) {
-                        cJSON *result = cJSON_GetObjectItem(root, "result");
-                        if (result != NULL) {
-                            cJSON *state = cJSON_GetObjectItem(result, "state");
-                            cJSON *message = cJSON_GetObjectItem(result, "message");
-                            cJSON *logResult = cJSON_GetObjectItem(result, "logResult");
-                            
-                            if (state != NULL && cJSON_IsNumber(state)) {
-                                int access_state = state->valueint;
-                                
-                                if (access_state == 1) {
-                                    printf("[HTTP] ACCESS GRANTED - State: %d\n", access_state);
-                                    if (message != NULL && cJSON_IsString(message)) {
-                                        printf("[HTTP] Message: %s\n", message->valuestring);
-                                    }
-                                    led_success();
-                                } else {
-                                    printf("[HTTP] ACCESS DENIED - State: %d\n", access_state);
-                                    if (message != NULL && cJSON_IsString(message)) {
-                                        printf("[HTTP] Message: %s\n", message->valuestring);
-                                    }
-                                    led_failed();
-                                }
-                                
-                                if (logResult != NULL && cJSON_IsString(logResult)) {
-                                    printf("[HTTP] Log Result: %s\n", logResult->valuestring);
-                                }
-                            } else {
-                                printf("[HTTP] No state field found in response\n");
-                            }
-                        } else {
-                            printf("[HTTP] No result field found in response\n");
-                        }
-                        cJSON_Delete(root);
-                    } else {
-                        printf("[HTTP] Failed to parse JSON response\n");
-                    }
-                    
-                    free(response_buffer);
-                }
-            } else {
-                printf("[HTTP] No response body received\n");
-            }
-        } else {
-            printf("[HTTP] Request failed: %s\n", esp_err_to_name(err));
+        if (err != ESP_OK) {
+            printf("[HTTP] Failed to open connection: %s\n", esp_err_to_name(err));
+            esp_http_client_cleanup(client);
+            beep_error();
+            led_failed();
+            return;
         }
         
+        // Send the data
+        int written = esp_http_client_write(client, payload, strlen(payload));
+        printf("[HTTP] Bytes written: %d\n", written);
+        
+        // Now fetch response
+        int content_length = esp_http_client_fetch_headers(client);
+        printf("[HTTP] Content-Length after fetch_headers: %d\n", content_length);
+        
+        if (content_length <= 0) {
+            content_length = 512; // Default buffer size
+        }
+        
+        // Allocate buffer for response
+        char *response_buffer = malloc(content_length + 1);
+        if (!response_buffer) {
+            printf("[HTTP] Failed to allocate response buffer\n");
+            esp_http_client_close(client);
+            esp_http_client_cleanup(client);
+            beep_error();
+            led_failed();
+            return;
+        }
+        
+        // Read response body
+        int total_read = 0;
+        int read_len;
+        
+        while ((read_len = esp_http_client_read(client, 
+                response_buffer + total_read, 
+                content_length - total_read)) > 0) {
+            total_read += read_len;
+        }
+        
+        response_buffer[total_read] = '\0';
+        
+        // Get status code
+        int status_code = esp_http_client_get_status_code(client);
+        printf("[HTTP] Status code: %d\n", status_code);
+        printf("[HTTP] Response (%d bytes): %s\n", total_read, response_buffer);
+        
+        if (status_code == 200 || status_code == 201) {
+            printf("[HTTP] Request successful!\n");
+            handle_backend_response(response_buffer);
+        } else {
+            printf("[HTTP] Request failed\n");
+            beep_error();
+            led_failed();
+        }
+        
+        free(response_buffer);
+        esp_http_client_close(client);
         esp_http_client_cleanup(client);
     }
 
@@ -723,8 +846,8 @@
                         last_scan_time = current_time;
 
                         // BEEP: Card successfully read
-                        beep_success();
-                        led_success();
+                        // beep_success();
+                        // led_success();
                         
                         // Send to backend
                         printf("[HTTP] Sending scan to backend...\n");
@@ -733,6 +856,7 @@
                         printf("[INFO] Same card detected recently, waiting...\n");
                         // Quick single beep for duplicate card
                         beep_single();
+                        led_failed();
                     }
                 } else {
                     // BEEP: Card detected but failed to read UID
