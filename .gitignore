@@ -52,3 +52,5 @@ AI/boerbertlogs.csv
 .gitignore
 AI/BBlogs.csv
 AI/foo.csv
+myfig*
+*csv
