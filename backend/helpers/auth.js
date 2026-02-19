@@ -1,7 +1,8 @@
-const mariadb = require('mariadb');
-const dotenv = require('dotenv').config({quiet: true});
-const nodemailer = require('nodemailer');
-const { hashPassword, comparePassword, generateOTP, generateToken, verifyToken } = require("./passwordHandler.js");
+import mariadb from 'mariadb';
+import nodemailer from 'nodemailer';
+import { hashPassword, comparePassword, generateOTP, generateToken, verifyToken } from './passwordHandler.js';
+import dotenv from 'dotenv';
+dotenv.config({ quiet: true });
 
 var transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -28,17 +29,18 @@ export async function createUser(first_name, last_name, affix, email, username, 
     try {
         conn = await pool.getConnection();
         const otp = generateOTP();
-        // console.log('Generated OTP:', otp);
+        console.log('Generated OTP:', otp);
         const hashedPassword = await hashPassword(otp);
         const result = await conn.query("INSERT INTO users (first_name, last_name, affix, role, email, username, password) VALUES (?, ?, ?, ?, ?, ?, ?)", [first_name, last_name, affix, role, email, username, hashedPassword]);
 
-        // await sendMail(otp); TODOOOO
+        await sendMail(otp, email);
         return result;
     } catch (error) {
         console.error('Error creating user:', error);
         throw new Error('Error creating user');
     } finally {
         if (conn) conn.release();
+        await pool.end();
     }
 }
 
@@ -52,7 +54,7 @@ export async function sendMail(otp, toEmail) {
 
     try {
         const info = await transporter.sendMail(mailOptions);
-        // console.log('Email sent:', info.response || info);
+        console.log('Email sent:', info.response || info);
         return info;
     } catch (error) {
         console.error('Error sending email:', error);
@@ -67,13 +69,13 @@ export async function loginUser(username, password) {
         conn = await pool.getConnection();
         const rows = await conn.query("SELECT * FROM users WHERE username = ?", [username]);
         if (!rows || rows.length === 0) {
-            throw new Error('User not found');
+            throw new Error('Gebruiker niet gevonden');
         }
 
         const user = rows[0];
         const isPasswordValid = await comparePassword(password, user.password);
         if (!isPasswordValid) {
-            throw new Error('Invalid password');
+            throw new Error('Ongeldig wachtwoord');
         }
 
         const payload = {
@@ -103,19 +105,43 @@ export async function changePassword(username, oldPassword, newPassword) {
         conn = await pool.getConnection();
         const rows = await conn.query("SELECT * FROM users WHERE username = ?", [username]);
         if (!rows || rows.length === 0) {
-            throw new Error('User not found');
+            throw new Error('Gebruiker niet gevonden');
         }
         const user = rows[0];
         const isOldPasswordValid = await comparePassword(oldPassword, user.password);
         if (!isOldPasswordValid) {
-            throw new Error('Old password is incorrect');
+            throw new Error('Oud wachtwoord is onjuist');
         }
         const hashedNewPassword = await hashPassword(newPassword);
-        await conn.query("UPDATE users SET password = ? WHERE username = ?", [hashedNewPassword, username]);
-        return { message: 'Password changed successfully' };
+        await conn.query("UPDATE users SET password = ?, is_first_login = 0 WHERE username = ?", [hashedNewPassword, username]);
+        return { message: 'Wachtwoord succesvol gewijzigd' };
     } catch (error) {
         console.error('Error changing password:', error);
-        throw new Error('Error changing password');
+        throw new Error('Er is een fout opgetreden bij het wijzigen van het wachtwoord');
+    } finally {
+        if (conn) conn.release();
+        await pool.end();
+    }
+}
+
+export async function OTPintoResetPassword(username) {
+    const pool = mariadb.createPool(vpool);
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const rows = await conn.query("SELECT * FROM users WHERE username = ?", [username]);
+        if (!rows || rows.length === 0) {
+            throw new Error('User not found');
+        }
+        const user = rows[0];
+        const otp = generateOTP();
+        const hashedOTP = await hashPassword(otp);
+        await conn.query("UPDATE users SET password = ? WHERE username = ?", [hashedOTP, username]);
+        await sendMail(otp, user.email);
+        return { message: 'OTP sent to email' };
+    } catch (error) {
+        console.error('Error resetting password with OTP:', error);
+        throw new Error('Error resetting password with OTP');
     } finally {
         if (conn) conn.release();
         await pool.end();

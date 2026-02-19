@@ -1,21 +1,28 @@
-const mariadb = require('mariadb');
-const dotenv = require('dotenv').config({quiet: true});
+import mariadb from 'mariadb';
+import dotenv from 'dotenv';
+dotenv.config({ quiet: true });
 
 var vpool = {
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASS,
-        database: process.env.DB_NAME,
-        port: process.env.DB_PORT,
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT,
 }
 
 export async function logScan(tag_id, location_id, time, inout) {
+
     const pool = mariadb.createPool(vpool);
     let conn;
     try {
+        let allowed = await verifyAllowed(tag_id) ? 1 : 0;
         conn = await pool.getConnection();
-        const result = await conn.query("INSERT INTO logs (keyfob_id, facility_id, timestamp, in_out) VALUES (?, ?, ?, ?)", [tag_id, location_id, time, inout]);
-        return result;
+        const result = await conn.query("INSERT INTO logs (keyfob_id, facility_id, timestamp, in_out, allowed) VALUES (?, ?, ?, ?, ?)", [tag_id, location_id, time, inout, allowed]);
+        if (allowed === 1) {
+            return { message: 'Access granted', state: 1, logResult: "Scan logged with grant" };
+        } else {
+            return { message: 'Access denied', state: 0, logResult: "Scan logged with denial" };
+        }
     } catch (error) {
         console.error('Error logging scan:', error);
         throw new Error('Error logging scan');
@@ -30,7 +37,7 @@ export async function getScans() {
     let conn;
     try {
         conn = await pool.getConnection();
-        const rows = await conn.query("SELECT * FROM logs");
+        const rows = await conn.query("SELECT * FROM logs ORDER BY timestamp DESC");
         return rows;
     } catch (error) {
         console.error('Error retrieving scans:', error);
@@ -94,7 +101,11 @@ export async function getKeyfobs() {
     let conn;
     try {
         conn = await pool.getConnection();
-        const rows = await conn.query("SELECT * FROM keyfobs WHERE buitengebruik = 0");
+        const rows = await conn.query(`
+            SELECT k.*, u.first_name as firstName, u.last_name as lastName, u.affix, u.role 
+            FROM keyfobs k 
+            LEFT JOIN users u ON k.attached_user_id = u.user_id
+        `);
         return rows;
     } catch (error) {
         console.error('Error retrieving keyfobs:', error);
@@ -105,7 +116,6 @@ export async function getKeyfobs() {
     }
 }
 
-// initialize new keyfob before linking to individual person
 export async function initNewKeyfob(keyfob_key) {
     const pool = mariadb.createPool(vpool);
     let conn;
@@ -121,3 +131,91 @@ export async function initNewKeyfob(keyfob_key) {
         await pool.end();
     }
 }
+
+async function verifyAllowed(keyfob_id) {
+    const pool = mariadb.createPool(vpool);
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const rows = await conn.query("SELECT * FROM keyfobs WHERE keyfob_id = ? AND attached_user_id IS NOT NULL AND buitengebruik = 0", [keyfob_id]);
+        return rows.length > 0;
+    } catch (error) {
+        console.error('Error verifying keyfob access:', error);
+        throw new Error('Error verifying keyfob access');
+    } finally {
+        if (conn) conn.release();
+        await pool.end();
+    }
+}
+
+export async function toggleKeyfob(keyfob_id, bool) {
+    const pool = mariadb.createPool(vpool);
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const result = await conn.query("UPDATE keyfobs SET buitengebruik = ? WHERE keyfob_id = ?", [bool, keyfob_id]);
+        return result;
+    } catch (error) {
+        console.error('Error updating keyfob:', error);
+        throw new Error('Error updating keyfob');
+    } finally {
+        if (conn) conn.release();
+        await pool.end();
+    }
+}
+
+export async function createTestLogs(amount) {
+    function randomDate(start, end, startHour, endHour) {
+        var date = new Date(+start + Math.random() * (end - start));
+        var hour = startHour + Math.random() * (endHour - startHour) | 0;
+        date.setHours(hour);
+        return date;
+    }
+
+    function getRandomInt(max) {
+        return Math.floor(Math.random() * max);
+    }
+
+    const pool = mariadb.createPool(vpool);
+    let conn;
+    let finalQuery;
+    let allFacilities;
+    let inorout;
+    try {
+        finalQuery = "INSERT INTO logs (keyfob_id, facility_id, timestamp, in_out, allowed) VALUES ";
+
+        conn = await pool.getConnection();
+        allFacilities = await conn.query("select * from facilities");
+        console.log(allFacilities);
+
+        // check if last time curFacility scan = in/out and flip
+
+
+        for (let x = 0; x < amount; x++){
+            console.log("iteration",x+1);
+            const randDatetime = randomDate(new Date(2023, 0, 1), new Date(2023,2,31), 6, 22);
+            const epochTime = Date.parse(randDatetime);
+            const curFacility = allFacilities[getRandomInt(allFacilities.length)];
+            // inorout = (getRandomInt(1) === 1) ? "out" : "in";
+            if (getRandomInt(2) === 1) { inorout = "out"; } else { inorout = "in"; }
+            console.log(epochTime);
+            console.log(curFacility);
+
+            // get rand datetime within set timespan (3 months)
+
+            // construct query
+            finalQuery += `(1, ${curFacility.facilities_id}, ${epochTime}, "${inorout}", 1)`;
+            if (x === amount-1) { break } else { finalQuery+="," };
+        }
+
+        console.log(finalQuery);
+        await conn.query(finalQuery);
+    } catch {
+        console.error('Error inserting rows: ', error)
+        throw new Error('Error inserting rows')
+    } finally {
+        if (conn) {conn.release();}
+        await pool.end();
+    }
+}
+

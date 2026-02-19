@@ -1,21 +1,17 @@
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext, useMemo } from 'react';
 import { BsFillGrid1X2Fill } from "react-icons/bs";
 import LaatsteScans from './components/LaatsteScans';
 import Weer from './components/Weer';
 import Faciliteiten from './components/Faciliteiten';
+import ScanGrafiek from './components/ScanGrafiek';
 import { scanService } from '../../services/scanService';
 import { facilityService } from '../../services/facilityService';
 
-import { User, Scan, Facility } from '../../types';
+import { DataContext, DataContextType } from '../../types';
 
-interface DashboardProps {
-    user: User | null;
-}
-
-const Dashboard: React.FC<DashboardProps> = ({ user }) => {
-  const [scans, setScans] = useState<Scan[]>([]);
-  const [facilities, setFacilities] = useState<Facility[]>([]);
+const Dashboard: React.FC = () => {
+  const { user, scans, setScans, facilities, setFacilities } = useContext<DataContextType>(DataContext);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,25 +35,33 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     };
 
     fetchData();
-  }, [user]);
+  }, [user, setScans, setFacilities]);
 
-  // Transform scans data for display
-  const displayScans = scans.slice(0, 10).map((scan) => {
+  const displayScans = scans.slice(0, 4).map((scan) => {
     const facility = facilities.find(f => f.facilities_id === scan.facility_id);
     return {
       id: scan.id,
       location: facility?.facility_type || `Facility ${scan.facility_id}`,
-      time: new Date(scan.timestamp).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
+      time: new Date((scan.timestamp * 1000)).toLocaleString('nl-NL', { year: 'numeric', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
       tagId: String(scan.keyfob_id).padStart(5, '0')
     };
   });
+
+  const filteredScans = useMemo(() => {
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - 1);
+    const cutoffSeconds = Math.floor(cutoff.getTime() / 1000);
+    return scans.filter(s => s.timestamp >= cutoffSeconds);
+  }, [scans]);
+
+
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
+        staggerChildren: 0.05
       }
     }
   };
@@ -73,7 +77,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 
   return (
     <div className="z-10 bg-neutral-900 min-h-screen w-full h-screen p-4 flex flex-col items-center justify-start text-white">
-      <motion.div 
+      <motion.div
         className='absolute bottom-16 right-16 -z-10 blur-sm'
         initial={{ opacity: 0, scale: 0.8, translateX: -50, translateY: 10 }}
         animate={{ opacity: 1, scale: 1, translateX: 0, translateY: 0 }}
@@ -81,26 +85,38 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
       >
         <BsFillGrid1X2Fill className="size-96 text-neutral-800 rotate-12" />
       </motion.div>
-      <motion.div 
-        className="w-full p-4 rounded-3xl justify-center items-center flex space-x-4 mb-8 flex-row"
+      <motion.div
+        className="w-full p-4 rounded-3xl justify-between items-center flex space-x-4 mb-8 flex-row"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <BsFillGrid1X2Fill className="w-8 h-8 text-emerald-400" />
-        <h1 className="text-4xl font-semibold">Dashboard</h1>
+        <div className="flex items-center space-x-4">
+          <BsFillGrid1X2Fill className="w-8 h-8 text-emerald-400" />
+          <h1 className="text-4xl font-semibold">DashBert</h1>
+        </div>
+
       </motion.div>
-      <motion.section 
-        className="grid *:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full mb-8"
+      <motion.div
+        className="w-full mb-4 rounded-3xl justify-between items-center flex space-x-4 flex-row"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      > 
+      <Weer variants={itemVariants} />  
+      </motion.div>
+
+      <motion.section
+        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 w-full mb-8 items-start"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        <LaatsteScans scans={displayScans} variants={itemVariants} user={user} loading={loading} />
+        <LaatsteScans scans={displayScans} variants={itemVariants} loading={loading} />
 
-        <Weer variants={itemVariants} />
+        <ScanGrafiek scans={filteredScans} facilities={facilities} variants={itemVariants} loading={loading} />
 
-        <Faciliteiten facilities={facilities} variants={itemVariants} user={user} loading={loading} />
+        <Faciliteiten facilities={facilities} variants={itemVariants} loading={loading} />
       </motion.section>
     </div>
   );

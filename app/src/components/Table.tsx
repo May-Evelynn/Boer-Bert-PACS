@@ -1,5 +1,19 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, ReactNode, useMemo } from "react";
+import { motion, Variants, AnimatePresence } from "framer-motion";
+import { FaSpinner, FaLock, FaTimes, FaSortUp, FaSortDown, FaSort } from "react-icons/fa";
+import FilterDropdown from "./FilterDropdown";
+
+interface ColumnFilter<T> {
+    column: keyof T;
+    label: string;
+    options?: string[];
+    valueFormatter?: (value: unknown) => string;
+}
+
+interface SortConfig {
+    columnIndex: number;
+    direction: 'asc' | 'desc';
+}
 
 interface TableProps<T> {
     table: {
@@ -8,61 +22,369 @@ interface TableProps<T> {
     };
     data: T[];
     searchFilters?: (keyof T)[];
-    renderRow: (item: T) => (string | number)[];
+    columnFilters?: ColumnFilter<T>[];
+    sortableColumns?: number[];
+    defaultSort?: SortConfig;
+    renderRow: (item: T) => ReactNode[];
     clickableRows?: boolean;
     clickFunction?: (item: T) => void;
+    loading?: boolean;
+    error?: string | null;
+    emptyMessage?: string;
+    actionButton?: {
+        label: string;
+        icon?: ReactNode;
+        onClick: () => void;
+    };
+    maxHeight?: string;
+    variants?: Variants;
+    requiresAuth?: boolean;
+    isAuthenticated?: boolean;
+    authMessage?: string;
+    hideSearch?: boolean;
 }
 
-const Table = <T extends { id: number }>({ table, data, searchFilters, renderRow, clickableRows, clickFunction }: TableProps<T>) => {
+const Table = <T extends { id: number | string }>({
+    table,
+    data,
+    searchFilters,
+    columnFilters = [],
+    sortableColumns = [],
+    defaultSort,
+    renderRow,
+    clickableRows,
+    clickFunction,
+    loading = false,
+    error = null,
+    emptyMessage = "Geen gegevens gevonden.",
+    actionButton,
+    maxHeight = "max-h-96",
+    variants,
+    requiresAuth = false,
+    isAuthenticated = true,
+    authMessage = "Je moet ingelogd zijn om deze gegevens te bekijken.",
+    hideSearch = false,
+}: TableProps<T>) => {
     const [search, setSearch] = useState('');
+    const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
+    const [sortConfig, setSortConfig] = useState<SortConfig | null>(defaultSort || null);
+    
+    const filterOptions = useMemo(() => {
+        const options: Record<string, { value: string; count: number }[]> = {};
 
-    const filteredSearch = data.filter((item) => {
-        if (!searchFilters || searchFilters.length === 0 || !search) return true;
+        columnFilters.forEach((filter) => {
+            if (filter.options) {
+                options[filter.column as string] = filter.options.map((opt) => ({
+                    value: opt,
+                    count: data.filter((item) => {
+                        const value = item[filter.column];
+                        const formatted = filter.valueFormatter
+                            ? filter.valueFormatter(value)
+                            : String(value ?? '');
+                        return formatted === opt;
+                    }).length,
+                }));
+            } else {
+                const valueCounts = new Map<string, number>();
+                data.forEach((item) => {
+                    const value = item[filter.column];
+                    const formatted = filter.valueFormatter
+                        ? filter.valueFormatter(value)
+                        : String(value ?? '');
+                    if (formatted) {
+                        valueCounts.set(formatted, (valueCounts.get(formatted) || 0) + 1);
+                    }
+                });
 
-        return searchFilters.some((filter) => {
-            const value = item[filter];
-            return value?.toString().toLowerCase().includes(search.toLowerCase());
+                options[filter.column as string] = Array.from(valueCounts.entries())
+                    .sort((a, b) => a[0].localeCompare(b[0]))
+                    .map(([value, count]) => ({ value, count }));
+            }
         });
-    });
+
+        return options;
+    }, [columnFilters, data]);
+
+    const filteredData = useMemo(() => {
+        return data.filter((item) => {
+            if (search && searchFilters && searchFilters.length > 0) {
+                const matchesSearch = searchFilters.some((filter) => {
+                    const value = item[filter];
+                    return value?.toString().toLowerCase().includes(search.toLowerCase());
+                });
+                if (!matchesSearch) return false;
+            }
+
+            for (const filter of columnFilters) {
+                const selectedValues = activeFilters[filter.column as string];
+                if (selectedValues && selectedValues.length > 0) {
+                    const itemValue = item[filter.column];
+                    const formatted = filter.valueFormatter
+                        ? filter.valueFormatter(itemValue)
+                        : String(itemValue ?? '');
+                    if (!selectedValues.includes(formatted)) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        });
+    }, [data, search, searchFilters, columnFilters, activeFilters]);
+
+    const sortedData = useMemo(() => {
+        if (!sortConfig) return filteredData;
+
+        return [...filteredData].sort((a, b) => {
+            const rowA = renderRow(a);
+            const rowB = renderRow(b);
+
+            const valueA = rowA[sortConfig.columnIndex];
+            const valueB = rowB[sortConfig.columnIndex];
+
+            const strA = String(valueA ?? '').toLowerCase();
+            const strB = String(valueB ?? '').toLowerCase();
+
+            const numA = parseFloat(strA);
+            const numB = parseFloat(strB);
+
+            let comparison = 0;
+            if (!isNaN(numA) && !isNaN(numB)) {
+                comparison = numA - numB;
+            } else {
+                comparison = strA.localeCompare(strB);
+            }
+
+            return sortConfig.direction === 'asc' ? comparison : -comparison;
+        });
+    }, [filteredData, sortConfig, renderRow]);
+
+    const handleSort = (columnIndex: number) => {
+        if (!sortableColumns.includes(columnIndex)) return;
+
+        setSortConfig((current) => {
+            if (!current || current.columnIndex !== columnIndex) {
+                return { columnIndex, direction: 'asc' };
+            }
+            if (current.direction === 'asc') {
+                return { columnIndex, direction: 'desc' };
+            }
+            return null;
+        });
+    };
+
+    const handleFilterChange = (column: string, values: string[]) => {
+        setActiveFilters((prev) => ({
+            ...prev,
+            [column]: values,
+        }));
+    };
+
+    const clearAllFilters = () => {
+        setSearch('');
+        setActiveFilters({});
+    };
+
+    const removeFilter = (column: string, value: string) => {
+        setActiveFilters((prev) => ({
+            ...prev,
+            [column]: prev[column]?.filter((v) => v !== value) || [],
+        }));
+    };
+
+    const activeFilterBadges = useMemo(() => {
+        const badges: { column: string; label: string; value: string }[] = [];
+        columnFilters.forEach((filter) => {
+            const values = activeFilters[filter.column as string] || [];
+            values.forEach((value) => {
+                badges.push({
+                    column: filter.column as string,
+                    label: filter.label,
+                    value,
+                });
+            });
+        });
+        return badges;
+    }, [columnFilters, activeFilters]);
+
+    const hasActiveFilters = search || activeFilterBadges.length > 0;
+
+    const renderContent = () => {
+        if (requiresAuth && !isAuthenticated) {
+            return (
+                <div className="p-6 text-center">
+                    <FaLock className="mx-auto mb-4 size-12 text-neutral-500" />
+                    <p className="text-neutral-400">{authMessage}</p>
+                </div>
+            );
+        }
+
+        if (loading) {
+            return (
+                <div className="p-6 text-center">
+                    <FaSpinner className="mx-auto mb-4 size-12 text-neutral-500 animate-spin" />
+                    <p className="text-neutral-400">Laden...</p>
+                </div>
+            );
+        }
+
+        if (error) {
+            return (
+                <div className="p-6 text-center">
+                    <p className="text-red-400">{error}</p>
+                </div>
+            );
+        }
+
+        if (filteredData.length === 0) {
+            return (
+                <div className="p-6 text-center">
+                    <p className="text-neutral-400">{emptyMessage}</p>
+                </div>
+            );
+        }
+
+        return (
+            <div className={`${maxHeight} overflow-y-auto custom-scrollbar`}>
+                <table className="w-full table-auto">
+                    <thead className="sticky top-0 bg-neutral-900/90 backdrop-blur-xs">
+                        <tr className="bg-neutral-800/50">
+                            {table.columns.map((col, i) => {
+                                const isSortable = sortableColumns.includes(i);
+                                const isCurrentSort = sortConfig?.columnIndex === i;
+
+                                return (
+                                    <th
+                                        key={i}
+                                        className={`text-left p-3 border-b border-neutral-700 text-neutral-400 font-medium text-sm uppercase tracking-wide ${isSortable ? 'cursor-pointer hover:text-neutral-200 hover:bg-neutral-700/30 transition-colors select-none' : ''
+                                            }`}
+                                        onClick={() => isSortable && handleSort(i)}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            {col}
+                                            {isSortable && (
+                                                <span className="text-xs">
+                                                    {isCurrentSort ? (
+                                                        sortConfig.direction === 'asc' ? (
+                                                            <FaSortUp className="text-emerald-400" />
+                                                        ) : (
+                                                            <FaSortDown className="text-emerald-400" />
+                                                        )
+                                                    ) : (
+                                                        <FaSort className="text-neutral-600" />
+                                                    )}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </th>
+                                );
+                            })}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {sortedData.map((item, index) => (
+                            <motion.tr
+                                key={item.id}
+                                className={`hover:bg-neutral-800/50 transition-colors ${clickableRows ? 'cursor-pointer' : ''}`}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.05 * Math.min(index, 10), duration: 0.3 }}
+                                onClick={() => clickableRows && clickFunction?.(item)}
+                            >
+                                {renderRow(item).map((cell, i) => (
+                                    <td key={i} className="p-3 border-b border-neutral-800 text-neutral-300">
+                                        {cell}
+                                    </td>
+                                ))}
+                            </motion.tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        );
+    };
 
     return (
-        <motion.div className="w-full mb-8">
+        <motion.div className="w-full" variants={variants}>
             <div className="bg-neutral-950 border border-neutral-700 p-4 rounded-3xl">
-                <div className='flex justify-between items-center mb-4'>
-                    <h2 className="text-2xl">{table.title}</h2>
-                    <input
-                        type="text"
-                        placeholder={`Zoek ${table.title.toLowerCase()}...`}
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="w-1/2 max-w-48 p-2 rounded-lg bg-neutral-800 border border-neutral-600 text-white"
-                    />
-                </div>
-                <div className="max-h-48 rounded-2xl overflow-hidden overflow-y-auto custom-scrollbar">
-                    <table className='bg-neutral-900 w-full  max-h-48 '>
-                        <thead className='sticky top-0 bg-neutral-900/90 backdrop-blur-xs'>
-                            <tr className='bg-neutral-800/50'>
-                                {table.columns.map((col, i) => (
-                                    <th key={i} className="text-left p-3 border-b border-neutral-700">{col}</th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredSearch.map((item) => (
-                                <motion.tr key={item.id} className={`hover:bg-neutral-800/50 ${clickableRows ? 'cursor-pointer' : ''}`}>
-                                    {renderRow(item).map((cell, i) => (
-                                        <>
-                                            {clickableRows ? (
-                                                <td key={i} onClick={() => clickFunction && clickFunction(item)} className="p-3 border-b border-neutral-800">{cell}</td>
-                                            ) : (
-                                                <td key={i} className="p-3 border-b border-neutral-800">{cell}</td>
-                                            )}
-                                        </>
-                                    ))}
-                                </motion.tr>
+                <div className="flex flex-col gap-4 mb-4">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-2xl font-medium">{table.title}</h2>
+                        <div className="flex items-center gap-3">
+                            {!hideSearch && (
+                                <input
+                                    type="text"
+                                    placeholder={`Zoek ${table.title.toLowerCase()}...`}
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="p-2 rounded-lg bg-neutral-800 border border-neutral-600 text-white focus:outline-none focus:border-blue-500"
+                                />
+                            )}
+
+                            {columnFilters.map((filter) => (
+                                <FilterDropdown
+                                    key={filter.column as string}
+                                    label={filter.label}
+                                    options={filterOptions[filter.column as string] || []}
+                                    selectedValues={activeFilters[filter.column as string] || []}
+                                    onChange={(values) => handleFilterChange(filter.column as string, values)}
+                                />
                             ))}
-                        </tbody>
-                    </table>
+
+
+                            {actionButton && (
+                                <button
+                                    onClick={actionButton.onClick}
+                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-medium transition-colors"
+                                >
+                                    {actionButton.icon}
+                                    {actionButton.label}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    <AnimatePresence>
+                        {activeFilterBadges.length > 0 && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="flex flex-wrap gap-2"
+                            >
+                                {activeFilterBadges.map((badge) => (
+                                    <motion.span
+                                        key={`${badge.column}-${badge.value}`}
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.8 }}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 rounded-full text-sm"
+                                    >
+                                        <span className="text-emerald-300/70">{badge.label}:</span>
+                                        {badge.value}
+                                        <button
+                                            onClick={() => removeFilter(badge.column, badge.value)}
+                                            className="ml-1 hover:text-emerald-200 transition-colors"
+                                        >
+                                            <FaTimes className="w-3 h-3" />
+                                        </button>
+                                    </motion.span>
+                                ))}
+                                {hasActiveFilters && (
+                                    <button
+                                        onClick={clearAllFilters}
+                                        className="px-3 py-2 text-sm hover:text-red-200 bg-red-600/20 text-red-400 border border-red-500/30 rounded-full transition-colors hover:cursor-pointer"
+                                    >
+                                        Wis Filters
+                                    </button>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+
+                <div className="bg-neutral-900 rounded-2xl overflow-hidden">
+                    {renderContent()}
                 </div>
             </div>
         </motion.div>

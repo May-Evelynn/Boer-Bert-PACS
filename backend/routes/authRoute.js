@@ -1,6 +1,7 @@
-const express = require('express');
-const router = express.Router();
-const { createUser, sendMail, loginUser, changePassword } = require('../helpers/auth.js'); 
+import express from 'express';
+import { sendMail, loginUser, changePassword, OTPintoResetPassword } from '../helpers/auth.js';
+
+const router = express.Router(); 
 
 router.post('/login', async (req, res) => {
     let { username, password } = req.body;
@@ -32,4 +33,19 @@ router.post('/change-password', async (req, res) => {
     }
 });
 
-module.exports = router;
+router.post('/reset-password-otp', async (req, res) => {
+    let { username } = req.body;
+
+    if (!username) {
+        return res.status(400).json({ error: 'Username is required' });
+    }
+
+    try {
+        const resetResult = await OTPintoResetPassword(username);
+        return res.status(200).json({ message: 'OTP sent successfully', ...resetResult });
+    } catch (err) {
+        return res.status(500).json({ error: err.message || 'Internal Server Error' });
+    }
+});
+
+export default router;
